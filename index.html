@@ -10,10 +10,16 @@
         body { font-family: 'Inter', sans-serif; }
         .card {
             transition: all 0.3s ease;
+            cursor: pointer;
         }
         .card:hover {
             transform: translateY(-8px);
             box-shadow: 0 20px 40px rgba(251, 191, 36, 0.15);
+        }
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
         }
         .card:hover .card-border {
             opacity: 1;
@@ -73,109 +79,116 @@
         <!-- Grid de Metrónomos -->
         <section class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
             <!-- Péndulo Simple -->
-            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                <div class="card-border"></div>
-                <div class="p-4">
-                    <canvas id="preview-pendulo" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                    <h3 class="text-lg font-medium mb-1">Péndulo Simple</h3>
-                    <p class="text-gray-500 text-sm mb-3">Oscilación armónica con RK4</p>
-                    <div class="equation text-amber-400/70 text-sm mb-4">θ'' + (g/L)sin(θ) = 0</div>
-                    <a href="https://cjlkaiser-cpu.github.io/metronomo-fisico/" target="_blank"
-                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                        Abrir Demo →
-                    </a>
+            <a href="https://cjlkaiser-cpu.github.io/metronomo-fisico/" target="_blank" class="card-link">
+                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                    <div class="card-border"></div>
+                    <div class="p-4">
+                        <canvas id="preview-pendulo" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                        <h3 class="text-lg font-medium mb-1">Péndulo Simple</h3>
+                        <p class="text-gray-500 text-sm mb-3">Oscilación armónica con RK4</p>
+                        <div class="equation text-amber-400/70 text-sm mb-4">θ'' + (g/L)sin(θ) = 0</div>
+                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                            Abrir Demo →
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </a>
 
             <!-- Oscilador Armónico -->
-            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                <div class="card-border"></div>
-                <div class="p-4">
-                    <canvas id="preview-resorte" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                    <h3 class="text-lg font-medium mb-1">Oscilador Armónico</h3>
-                    <p class="text-gray-500 text-sm mb-3">Masa-resorte horizontal</p>
-                    <div class="equation text-amber-400/70 text-sm mb-4">ẍ + (k/m)x = 0</div>
-                    <a href="https://cjlkaiser-cpu.github.io/metronomo-resorte/" target="_blank"
-                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                        Abrir Demo →
-                    </a>
+            <a href="https://cjlkaiser-cpu.github.io/metronomo-resorte/" target="_blank" class="card-link">
+                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                    <div class="card-border"></div>
+                    <div class="p-4">
+                        <canvas id="preview-resorte" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                        <h3 class="text-lg font-medium mb-1">Oscilador Armónico</h3>
+                        <p class="text-gray-500 text-sm mb-3">Masa-resorte horizontal</p>
+                        <div class="equation text-amber-400/70 text-sm mb-4">ẍ + (k/m)x = 0</div>
+                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                            Abrir Demo →
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </a>
 
             <!-- Péndulos Acoplados -->
-            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                <div class="card-border"></div>
-                <div class="p-4">
-                    <canvas id="preview-acoplados" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                    <h3 class="text-lg font-medium mb-1">Péndulos Acoplados</h3>
-                    <p class="text-gray-500 text-sm mb-3">Polirritmos físicos</p>
-                    <div class="equation text-amber-400/70 text-sm mb-4">T₁/T₂ = √(L₁/L₂)</div>
-                    <a href="https://cjlkaiser-cpu.github.io/metronomo-polirritmico/" target="_blank"
-                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                        Abrir Demo →
-                    </a>
+            <a href="https://cjlkaiser-cpu.github.io/metronomo-polirritmico/" target="_blank" class="card-link">
+                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                    <div class="card-border"></div>
+                    <div class="p-4">
+                        <canvas id="preview-acoplados" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                        <h3 class="text-lg font-medium mb-1">Péndulos Acoplados</h3>
+                        <p class="text-gray-500 text-sm mb-3">Polirritmos físicos</p>
+                        <div class="equation text-amber-400/70 text-sm mb-4">T₁/T₂ = √(L₁/L₂)</div>
+                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                            Abrir Demo →
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </a>
 
             <!-- Lissajous -->
-            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                <div class="card-border"></div>
-                <div class="p-4">
-                    <canvas id="preview-lissajous" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                    <h3 class="text-lg font-medium mb-1">Figuras de Lissajous</h3>
-                    <p class="text-gray-500 text-sm mb-3">Patrones geométricos</p>
-                    <div class="equation text-amber-400/70 text-sm mb-4">x = sin(ωₓt), y = sin(ωᵧt + δ)</div>
-                    <a href="https://cjlkaiser-cpu.github.io/metronomo-lissajous/" target="_blank"
-                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                        Abrir Demo →
-                    </a>
+            <a href="https://cjlkaiser-cpu.github.io/metronomo-lissajous/" target="_blank" class="card-link">
+                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                    <div class="card-border"></div>
+                    <div class="p-4">
+                        <canvas id="preview-lissajous" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                        <h3 class="text-lg font-medium mb-1">Figuras de Lissajous</h3>
+                        <p class="text-gray-500 text-sm mb-3">Patrones geométricos</p>
+                        <div class="equation text-amber-400/70 text-sm mb-4">x = sin(ωₓt), y = sin(ωᵧt + δ)</div>
+                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                            Abrir Demo →
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </a>
 
             <!-- Onda Estacionaria -->
-            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                <div class="card-border"></div>
-                <div class="p-4">
-                    <canvas id="preview-onda" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                    <h3 class="text-lg font-medium mb-1">Onda Estacionaria</h3>
-                    <p class="text-gray-500 text-sm mb-3">Armónicos de cuerda vibrante</p>
-                    <div class="equation text-amber-400/70 text-sm mb-4">fₙ = n·v/(2L)</div>
-                    <a href="https://cjlkaiser-cpu.github.io/metronomo-onda/" target="_blank"
-                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                        Abrir Demo →
-                    </a>
+            <a href="https://cjlkaiser-cpu.github.io/metronomo-onda/" target="_blank" class="card-link">
+                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                    <div class="card-border"></div>
+                    <div class="p-4">
+                        <canvas id="preview-onda" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                        <h3 class="text-lg font-medium mb-1">Onda Estacionaria</h3>
+                        <p class="text-gray-500 text-sm mb-3">Armónicos de cuerda vibrante</p>
+                        <div class="equation text-amber-400/70 text-sm mb-4">fₙ = n·v/(2L)</div>
+                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                            Abrir Demo →
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </a>
 
             <!-- Rebote Elástico -->
-            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                <div class="card-border"></div>
-                <div class="p-4">
-                    <canvas id="preview-rebote" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                    <h3 class="text-lg font-medium mb-1">Rebote Elástico</h3>
-                    <p class="text-gray-500 text-sm mb-3">Gravedad y colisiones</p>
-                    <div class="equation text-amber-400/70 text-sm mb-4">v' = -e·v, h = ½gt²</div>
-                    <a href="https://cjlkaiser-cpu.github.io/metronomo-rebote/" target="_blank"
-                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                        Abrir Demo →
-                    </a>
+            <a href="https://cjlkaiser-cpu.github.io/metronomo-rebote/" target="_blank" class="card-link">
+                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                    <div class="card-border"></div>
+                    <div class="p-4">
+                        <canvas id="preview-rebote" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                        <h3 class="text-lg font-medium mb-1">Rebote Elástico</h3>
+                        <p class="text-gray-500 text-sm mb-3">Gravedad y colisiones</p>
+                        <div class="equation text-amber-400/70 text-sm mb-4">v' = -e·v, h = ½gt²</div>
+                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                            Abrir Demo →
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </a>
 
             <!-- Harmonices Mundi (Kepler) -->
-            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                <div class="card-border"></div>
-                <div class="p-4">
-                    <canvas id="preview-kepler" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                    <h3 class="text-lg font-medium mb-1">Harmonices Mundi</h3>
-                    <p class="text-gray-500 text-sm mb-3">Órbitas keplerianas</p>
-                    <div class="equation text-amber-400/70 text-sm mb-4">T² = a³ (3ª Ley de Kepler)</div>
-                    <a href="https://cjlkaiser-cpu.github.io/metronomo-kepler/" target="_blank"
-                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                        Abrir Demo →
-                    </a>
+            <a href="https://cjlkaiser-cpu.github.io/metronomo-kepler/" target="_blank" class="card-link">
+                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                    <div class="card-border"></div>
+                    <div class="p-4">
+                        <canvas id="preview-kepler" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                        <h3 class="text-lg font-medium mb-1">Harmonices Mundi</h3>
+                        <p class="text-gray-500 text-sm mb-3">Órbitas keplerianas</p>
+                        <div class="equation text-amber-400/70 text-sm mb-4">T² = a³ (3ª Ley de Kepler)</div>
+                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                            Abrir Demo →
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </a>
         </section>
 
         <!-- Destacado: Coro Planetario -->
