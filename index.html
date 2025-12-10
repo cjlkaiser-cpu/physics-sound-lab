@@ -85,7 +85,7 @@
                     <div class="p-4">
                         <canvas id="preview-pendulo" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
                         <h3 class="text-lg font-medium mb-1">Péndulo Simple</h3>
-                        <p class="text-gray-500 text-sm mb-3">Oscilación armónica con RK4</p>
+                        <p class="text-gray-400 text-sm mb-3">El sistema oscilatorio más fundamental. A diferencia de la aproximación lineal, esta simulación resuelve la ecuación completa con el método Runge-Kutta de 4º orden, capturando el comportamiento no lineal donde el período depende de la amplitud.</p>
                         <div class="equation text-amber-400/70 text-sm mb-4">θ'' + (g/L)sin(θ) = 0</div>
                         <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
                             Abrir Demo →
@@ -101,7 +101,7 @@
                     <div class="p-4">
                         <canvas id="preview-resorte" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
                         <h3 class="text-lg font-medium mb-1">Oscilador Armónico</h3>
-                        <p class="text-gray-500 text-sm mb-3">Masa-resorte horizontal</p>
+                        <p class="text-gray-400 text-sm mb-3">Sistema masa-resorte: la forma más pura de movimiento armónico simple. La energía se conserva oscilando entre cinética y potencial elástica. El período T = 2π√(m/k) es independiente de la amplitud.</p>
                         <div class="equation text-amber-400/70 text-sm mb-4">ẍ + (k/m)x = 0</div>
                         <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
                             Abrir Demo →
@@ -117,7 +117,7 @@
                     <div class="p-4">
                         <canvas id="preview-acoplados" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
                         <h3 class="text-lg font-medium mb-1">Péndulos Acoplados</h3>
-                        <p class="text-gray-500 text-sm mb-3">Polirritmos físicos</p>
+                        <p class="text-gray-400 text-sm mb-3">Dos péndulos con longitudes diferentes generan polirritmos naturales. La relación de períodos sigue √(L₁/L₂), creando patrones rítmicos como 2:3 o 3:4 que se repiten cíclicamente. Física de superposición de osciladores.</p>
                         <div class="equation text-amber-400/70 text-sm mb-4">T₁/T₂ = √(L₁/L₂)</div>
                         <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
                             Abrir Demo →
@@ -133,7 +133,7 @@
                     <div class="p-4">
                         <canvas id="preview-lissajous" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
                         <h3 class="text-lg font-medium mb-1">Figuras de Lissajous</h3>
-                        <p class="text-gray-500 text-sm mb-3">Patrones geométricos</p>
+                        <p class="text-gray-400 text-sm mb-3">Combinación de dos oscilaciones perpendiculares que crean patrones geométricos hipnóticos. Los ratios de frecuencia (1:2, 2:3, 3:4) generan figuras cerradas; la fase relativa δ las deforma continuamente.</p>
                         <div class="equation text-amber-400/70 text-sm mb-4">x = sin(ωₓt), y = sin(ωᵧt + δ)</div>
                         <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
                             Abrir Demo →
@@ -149,7 +149,7 @@
                     <div class="p-4">
                         <canvas id="preview-onda" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
                         <h3 class="text-lg font-medium mb-1">Onda Estacionaria</h3>
-                        <p class="text-gray-500 text-sm mb-3">Armónicos de cuerda vibrante</p>
+                        <p class="text-gray-400 text-sm mb-3">Cuerda vibrante con modos normales: nodos fijos y antinodos oscilantes. Las frecuencias armónicas fₙ = n·f₁ forman la serie que fundamenta toda la música occidental. Visualiza cómo emergen los armónicos.</p>
                         <div class="equation text-amber-400/70 text-sm mb-4">fₙ = n·v/(2L)</div>
                         <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
                             Abrir Demo →
@@ -165,7 +165,7 @@
                     <div class="p-4">
                         <canvas id="preview-rebote" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
                         <h3 class="text-lg font-medium mb-1">Rebote Elástico</h3>
-                        <p class="text-gray-500 text-sm mb-3">Gravedad y colisiones</p>
+                        <p class="text-gray-400 text-sm mb-3">Pelota bajo gravedad con coeficiente de restitución e. Cada rebote pierde energía: v' = -e·v. El tiempo entre impactos sigue una progresión geométrica, creando ritmos acelerados naturalmente.</p>
                         <div class="equation text-amber-400/70 text-sm mb-4">v' = -e·v, h = ½gt²</div>
                         <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
                             Abrir Demo →
@@ -181,7 +181,7 @@
                     <div class="p-4">
                         <canvas id="preview-kepler" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
                         <h3 class="text-lg font-medium mb-1">Harmonices Mundi</h3>
-                        <p class="text-gray-500 text-sm mb-3">Órbitas keplerianas</p>
+                        <p class="text-gray-400 text-sm mb-3">Órbitas elípticas resueltas con la ecuación de Kepler (Newton-Raphson). La velocidad orbital varía según la 2ª ley: más rápido en el perihelio, más lento en el afelio. Beat en cada paso por el perihelio.</p>
                         <div class="equation text-amber-400/70 text-sm mb-4">T² = a³ (3ª Ley de Kepler)</div>
                         <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
                             Abrir Demo →
