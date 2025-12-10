@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Sound Lab - Metrónomos Físicos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .card {
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(251, 191, 36, 0.15);
+        }
+        .card:hover .card-border {
+            opacity: 1;
+        }
+        .card-border {
+            position: absolute;
+            inset: 0;
+            border-radius: 1rem;
+            padding: 2px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b, #fbbf24);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .preview-canvas {
+            border-radius: 0.5rem;
+        }
+        .equation {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-light">
+                        <span class="text-amber-400 font-medium">Physics</span> Sound Lab
+                    </h1>
+                    <p class="text-gray-500 text-sm">Metrónomos Físicos Interactivos</p>
+                </div>
+                <a href="https://github.com/cjlkaiser-cpu" target="_blank" class="text-gray-400 hover:text-white transition">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-12">
+        <!-- Hero -->
+        <section class="text-center mb-16">
+            <h2 class="text-4xl font-light mb-4">
+                Física que <span class="text-amber-400 font-medium">suena</span>
+            </h2>
+            <p class="text-gray-400 max-w-2xl mx-auto">
+                7 simulaciones interactivas donde las ecuaciones del movimiento se convierten en ritmo.
+                Cada metrónomo genera beats basados en física real.
+            </p>
+        </section>
+
+        <!-- Grid de Metrónomos -->
+        <section class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+            <!-- Péndulo Simple -->
+            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                <div class="card-border"></div>
+                <div class="p-4">
+                    <canvas id="preview-pendulo" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                    <h3 class="text-lg font-medium mb-1">Péndulo Simple</h3>
+                    <p class="text-gray-500 text-sm mb-3">Oscilación armónica con RK4</p>
+                    <div class="equation text-amber-400/70 text-sm mb-4">θ'' + (g/L)sin(θ) = 0</div>
+                    <a href="https://cjlkaiser-cpu.github.io/metronomo-fisico/" target="_blank"
+                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                        Abrir Demo →
+                    </a>
+                </div>
+            </div>
+
+            <!-- Oscilador Armónico -->
+            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                <div class="card-border"></div>
+                <div class="p-4">
+                    <canvas id="preview-resorte" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                    <h3 class="text-lg font-medium mb-1">Oscilador Armónico</h3>
+                    <p class="text-gray-500 text-sm mb-3">Masa-resorte horizontal</p>
+                    <div class="equation text-amber-400/70 text-sm mb-4">ẍ + (k/m)x = 0</div>
+                    <a href="https://cjlkaiser-cpu.github.io/metronomo-resorte/" target="_blank"
+                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                        Abrir Demo →
+                    </a>
+                </div>
+            </div>
+
+            <!-- Péndulos Acoplados -->
+            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                <div class="card-border"></div>
+                <div class="p-4">
+                    <canvas id="preview-acoplados" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                    <h3 class="text-lg font-medium mb-1">Péndulos Acoplados</h3>
+                    <p class="text-gray-500 text-sm mb-3">Polirritmos físicos</p>
+                    <div class="equation text-amber-400/70 text-sm mb-4">T₁/T₂ = √(L₁/L₂)</div>
+                    <a href="https://cjlkaiser-cpu.github.io/metronomo-polirritmico/" target="_blank"
+                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                        Abrir Demo →
+                    </a>
+                </div>
+            </div>
+
+            <!-- Lissajous -->
+            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                <div class="card-border"></div>
+                <div class="p-4">
+                    <canvas id="preview-lissajous" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                    <h3 class="text-lg font-medium mb-1">Figuras de Lissajous</h3>
+                    <p class="text-gray-500 text-sm mb-3">Patrones geométricos</p>
+                    <div class="equation text-amber-400/70 text-sm mb-4">x = sin(ωₓt), y = sin(ωᵧt + δ)</div>
+                    <a href="https://cjlkaiser-cpu.github.io/metronomo-lissajous/" target="_blank"
+                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                        Abrir Demo →
+                    </a>
+                </div>
+            </div>
+
+            <!-- Onda Estacionaria -->
+            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                <div class="card-border"></div>
+                <div class="p-4">
+                    <canvas id="preview-onda" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                    <h3 class="text-lg font-medium mb-1">Onda Estacionaria</h3>
+                    <p class="text-gray-500 text-sm mb-3">Armónicos de cuerda vibrante</p>
+                    <div class="equation text-amber-400/70 text-sm mb-4">fₙ = n·v/(2L)</div>
+                    <a href="https://cjlkaiser-cpu.github.io/metronomo-onda/" target="_blank"
+                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                        Abrir Demo →
+                    </a>
+                </div>
+            </div>
+
+            <!-- Rebote Elástico -->
+            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                <div class="card-border"></div>
+                <div class="p-4">
+                    <canvas id="preview-rebote" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                    <h3 class="text-lg font-medium mb-1">Rebote Elástico</h3>
+                    <p class="text-gray-500 text-sm mb-3">Gravedad y colisiones</p>
+                    <div class="equation text-amber-400/70 text-sm mb-4">v' = -e·v, h = ½gt²</div>
+                    <a href="https://cjlkaiser-cpu.github.io/metronomo-rebote/" target="_blank"
+                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                        Abrir Demo →
+                    </a>
+                </div>
+            </div>
+
+            <!-- Harmonices Mundi (Kepler) -->
+            <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                <div class="card-border"></div>
+                <div class="p-4">
+                    <canvas id="preview-kepler" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
+                    <h3 class="text-lg font-medium mb-1">Harmonices Mundi</h3>
+                    <p class="text-gray-500 text-sm mb-3">Órbitas keplerianas</p>
+                    <div class="equation text-amber-400/70 text-sm mb-4">T² = a³ (3ª Ley de Kepler)</div>
+                    <a href="https://cjlkaiser-cpu.github.io/metronomo-kepler/" target="_blank"
+                       class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
+                        Abrir Demo →
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Destacado: Coro Planetario -->
+        <section class="bg-gradient-to-r from-amber-900/20 to-purple-900/20 border border-amber-500/30 rounded-2xl p-8 mb-16">
+            <div class="flex flex-col md:flex-row gap-8 items-center">
+                <div class="flex-1">
+                    <span class="text-amber-400 text-sm font-medium">⭐ DESTACADO</span>
+                    <h2 class="text-3xl font-light mt-2 mb-4">
+                        <span class="text-amber-400 font-medium">Coro Planetario</span>
+                    </h2>
+                    <p class="text-gray-400 mb-6">
+                        El Sistema Solar completo sonificado según la visión de Kepler (1619).
+                        8 planetas cantando en armonía con física orbital real, FFT spectrum analyzer,
+                        y modo Concert Hall inmersivo.
+                    </p>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="https://cjlkaiser-cpu.github.io/harmonices-mundi/" target="_blank"
+                           class="px-5 py-2.5 bg-amber-500 text-gray-900 rounded-lg font-medium hover:bg-amber-400 transition">
+                            ▶ Demo
+                        </a>
+                        <a href="https://cjlkaiser-cpu.github.io/harmonices-mundi/tutorial.html" target="_blank"
+                           class="px-5 py-2.5 bg-gray-800 text-gray-200 rounded-lg font-medium hover:bg-gray-700 transition">
+                            📖 Tutorial
+                        </a>
+                        <a href="https://github.com/cjlkaiser-cpu/harmonices-mundi" target="_blank"
+                           class="px-5 py-2.5 bg-gray-800 text-gray-200 rounded-lg font-medium hover:bg-gray-700 transition">
+                            GitHub
+                        </a>
+                    </div>
+                </div>
+                <div class="w-full md:w-80">
+                    <canvas id="preview-coro" class="w-full h-48 bg-gray-950 rounded-xl"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tech Stack -->
+        <section class="text-center">
+            <h3 class="text-lg font-medium mb-4 text-gray-400">Tecnologías</h3>
+            <div class="flex flex-wrap justify-center gap-3">
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Canvas 2D</span>
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Web Audio API</span>
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Runge-Kutta 4</span>
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Newton-Raphson</span>
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">FFT Analyser</span>
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Ecuaciones de Kepler</span>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 py-6 mt-12">
+        <div class="max-w-6xl mx-auto px-6 text-center text-gray-500 text-sm">
+            Physics Sound Lab · Simulaciones donde la física genera música
+        </div>
+    </footer>
+
+    <script>
+        // Mini simulaciones para previews
+        const previews = {};
+        let time = 0;
+
+        // Inicializar todos los canvas
+        function initPreviews() {
+            // Péndulo Simple
+            const pendulo = document.getElementById('preview-pendulo');
+            if (pendulo) {
+                previews.pendulo = {
+                    ctx: pendulo.getContext('2d'),
+                    w: pendulo.width = pendulo.offsetWidth * 2,
+                    h: pendulo.height = pendulo.offsetHeight * 2,
+                    theta: Math.PI / 4,
+                    omega: 0
+                };
+            }
+
+            // Oscilador Armónico (Resorte)
+            const resorte = document.getElementById('preview-resorte');
+            if (resorte) {
+                previews.resorte = {
+                    ctx: resorte.getContext('2d'),
+                    w: resorte.width = resorte.offsetWidth * 2,
+                    h: resorte.height = resorte.offsetHeight * 2,
+                    x: 0.3,
+                    v: 0
+                };
+            }
+
+            // Péndulos Acoplados
+            const acoplados = document.getElementById('preview-acoplados');
+            if (acoplados) {
+                previews.acoplados = {
+                    ctx: acoplados.getContext('2d'),
+                    w: acoplados.width = acoplados.offsetWidth * 2,
+                    h: acoplados.height = acoplados.offsetHeight * 2,
+                    theta1: Math.PI / 5,
+                    theta2: Math.PI / 4,
+                    omega1: 0,
+                    omega2: 0
+                };
+            }
+
+            // Lissajous
+            const lissajous = document.getElementById('preview-lissajous');
+            if (lissajous) {
+                previews.lissajous = {
+                    ctx: lissajous.getContext('2d'),
+                    w: lissajous.width = lissajous.offsetWidth * 2,
+                    h: lissajous.height = lissajous.offsetHeight * 2,
+                    trail: []
+                };
+            }
+
+            // Onda Estacionaria
+            const onda = document.getElementById('preview-onda');
+            if (onda) {
+                previews.onda = {
+                    ctx: onda.getContext('2d'),
+                    w: onda.width = onda.offsetWidth * 2,
+                    h: onda.height = onda.offsetHeight * 2
+                };
+            }
+
+            // Rebote Elástico
+            const rebote = document.getElementById('preview-rebote');
+            if (rebote) {
+                previews.rebote = {
+                    ctx: rebote.getContext('2d'),
+                    w: rebote.width = rebote.offsetWidth * 2,
+                    h: rebote.height = rebote.offsetHeight * 2,
+                    y: 0.2,
+                    vy: 0
+                };
+            }
+
+            // Harmonices Mundi (Kepler metronomo)
+            const kepler = document.getElementById('preview-kepler');
+            if (kepler) {
+                previews.kepler = {
+                    ctx: kepler.getContext('2d'),
+                    w: kepler.width = kepler.offsetWidth * 2,
+                    h: kepler.height = kepler.offsetHeight * 2
+                };
+            }
+
+            // Coro Planetario (Sistema Solar)
+            const coro = document.getElementById('preview-coro');
+            if (coro) {
+                previews.coro = {
+                    ctx: coro.getContext('2d'),
+                    w: coro.width = coro.offsetWidth * 2,
+                    h: coro.height = coro.offsetHeight * 2
+                };
+            }
+        }
+
+        // Animaciones
+        function animate() {
+            time += 0.02;
+
+            // Péndulo Simple
+            if (previews.pendulo) {
+                const p = previews.pendulo;
+                const dt = 0.05;
+                const g = 9.8, L = 1;
+                p.omega += -g/L * Math.sin(p.theta) * dt;
+                p.theta += p.omega * dt;
+                p.omega *= 0.999;
+
+                p.ctx.fillStyle = '#030712';
+                p.ctx.fillRect(0, 0, p.w, p.h);
+
+                const cx = p.w / 2, cy = 30;
+                const bobX = cx + Math.sin(p.theta) * 100;
+                const bobY = cy + Math.cos(p.theta) * 100;
+
+                p.ctx.strokeStyle = '#fbbf24';
+                p.ctx.lineWidth = 3;
+                p.ctx.beginPath();
+                p.ctx.moveTo(cx, cy);
+                p.ctx.lineTo(bobX, bobY);
+                p.ctx.stroke();
+
+                p.ctx.fillStyle = '#fbbf24';
+                p.ctx.beginPath();
+                p.ctx.arc(bobX, bobY, 15, 0, Math.PI * 2);
+                p.ctx.fill();
+            }
+
+            // Oscilador Armónico
+            if (previews.resorte) {
+                const r = previews.resorte;
+                const dt = 0.05;
+                const k = 5, m = 1;
+                r.v += -k/m * r.x * dt;
+                r.x += r.v * dt;
+
+                r.ctx.fillStyle = '#030712';
+                r.ctx.fillRect(0, 0, r.w, r.h);
+
+                const cy = r.h / 2;
+                const baseX = 40;
+                const massX = baseX + 100 + r.x * 150;
+
+                // Resorte
+                r.ctx.strokeStyle = '#6b7280';
+                r.ctx.lineWidth = 3;
+                r.ctx.beginPath();
+                const coils = 10;
+                for (let i = 0; i <= coils; i++) {
+                    const px = baseX + (massX - baseX - 20) * (i / coils);
+                    const py = cy + (i % 2 === 0 ? 15 : -15);
+                    if (i === 0) r.ctx.moveTo(px, cy);
+                    else r.ctx.lineTo(px, py);
+                }
+                r.ctx.lineTo(massX - 20, cy);
+                r.ctx.stroke();
+
+                // Masa
+                r.ctx.fillStyle = '#fbbf24';
+                r.ctx.fillRect(massX - 20, cy - 20, 40, 40);
+
+                // Pared
+                r.ctx.fillStyle = '#4b5563';
+                r.ctx.fillRect(20, cy - 40, 20, 80);
+            }
+
+            // Péndulos Acoplados
+            if (previews.acoplados) {
+                const a = previews.acoplados;
+                const dt = 0.05;
+                const g = 9.8;
+                const L1 = 0.8, L2 = 1.2;
+
+                a.omega1 += -g/L1 * Math.sin(a.theta1) * dt;
+                a.theta1 += a.omega1 * dt;
+                a.omega1 *= 0.999;
+
+                a.omega2 += -g/L2 * Math.sin(a.theta2) * dt;
+                a.theta2 += a.omega2 * dt;
+                a.omega2 *= 0.999;
+
+                a.ctx.fillStyle = '#030712';
+                a.ctx.fillRect(0, 0, a.w, a.h);
+
+                const cx1 = a.w * 0.35, cx2 = a.w * 0.65, cy = 30;
+                const len1 = 80, len2 = 100;
+
+                // Péndulo 1
+                const bob1X = cx1 + Math.sin(a.theta1) * len1;
+                const bob1Y = cy + Math.cos(a.theta1) * len1;
+                a.ctx.strokeStyle = '#4ade80';
+                a.ctx.lineWidth = 3;
+                a.ctx.beginPath();
+                a.ctx.moveTo(cx1, cy);
+                a.ctx.lineTo(bob1X, bob1Y);
+                a.ctx.stroke();
+                a.ctx.fillStyle = '#4ade80';
+                a.ctx.beginPath();
+                a.ctx.arc(bob1X, bob1Y, 12, 0, Math.PI * 2);
+                a.ctx.fill();
+
+                // Péndulo 2
+                const bob2X = cx2 + Math.sin(a.theta2) * len2;
+                const bob2Y = cy + Math.cos(a.theta2) * len2;
+                a.ctx.strokeStyle = '#60a5fa';
+                a.ctx.lineWidth = 3;
+                a.ctx.beginPath();
+                a.ctx.moveTo(cx2, cy);
+                a.ctx.lineTo(bob2X, bob2Y);
+                a.ctx.stroke();
+                a.ctx.fillStyle = '#60a5fa';
+                a.ctx.beginPath();
+                a.ctx.arc(bob2X, bob2Y, 12, 0, Math.PI * 2);
+                a.ctx.fill();
+            }
+
+            // Lissajous
+            if (previews.lissajous) {
+                const l = previews.lissajous;
+                const cx = l.w / 2, cy = l.h / 2;
+                const A = 70;
+                const fx = 3, fy = 2, delta = Math.PI / 2;
+
+                const x = cx + A * Math.sin(fx * time);
+                const y = cy + A * Math.sin(fy * time + delta);
+
+                l.trail.push({ x, y });
+                if (l.trail.length > 200) l.trail.shift();
+
+                l.ctx.fillStyle = '#030712';
+                l.ctx.fillRect(0, 0, l.w, l.h);
+
+                // Trail
+                l.ctx.beginPath();
+                l.trail.forEach((p, i) => {
+                    if (i === 0) l.ctx.moveTo(p.x, p.y);
+                    else l.ctx.lineTo(p.x, p.y);
+                });
+                l.ctx.strokeStyle = '#fbbf24';
+                l.ctx.lineWidth = 2;
+                l.ctx.stroke();
+
+                // Punto actual
+                l.ctx.fillStyle = '#fff';
+                l.ctx.beginPath();
+                l.ctx.arc(x, y, 6, 0, Math.PI * 2);
+                l.ctx.fill();
+            }
+
+            // Onda Estacionaria
+            if (previews.onda) {
+                const o = previews.onda;
+                o.ctx.fillStyle = '#030712';
+                o.ctx.fillRect(0, 0, o.w, o.h);
+
+                const cy = o.h / 2;
+                const n = 3; // Modo
+                const A = 40;
+
+                o.ctx.beginPath();
+                for (let x = 40; x < o.w - 40; x++) {
+                    const xNorm = (x - 40) / (o.w - 80);
+                    const y = cy + A * Math.sin(n * Math.PI * xNorm) * Math.cos(time * 3);
+                    if (x === 40) o.ctx.moveTo(x, y);
+                    else o.ctx.lineTo(x, y);
+                }
+                o.ctx.strokeStyle = '#fbbf24';
+                o.ctx.lineWidth = 3;
+                o.ctx.stroke();
+
+                // Nodos
+                o.ctx.fillStyle = '#ef4444';
+                for (let i = 0; i <= n; i++) {
+                    const nodeX = 40 + (o.w - 80) * (i / n);
+                    o.ctx.beginPath();
+                    o.ctx.arc(nodeX, cy, 5, 0, Math.PI * 2);
+                    o.ctx.fill();
+                }
+            }
+
+            // Rebote Elástico
+            if (previews.rebote) {
+                const b = previews.rebote;
+                const dt = 0.03;
+                const g = 2;
+                const e = 0.85;
+
+                b.vy += g * dt;
+                b.y += b.vy * dt;
+
+                if (b.y > 0.85) {
+                    b.y = 0.85;
+                    b.vy = -b.vy * e;
+                }
+
+                b.ctx.fillStyle = '#030712';
+                b.ctx.fillRect(0, 0, b.w, b.h);
+
+                // Suelo
+                b.ctx.fillStyle = '#374151';
+                b.ctx.fillRect(0, b.h * 0.9, b.w, b.h * 0.1);
+
+                // Pelota
+                const ballY = 20 + b.y * (b.h * 0.9 - 40);
+                b.ctx.fillStyle = '#fbbf24';
+                b.ctx.beginPath();
+                b.ctx.arc(b.w / 2, ballY, 18, 0, Math.PI * 2);
+                b.ctx.fill();
+            }
+
+            // Harmonices Mundi (Kepler - órbita elíptica)
+            if (previews.kepler) {
+                const k = previews.kepler;
+                k.ctx.fillStyle = '#030712';
+                k.ctx.fillRect(0, 0, k.w, k.h);
+
+                const cx = k.w / 2, cy = k.h / 2;
+                const a = 80, e = 0.6;
+                const b = a * Math.sqrt(1 - e * e);
+
+                // Órbita
+                k.ctx.strokeStyle = '#4b556320';
+                k.ctx.lineWidth = 2;
+                k.ctx.beginPath();
+                k.ctx.ellipse(cx + a * e * 0.3, cy, a, b, 0, 0, Math.PI * 2);
+                k.ctx.stroke();
+
+                // Sol
+                k.ctx.fillStyle = '#fbbf24';
+                k.ctx.beginPath();
+                k.ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+                k.ctx.fill();
+
+                // Planeta
+                const theta = time * 1.5;
+                const r = a * (1 - e * e) / (1 + e * Math.cos(theta));
+                const px = cx + r * Math.cos(theta);
+                const py = cy + r * Math.sin(theta) * (b / a);
+
+                k.ctx.fillStyle = '#60a5fa';
+                k.ctx.beginPath();
+                k.ctx.arc(px, py, 8, 0, Math.PI * 2);
+                k.ctx.fill();
+            }
+
+            // Coro Planetario (Sistema Solar)
+            if (previews.coro) {
+                const c = previews.coro;
+                c.ctx.fillStyle = '#030712';
+                c.ctx.fillRect(0, 0, c.w, c.h);
+
+                const cx = c.w / 2, cy = c.h / 2;
+
+                // Sol
+                const sunGrad = c.ctx.createRadialGradient(cx, cy, 0, cx, cy, 20);
+                sunGrad.addColorStop(0, '#fff');
+                sunGrad.addColorStop(0.5, '#fbbf24');
+                sunGrad.addColorStop(1, '#f59e0b');
+                c.ctx.fillStyle = sunGrad;
+                c.ctx.beginPath();
+                c.ctx.arc(cx, cy, 15, 0, Math.PI * 2);
+                c.ctx.fill();
+
+                // Planetas
+                const planets = [
+                    { r: 30, speed: 4, color: '#a0a0a0', size: 3 },   // Mercurio
+                    { r: 45, speed: 3, color: '#e6c87a', size: 4 },   // Venus
+                    { r: 60, speed: 2.5, color: '#6b93d6', size: 4 }, // Tierra
+                    { r: 80, speed: 2, color: '#c1440e', size: 3.5 }, // Marte
+                    { r: 110, speed: 1, color: '#d8ca9d', size: 8 },  // Júpiter
+                    { r: 140, speed: 0.7, color: '#f4d59e', size: 7 } // Saturno
+                ];
+
+                planets.forEach(p => {
+                    // Órbita
+                    c.ctx.strokeStyle = p.color + '20';
+                    c.ctx.lineWidth = 1;
+                    c.ctx.beginPath();
+                    c.ctx.arc(cx, cy, p.r, 0, Math.PI * 2);
+                    c.ctx.stroke();
+
+                    // Planeta
+                    const angle = time * p.speed;
+                    const px = cx + p.r * Math.cos(angle);
+                    const py = cy + p.r * Math.sin(angle);
+
+                    c.ctx.fillStyle = p.color;
+                    c.ctx.beginPath();
+                    c.ctx.arc(px, py, p.size, 0, Math.PI * 2);
+                    c.ctx.fill();
+                });
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Iniciar
+        window.addEventListener('load', () => {
+            initPreviews();
+            animate();
+        });
+
+        window.addEventListener('resize', initPreviews);
+    </script>
+</body>
+</html>
