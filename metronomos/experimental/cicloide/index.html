@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="description" content="Metrónomo físico basado en la curva cicloide - propiedad tautócrona de Huygens">
+    <title>Metrónomo Físico - Cicloide (Tautócrona)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Covered+By+Your+Grace&family=Inter:wght@300;400;500&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            background: #0a0a0a;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+        }
+
+        .header {
+            padding: 12px 20px;
+            text-align: center;
+            background: linear-gradient(180deg, #1a1a1a 0%, transparent 100%);
+        }
+
+        .header h1 {
+            font-family: 'Covered By Your Grace', cursive;
+            font-size: 1.6rem;
+            font-weight: normal;
+            color: rgba(255,255,255,0.95);
+        }
+
+        .header .subtitle {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+            min-height: 280px;
+        }
+
+        #canvas {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 12px;
+            background: #0d0d0d;
+            touch-action: none;
+        }
+
+        .controls {
+            padding: 12px 16px 20px;
+            background: linear-gradient(180deg, transparent 0%, #1a1a1a 30%);
+            overflow-y: auto;
+            max-height: 55vh;
+        }
+
+        .slider-group {
+            margin-bottom: 12px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .slider-label {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .slider-value {
+            font-family: 'Covered By Your Grace', cursive;
+            font-size: 1.1rem;
+            color: #fbbf24;
+        }
+
+        .slider-value.green { color: #4ade80; }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #fbbf24;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+        }
+
+        input[type="range"].green::-webkit-slider-thumb {
+            background: #4ade80;
+            box-shadow: 0 2px 8px rgba(74, 222, 128, 0.4);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .btn-play {
+            background: #4ade80;
+            color: #000;
+        }
+
+        .btn-stop {
+            background: #f87171;
+            color: #000;
+        }
+
+        .toggles {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .toggle input {
+            display: none;
+        }
+
+        .toggle-switch {
+            width: 36px;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            position: relative;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+        }
+
+        .toggle input:checked + .toggle-switch {
+            background: #4ade80;
+        }
+
+        .toggle input:checked + .toggle-switch::after {
+            transform: translateX(16px);
+        }
+
+        .toggle-label {
+            font-size: 0.75rem;
+            color: #aaa;
+        }
+
+        .info-panel {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .info-item {
+            text-align: center;
+            padding: 8px 4px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+        }
+
+        .info-item .label {
+            font-size: 0.65rem;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .info-item .value {
+            font-family: 'Covered By Your Grace', cursive;
+            font-size: 1rem;
+            color: #fff;
+        }
+
+        .info-item .value.yellow { color: #fbbf24; }
+        .info-item .value.green { color: #4ade80; }
+
+        .tautocrona-box {
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .tautocrona-box .title {
+            font-family: 'Covered By Your Grace', cursive;
+            font-size: 1.2rem;
+            color: #4ade80;
+            margin-bottom: 4px;
+        }
+
+        .tautocrona-box .desc {
+            font-size: 0.7rem;
+            color: #888;
+            line-height: 1.4;
+        }
+
+        .equations {
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .section-title {
+            font-size: 0.7rem;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .equation-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .equation-row:last-child {
+            border-bottom: none;
+        }
+
+        .equation-name {
+            font-size: 0.65rem;
+            color: #666;
+        }
+
+        .equation-text {
+            font-family: 'Covered By Your Grace', cursive;
+            font-size: 1rem;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .equation-value {
+            font-family: 'Covered By Your Grace', cursive;
+            font-size: 0.9rem;
+            color: #4ade80;
+        }
+
+        @media (min-width: 768px) {
+            .app {
+                flex-direction: row;
+                padding: 20px;
+                gap: 25px;
+                justify-content: center;
+                align-items: flex-start;
+            }
+
+            .header {
+                display: none;
+            }
+
+            .canvas-container {
+                padding: 0;
+            }
+
+            #canvas {
+                width: 600px;
+                height: 600px;
+            }
+
+            .controls {
+                width: 380px;
+                padding: 20px;
+                background: #1a1a1a;
+                border-radius: 12px;
+                max-height: 90vh;
+            }
+
+            .controls::before {
+                content: 'Metrónomo Tautócrono';
+                display: block;
+                font-family: 'Covered By Your Grace', cursive;
+                font-size: 1.5rem;
+                margin-bottom: 4px;
+            }
+
+            .controls::after {
+                content: 'Curva cicloide - Huygens 1673';
+                display: block;
+                font-size: 0.7rem;
+                color: #666;
+                margin-bottom: 15px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid #333;
+            }
+
+            .info-panel {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-height: 700px) {
+            .controls {
+                max-height: 50vh;
+            }
+
+            .equations {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>Metrónomo Tautócrono</h1>
+            <div class="subtitle">Curva cicloide - Huygens 1673</div>
+        </header>
+
+        <div class="canvas-section">
+            <div class="canvas-container">
+                <canvas id="canvas"></canvas>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="tautocrona-box">
+                <div class="title">Propiedad Tautócrona</div>
+                <div class="desc">
+                    En una cicloide, el tiempo de descenso es <strong>constante</strong> sin importar
+                    la altura inicial. Descubierto por Christiaan Huygens en 1673 para crear
+                    relojes de péndulo más precisos.
+                </div>
+            </div>
+
+            <!-- Radius slider -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span class="slider-label">Radio de la cicloide (r)</span>
+                    <span class="slider-value" id="radiusDisplay">1.0 m</span>
+                </div>
+                <input type="range" id="radiusSlider" min="0.5" max="2" step="0.05" value="1.0">
+            </div>
+
+            <!-- Start position slider -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span class="slider-label">Posición inicial (% de altura)</span>
+                    <span class="slider-value green" id="startDisplay">80%</span>
+                </div>
+                <input type="range" class="green" id="startSlider" min="10" max="100" step="5" value="80">
+            </div>
+
+            <!-- Gravity slider -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span class="slider-label">Gravedad (g)</span>
+                    <span class="slider-value" id="gravityDisplay">9.8 m/s²</span>
+                </div>
+                <input type="range" id="gravitySlider" min="1" max="25" step="0.1" value="9.8">
+            </div>
+
+            <div class="buttons">
+                <button class="btn-play" id="playBtn">▶ Iniciar</button>
+                <button class="btn-stop" id="stopBtn">⏹ Detener</button>
+            </div>
+
+            <div class="toggles">
+                <label class="toggle">
+                    <input type="checkbox" id="soundToggle" checked>
+                    <span class="toggle-switch"></span>
+                    <span class="toggle-label">🔊 Sonido</span>
+                </label>
+                <label class="toggle">
+                    <input type="checkbox" id="showCompareToggle" checked>
+                    <span class="toggle-switch"></span>
+                    <span class="toggle-label">⚖️ Comparar</span>
+                </label>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-item">
+                    <div class="label">Período T</div>
+                    <div class="value green" id="periodVal">2.00 s</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">BPM</div>
+                    <div class="value green" id="bpmVal">60</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Velocidad</div>
+                    <div class="value" id="velocityVal">0.00 m/s</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Beats</div>
+                    <div class="value" id="beatsVal">0</div>
+                </div>
+            </div>
+
+            <div class="equations">
+                <div class="section-title">Ecuaciones de la Cicloide</div>
+                <div class="equation-row">
+                    <span class="equation-name">Curva paramétrica</span>
+                    <span class="equation-text">x = r(θ - sinθ)</span>
+                </div>
+                <div class="equation-row">
+                    <span class="equation-name"></span>
+                    <span class="equation-text">y = r(1 - cosθ)</span>
+                </div>
+                <div class="equation-row">
+                    <span class="equation-name">Período (constante!)</span>
+                    <span class="equation-value" id="periodFormula">T = 4π√(r/g)</span>
+                </div>
+                <div class="equation-row">
+                    <span class="equation-name">Propiedad clave</span>
+                    <span class="equation-text">T ≠ f(altura)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function setupCanvas() {
+            const container = canvas.parentElement;
+            const size = Math.min(container.clientWidth - 16, container.clientHeight - 16, 600);
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+            canvas.style.width = size + 'px';
+            canvas.style.height = size + 'px';
+            ctx.scale(dpr, dpr);
+
+            return size;
+        }
+
+        let canvasSize = setupCanvas();
+        window.addEventListener('resize', () => {
+            canvasSize = setupCanvas();
+            if (!running) draw();
+        });
+
+        // Physics
+        let g = 9.8;
+        let radius = 1.0;  // Cycloid radius
+        let startPercent = 80;  // Starting position as % of max height
+
+        // State - using parameter theta for position on cycloid
+        let theta = 0;  // Parameter along cycloid (0 to 2π)
+        let thetaDot = 0;  // Angular velocity
+        let theta_0 = 0;  // Initial theta
+
+        let running = false;
+        let lastTime = 0;
+        let beatCount = 0;
+        let prevThetaDot = 0;
+        let beatFlashIntensity = 0;
+
+        let soundEnabled = true;
+        let showCompare = true;
+
+        // Comparison ball state (on parabola)
+        let paraY = 0;
+        let paraVy = 0;
+        let paraY_0 = 0;
+
+        // Audio
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playClick(type = 'normal') {
+            if (!audioCtx || !soundEnabled) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'high') {
+                osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.02);
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            } else {
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.03);
+                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            }
+
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.12);
+        }
+
+        // Cycloid parametric equations (inverted - opening upward for ball to roll)
+        function cycloidX(t) {
+            return radius * (t - Math.sin(t));
+        }
+
+        function cycloidY(t) {
+            return radius * (1 - Math.cos(t));
+        }
+
+        // Convert height percentage to theta parameter
+        function heightToTheta(percent) {
+            // y = r(1 - cos(theta)), max y = 2r at theta = pi
+            // percent of max: y/2r = (1-cos(theta))/2
+            const yRatio = percent / 100;
+            const cosTheta = 1 - 2 * yRatio;
+            return Math.acos(Math.max(-1, Math.min(1, cosTheta)));
+        }
+
+        // Equations of motion for cycloid
+        // Using energy conservation and arc length
+        // For a cycloid: s = 4r*sin(theta/2) (arc length from bottom)
+        // The equation becomes: theta'' = -(g/4r)*sin(theta/2)*cos(theta/2) / sin²(theta/2)
+        // Simplified: theta'' = -g/(4r) * cot(theta/2)
+        // But more stable: use energy conservation
+
+        function simulate(currentTime) {
+            if (!running) return;
+
+            const dt = Math.min((currentTime - lastTime) / 1000, 0.02);
+            lastTime = currentTime;
+
+            // For cycloid, the period is constant: T = 4π√(r/g)
+            // The motion is equivalent to simple harmonic motion in the parameter
+            // theta'' + (g/4r) * theta = 0 for small angles, but we use exact solution
+
+            // Use Runge-Kutta for the cycloid motion
+            // Equation: d²s/dt² = -g*sin(α) where α is slope angle
+            // For cycloid: sin(α) = sin(theta/2)
+            // And ds = 2r*cos(theta/2)*dtheta
+            // So: theta'' = -g/(4r) * tan(theta/2) when theta > 0
+
+            const steps = 4;
+            for (let i = 0; i < steps; i++) {
+                const subDt = dt / steps;
+
+                // Avoid singularity at theta = 0
+                const safeTheta = Math.max(0.001, Math.abs(theta));
+
+                // Acceleration: a = -g*sin(slope) / (ds/dtheta factor)
+                // For inverted cycloid rolling ball:
+                const sinHalf = Math.sin(safeTheta / 2);
+                const cosHalf = Math.cos(safeTheta / 2);
+
+                // The effective equation for theta
+                // From Lagrangian: theta'' = -(g/4r) * sin(theta) / (1 - cos(theta))
+                // Which simplifies to: theta'' = -(g/4r) / tan(theta/2)
+                let thetaAcc = 0;
+                if (Math.abs(theta) > 0.01) {
+                    thetaAcc = -(g / (4 * radius)) * Math.sin(theta) / (1 - Math.cos(theta) + 0.0001);
+                }
+
+                // Simple integration (semi-implicit Euler for stability)
+                thetaDot += thetaAcc * subDt;
+                theta += thetaDot * subDt;
+
+                // Boundary: reflect at bottom (theta = 0)
+                if (theta <= 0 && thetaDot < 0) {
+                    theta = Math.abs(theta);
+                    thetaDot = -thetaDot * 0.999; // Tiny energy loss for stability
+                }
+            }
+
+            // Comparison parabola simulation
+            if (showCompare) {
+                // Simple parabola: y = ax²
+                // Using same starting height
+                const paraAcc = -g;  // Pure vertical drop then curved
+                paraVy += paraAcc * dt;
+                paraY += paraVy * dt;
+
+                // Reflect at bottom
+                if (paraY <= 0 && paraVy < 0) {
+                    paraY = 0;
+                    paraVy = -paraVy * 0.999;
+                }
+            }
+
+            // Detect beat at bottom (theta crossing through minimum)
+            if ((prevThetaDot < 0 && thetaDot >= 0) || (prevThetaDot > 0 && thetaDot <= 0)) {
+                if (Math.abs(theta) < 0.5) {  // Near bottom
+                    playClick('high');
+                    beatCount++;
+                    beatFlashIntensity = 1.0;
+                }
+            }
+            prevThetaDot = thetaDot;
+
+            beatFlashIntensity *= 0.85;
+
+            draw();
+            updateDisplay();
+            requestAnimationFrame(simulate);
+        }
+
+        function updateDisplay() {
+            document.getElementById('radiusDisplay').textContent = radius.toFixed(2) + ' m';
+            document.getElementById('startDisplay').textContent = startPercent + '%';
+            document.getElementById('gravityDisplay').textContent = g.toFixed(1) + ' m/s²';
+
+            // Theoretical period (constant!)
+            const T = 4 * Math.PI * Math.sqrt(radius / g);
+            const bpm = Math.round(60 / (T / 2));
+
+            document.getElementById('periodVal').textContent = T.toFixed(2) + ' s';
+            document.getElementById('bpmVal').textContent = bpm;
+
+            // Current velocity (tangential)
+            const v = 2 * radius * Math.abs(thetaDot) * Math.cos(theta / 2);
+            document.getElementById('velocityVal').textContent = v.toFixed(2) + ' m/s';
+            document.getElementById('beatsVal').textContent = beatCount;
+        }
+
+        function draw() {
+            const size = canvasSize;
+            const cx = size / 2;
+            const cy = size * 0.25;  // Top area for the cycloid
+
+            ctx.fillStyle = '#0d0d0d';
+            ctx.fillRect(0, 0, size, size);
+
+            // Scale for display
+            const scale = size * 0.2 / radius;
+
+            // Draw cycloid curve
+            ctx.beginPath();
+            ctx.strokeStyle = '#4ade80';
+            ctx.lineWidth = 4;
+
+            for (let t = 0; t <= Math.PI; t += 0.02) {
+                const px = cx - scale * radius * Math.PI / 2 + scale * cycloidX(t);
+                const py = cy + scale * cycloidY(t);
+
+                if (t === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+
+            // Mirror the other half
+            ctx.beginPath();
+            for (let t = Math.PI; t >= 0; t -= 0.02) {
+                const px = cx + scale * radius * Math.PI / 2 - scale * cycloidX(t);
+                const py = cy + scale * cycloidY(t);
+
+                if (t === Math.PI) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+
+            // Draw comparison parabola if enabled
+            if (showCompare) {
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+
+                const maxY = 2 * radius * scale;
+                const width = radius * Math.PI * scale;
+
+                for (let px = -width; px <= width; px += 2) {
+                    // Parabola: y = a*x², fitting to same height
+                    const normalizedX = px / width;
+                    const py = cy + maxY * normalizedX * normalizedX;
+
+                    if (px === -width) ctx.moveTo(cx + px, py);
+                    else ctx.lineTo(cx + px, py);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Ball on cycloid
+            const ballTheta = Math.abs(theta);
+            const direction = theta >= 0 ? 1 : -1;
+
+            let ballX, ballY;
+            if (direction >= 0) {
+                ballX = cx - scale * radius * Math.PI / 2 + scale * cycloidX(ballTheta);
+            } else {
+                ballX = cx + scale * radius * Math.PI / 2 - scale * cycloidX(ballTheta);
+            }
+            ballY = cy + scale * cycloidY(ballTheta);
+
+            // Ball glow on beat
+            if (beatFlashIntensity > 0.05) {
+                const glowRadius = 25 + 20 * beatFlashIntensity;
+                const glow = ctx.createRadialGradient(ballX, ballY, 10, ballX, ballY, glowRadius);
+                glow.addColorStop(0, `rgba(74, 222, 128, ${beatFlashIntensity * 0.8})`);
+                glow.addColorStop(1, 'rgba(74, 222, 128, 0)');
+
+                ctx.beginPath();
+                ctx.arc(ballX, ballY, glowRadius, 0, Math.PI * 2);
+                ctx.fillStyle = glow;
+                ctx.fill();
+            }
+
+            // Main ball
+            const ballRadius = 18;
+            const grad = ctx.createRadialGradient(ballX - 4, ballY - 4, 0, ballX, ballY, ballRadius);
+            grad.addColorStop(0, '#86efac');
+            grad.addColorStop(0.5, '#4ade80');
+            grad.addColorStop(1, '#166534');
+
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Comparison ball on parabola
+            if (showCompare) {
+                const maxY = 2 * radius * scale;
+                const width = radius * Math.PI * scale;
+
+                // Map paraY to parabola position
+                const paraYScaled = (paraY_0 - paraY) / (2 * radius);  // 0 to 1
+                const paraXNorm = Math.sqrt(Math.max(0, 1 - paraYScaled / (startPercent / 100)));
+
+                // Simple harmonic approximation for comparison
+                const paraT = performance.now() / 1000;
+                const paraPeriod = 2 * Math.PI * Math.sqrt(2 * radius * startPercent / 100 / g);
+
+                const compY = cy + maxY * (1 - startPercent / 100 * Math.abs(Math.cos(paraT * Math.PI / (paraPeriod / 2))));
+                const compX = cx;  // Keep at center for simplicity
+
+                ctx.globalAlpha = 0.5;
+                const grad2 = ctx.createRadialGradient(compX - 3, compY - 3, 0, compX, compY, 14);
+                grad2.addColorStop(0, '#fef08a');
+                grad2.addColorStop(0.5, '#fbbf24');
+                grad2.addColorStop(1, '#b45309');
+
+                ctx.beginPath();
+                ctx.arc(compX, compY, 14, 0, Math.PI * 2);
+                ctx.fillStyle = grad2;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+
+            // Labels
+            ctx.font = "18px 'Covered By Your Grace'";
+            ctx.fillStyle = '#4ade80';
+            ctx.textAlign = 'center';
+            ctx.fillText('Cicloide', cx - scale * radius * 0.8, cy - 15);
+
+            if (showCompare) {
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.6)';
+                ctx.fillText('Parábola', cx + scale * radius * 0.8, cy - 15);
+            }
+
+            // Period display
+            const T = 4 * Math.PI * Math.sqrt(radius / g);
+            ctx.font = "bold 22px 'Covered By Your Grace'";
+            ctx.fillStyle = 'rgba(74, 222, 128, 0.7)';
+            ctx.fillText('T = ' + T.toFixed(2) + 's (constante!)', cx, size - 20);
+
+            // Starting height indicator
+            const startY = cy + scale * 2 * radius * (startPercent / 100);
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(cx - scale * radius * 2, startY);
+            ctx.lineTo(cx + scale * radius * 2, startY);
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.font = "12px 'Inter'";
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.textAlign = 'left';
+            ctx.fillText('h₀ = ' + startPercent + '%', cx + scale * radius * 2 + 10, startY + 4);
+
+            ctx.textAlign = 'left';
+        }
+
+        // Controls
+        document.getElementById('radiusSlider').addEventListener('input', (e) => {
+            radius = parseFloat(e.target.value);
+            updateDisplay();
+            if (!running) draw();
+        });
+
+        document.getElementById('startSlider').addEventListener('input', (e) => {
+            startPercent = parseInt(e.target.value);
+            updateDisplay();
+            if (!running) {
+                theta_0 = heightToTheta(startPercent);
+                theta = theta_0;
+                draw();
+            }
+        });
+
+        document.getElementById('gravitySlider').addEventListener('input', (e) => {
+            g = parseFloat(e.target.value);
+            updateDisplay();
+            if (!running) draw();
+        });
+
+        document.getElementById('playBtn').addEventListener('click', () => {
+            if (!running) {
+                initAudio();
+                running = true;
+
+                // Initialize cycloid ball
+                theta_0 = heightToTheta(startPercent);
+                theta = theta_0;
+                thetaDot = 0;
+                prevThetaDot = 0;
+
+                // Initialize comparison ball
+                paraY_0 = 2 * radius * startPercent / 100;
+                paraY = paraY_0;
+                paraVy = 0;
+
+                beatCount = 0;
+                lastTime = performance.now();
+                requestAnimationFrame(simulate);
+            }
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            running = false;
+            theta = theta_0 = heightToTheta(startPercent);
+            thetaDot = 0;
+            beatCount = 0;
+            beatFlashIntensity = 0;
+            draw();
+            updateDisplay();
+        });
+
+        document.getElementById('soundToggle').addEventListener('change', (e) => {
+            soundEnabled = e.target.checked;
+            if (soundEnabled) initAudio();
+        });
+
+        document.getElementById('showCompareToggle').addEventListener('change', (e) => {
+            showCompare = e.target.checked;
+            if (!running) draw();
+        });
+
+        document.body.addEventListener('touchstart', () => {
+            initAudio();
+        }, { once: true });
+
+        // Init
+        theta_0 = heightToTheta(startPercent);
+        theta = theta_0;
+        updateDisplay();
+        draw();
+    </script>
+</body>
+</html>

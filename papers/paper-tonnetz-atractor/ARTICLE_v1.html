@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>El Atractor del Tonnetz: Cuando el Caos Compone Música</title>
+  <link rel="stylesheet" href="paper-style.css" />
+  <style>
+    .epigraph {
+      font-style: italic;
+      text-align: right;
+      margin: 2rem 0;
+      padding-right: 2rem;
+      color: #555;
+    }
+    .epigraph-source {
+      font-size: 0.9em;
+      margin-top: 0.5rem;
+    }
+    .note-box {
+      background: #f3e8ff;
+      border-left: 3px solid #9333ea;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .diagram {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.85em;
+      background: #f5f5f5;
+      padding: 1rem;
+      overflow-x: auto;
+      border-radius: 4px;
+      line-height: 1.4;
+      text-align: center;
+    }
+    .highlight-quote {
+      font-size: 1.1em;
+      text-align: center;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+      border-radius: 8px;
+    }
+    .tonnetz-hex {
+      display: flex;
+      justify-content: center;
+      margin: 2rem 0;
+    }
+    .transformation-table td:first-child {
+      font-weight: 600;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+<header id="title-block-header">
+  <h1 class="title">El Atractor del Tonnetz: Cuando el Caos Compone Música</h1>
+  <p style="font-style: italic; color: #666;">Física de sistemas caóticos + teoría musical del siglo XIX = música generativa del siglo XXI</p>
+  <p style="margin-top: 1.5rem; font-size: 1.1rem;"><strong>Carlos Lorente Kaiser</strong></p>
+  <p style="font-size: 0.9rem; color: #666;">Diciembre 2024</p>
+</header>
+
+<nav id="TOC" role="doc-toc">
+  <strong>Contenidos</strong>
+  <ul>
+    <li><a href="#abstract">Resumen</a></li>
+    <li><a href="#introduccion">1. Introducción</a></li>
+    <li><a href="#tonnetz">2. El Tonnetz: Un mapa del espacio armónico</a></li>
+    <li><a href="#neo-riemannian">3. Teoría Neo-Riemanniana</a></li>
+    <li><a href="#caos">4. Sistemas caóticos: Orden en el desorden</a></li>
+    <li><a href="#fusion">5. La fusión: Caos sobre el Tonnetz</a></li>
+    <li><a href="#implementacion">6. Implementación</a></li>
+    <li><a href="#emergencia">7. Lo que emerge</a></li>
+    <li><a href="#conclusiones">8. Conclusiones</a></li>
+    <li><a href="#referencias">Referencias</a></li>
+  </ul>
+</nav>
+
+<section id="abstract">
+  <h2>Resumen</h2>
+  <p>
+    ¿Puede el caos componer música? Este artículo presenta un sistema donde una partícula magnética, siguiendo trayectorias caóticas, genera progresiones de acordes al atravesar un espacio armónico llamado Tonnetz. El resultado es música que no es ni aleatoria ni predeterminada: es <em>emergente</em>. Exploramos cómo la combinación de física de sistemas dinámicos y teoría musical neo-riemanniana produce composiciones que suenan coherentes a pesar de nacer del caos.
+  </p>
+  <p class="keywords"><strong>Palabras clave:</strong> Tonnetz, teoría neo-riemanniana, sistemas caóticos, música generativa, atractores, Web Audio API</p>
+</section>
+
+<section id="introduccion">
+  <h2>1. Introducción: El problema de componer sin componer</h2>
+
+  <div class="epigraph">
+    "La música es el placer que experimenta la mente humana al contar sin darse cuenta de que está contando."
+    <div class="epigraph-source">— Gottfried Wilhelm Leibniz</div>
+  </div>
+
+  <p>
+    Imagina que quieres crear un sistema que genere música automáticamente. Tienes tres opciones obvias, y las tres tienen problemas:
+  </p>
+
+  <ol>
+    <li><strong>Reglas estrictas:</strong> Programas exactamente qué nota sigue a cuál. Resultado: música predecible y aburrida.</li>
+    <li><strong>Azar puro:</strong> Cada nota se elige al azar. Resultado: ruido sin sentido musical.</li>
+    <li><strong>Inteligencia artificial:</strong> Entrenas un modelo con miles de canciones. Resultado: imitación sofisticada, pero imitación al fin.</li>
+  </ol>
+
+  <p>
+    ¿Hay una cuarta vía? Sí: la <strong>emergencia</strong>. Sistemas donde reglas simples producen comportamientos complejos e impredecibles, pero no aleatorios. El ejemplo clásico es el clima: determinista en teoría, impredecible en la práctica, pero claramente no es "ruido".
+  </p>
+
+  <p>
+    Este artículo presenta un sistema de música generativa basado en esa idea. Una partícula se mueve caóticamente sobre un mapa musical llamado Tonnetz. Cada vez que cruza una región, dispara un acorde. El resultado es música que emerge del caos —literalmente.
+  </p>
+</section>
+
+<section id="tonnetz">
+  <h2>2. El Tonnetz: Un mapa del espacio armónico</h2>
+
+  <h3>2.1 ¿Qué es el Tonnetz?</h3>
+
+  <p>
+    El Tonnetz (del alemán "red de tonos") es una forma de visualizar las relaciones entre notas musicales. Fue inventado por el matemático Leonhard Euler en 1739 y redescubierto por el teórico musical Hugo Riemann en el siglo XIX.
+  </p>
+
+  <p>
+    En su forma más simple, es una cuadrícula donde:
+  </p>
+
+  <ul>
+    <li>Moverse horizontalmente sube o baja una <strong>quinta justa</strong> (Do → Sol → Re...)</li>
+    <li>Moverse en diagonal sube o baja una <strong>tercera mayor</strong> (Do → Mi → Sol#...)</li>
+    <li>La otra diagonal son <strong>terceras menores</strong> (Do → Mi♭ → Sol♭...)</li>
+  </ul>
+
+  <div class="diagram">
+    <pre>
+        Mi ---- Si ---- Fa# --- Do#
+       /  \    /  \    /  \    /  \
+     Do ---- Sol ---- Re ---- La
+       \  /    \  /    \  /    \  /
+        La♭--- Mi♭--- Si♭--- Fa
+    </pre>
+  </div>
+
+  <p>
+    Lo fascinante del Tonnetz es que los <strong>triángulos</strong> que se forman corresponden a <strong>acordes</strong>:
+  </p>
+
+  <ul>
+    <li>Triángulo Do-Mi-Sol = acorde de <strong>Do Mayor</strong></li>
+    <li>Triángulo Do-Mi♭-Sol = acorde de <strong>Do menor</strong></li>
+  </ul>
+
+  <h3>2.2 Por qué el Tonnetz es especial</h3>
+
+  <p>
+    En un piano, las notas están ordenadas por frecuencia: Do, Re, Mi... Esto es útil para tocar, pero esconde las relaciones armónicas. Do y Sol están lejos en el teclado, pero son muy cercanos armónicamente (forman una quinta).
+  </p>
+
+  <p>
+    El Tonnetz reordena las notas por <strong>cercanía armónica</strong>. Notas que "suenan bien juntas" están cerca en el mapa. Esto significa que moverse suavemente por el Tonnetz produce progresiones de acordes que suenan naturales.
+  </p>
+
+  <div class="note-box">
+    <strong>Intuición clave:</strong> El Tonnetz es como un mapa de una ciudad donde las calles conectan lugares relacionados. Caminar por cualquier ruta produce un "paseo armónico" coherente.
+  </div>
+</section>
+
+<section id="neo-riemannian">
+  <h2>3. Teoría Neo-Riemanniana: Moverse por el Tonnetz</h2>
+
+  <h3>3.1 Las tres transformaciones básicas</h3>
+
+  <p>
+    A finales del siglo XX, teóricos musicales redescubrieron el Tonnetz y formalizaron tres formas de moverse entre acordes:
+  </p>
+
+  <table class="transformation-table">
+    <thead>
+      <tr><th>Transformación</th><th>Qué hace</th><th>Ejemplo</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>P (Parallel)</td>
+        <td>Cambia mayor ↔ menor manteniendo la fundamental</td>
+        <td>Do Mayor → Do menor</td>
+      </tr>
+      <tr>
+        <td>R (Relative)</td>
+        <td>Va al relativo mayor/menor</td>
+        <td>Do Mayor → La menor</td>
+      </tr>
+      <tr>
+        <td>L (Leading-tone)</td>
+        <td>Mueve la nota sensible</td>
+        <td>Do Mayor → Mi menor</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    Estas tres operaciones tienen una propiedad mágica: <strong>solo cambian una nota</strong> del acorde. Por eso las transiciones suenan suaves.
+  </p>
+
+  <h3>3.2 El hexágono armónico</h3>
+
+  <p>
+    Alrededor de cualquier acorde en el Tonnetz hay exactamente seis acordes vecinos, accesibles mediante las transformaciones P, R, L y sus combinaciones. Esto forma un <strong>hexágono</strong>:
+  </p>
+
+  <div class="diagram">
+    <pre>
+           Mi menor (L)
+              /    \
+    La menor (R)    Sol Mayor (R∘L)
+              \    /
+           DO MAYOR
+              /    \
+    Do menor (P)    Mi Mayor (P∘L)
+              \    /
+           La♭ Mayor (P∘R)
+    </pre>
+  </div>
+
+  <p>
+    Este hexágono es el corazón de nuestro sistema. La partícula caótica orbita este hexágono, y cada vez que "toca" un vértice, suena el acorde correspondiente.
+  </p>
+</section>
+
+<section id="caos">
+  <h2>4. Sistemas caóticos: Orden en el desorden</h2>
+
+  <h3>4.1 ¿Qué es el caos?</h3>
+
+  <p>
+    Un sistema caótico es determinista (sigue ecuaciones precisas) pero impredecible a largo plazo. La razón es la <strong>sensibilidad a condiciones iniciales</strong>: dos puntos de partida casi idénticos divergen exponencialmente.
+  </p>
+
+  <p>
+    El ejemplo clásico es el clima. Las ecuaciones atmosféricas son conocidas, pero pequeñas incertidumbres en las mediciones hacen imposible predecir el tiempo más allá de ~10 días.
+  </p>
+
+  <h3>4.2 Atractores: Orden dentro del caos</h3>
+
+  <p>
+    Aunque las trayectorias caóticas son impredecibles, tienden a confinarse en regiones del espacio llamadas <strong>atractores</strong>. El sistema nunca repite exactamente su estado, pero visita las mismas regiones una y otra vez.
+  </p>
+
+  <div class="highlight-quote">
+    Un atractor es como un parque donde puedes pasear infinitamente sin repetir el camino exacto, pero siempre dentro de los límites del parque.
+  </div>
+
+  <h3>4.3 Nuestro sistema: Atractores magnéticos</h3>
+
+  <p>
+    En nuestra implementación, una partícula cargada se mueve en un plano con varios imanes. La física es simple:
+  </p>
+
+  <ul>
+    <li>Cada imán atrae o repele la partícula según la distancia</li>
+    <li>La partícula tiene inercia y fricción</li>
+    <li>La combinación de múltiples imanes crea trayectorias caóticas</li>
+  </ul>
+
+  <p>
+    El resultado es una partícula que orbita eternamente, nunca repitiendo exactamente su camino, pero siempre dentro de una región definida.
+  </p>
+</section>
+
+<section id="fusion">
+  <h2>5. La fusión: Caos sobre el Tonnetz</h2>
+
+  <h3>5.1 La idea central</h3>
+
+  <p>
+    Ahora viene la fusión creativa:
+  </p>
+
+  <ol>
+    <li>Colocamos el hexágono armónico del Tonnetz en el plano</li>
+    <li>Cada vértice del hexágono es un imán (y un acorde)</li>
+    <li>Una partícula cargada orbita caóticamente entre los imanes</li>
+    <li>Cuando la partícula se acerca a un vértice, suena el acorde</li>
+  </ol>
+
+  <div class="diagram">
+    <pre>
+    ┌─────────────────────────────────────────┐
+    │                                         │
+    │        ●Mi menor     ●Sol Mayor         │
+    │           ╲    ╱                        │
+    │    ●La menor ─── ◉ ←partícula          │
+    │           ╱    ╲                        │
+    │        ●Do menor     ●Mi Mayor          │
+    │                                         │
+    │              ●La♭ Mayor                 │
+    │                                         │
+    └─────────────────────────────────────────┘
+    </pre>
+  </div>
+
+  <h3>5.2 Por qué funciona</h3>
+
+  <p>
+    La magia está en que <strong>el Tonnetz ya codifica qué acordes suenan bien juntos</strong>. La partícula, al moverse suavemente entre vértices vecinos, produce transiciones armónicamente coherentes.
+  </p>
+
+  <p>
+    El caos aporta:
+  </p>
+  <ul>
+    <li><strong>Variedad:</strong> La secuencia nunca se repite exactamente</li>
+    <li><strong>Sorpresa:</strong> No podemos predecir el próximo acorde</li>
+    <li><strong>Estructura:</strong> Las trayectorias tienen "forma", no son ruido</li>
+  </ul>
+
+  <p>
+    El Tonnetz aporta:
+  </p>
+  <ul>
+    <li><strong>Coherencia:</strong> Cualquier camino suena musical</li>
+    <li><strong>Variedad armónica:</strong> Todos los acordes están disponibles</li>
+    <li><strong>Conexiones suaves:</strong> Cada transición cambia solo una nota</li>
+  </ul>
+</section>
+
+<section id="implementacion">
+  <h2>6. Implementación</h2>
+
+  <h3>6.1 Física de la partícula</h3>
+
+  <p>
+    La partícula sigue ecuaciones newtonianas simples:
+  </p>
+
+  <pre><code class="language-javascript">// Fuerza total = suma de fuerzas de cada imán
+for (const magnet of magnets) {
+    const dx = magnet.x - particle.x;
+    const dy = magnet.y - particle.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+
+    // Fuerza inversamente proporcional al cuadrado de la distancia
+    const force = magnet.strength / (dist * dist);
+
+    particle.vx += force * dx / dist * dt;
+    particle.vy += force * dy / dist * dt;
+}
+
+// Fricción para evitar aceleración infinita
+particle.vx *= 0.999;
+particle.vy *= 0.999;
+
+// Actualizar posición
+particle.x += particle.vx * dt;
+particle.y += particle.vy * dt;</code></pre>
+
+  <h3>6.2 Detección de acordes</h3>
+
+  <p>
+    Cada vértice del hexágono tiene una "zona de activación". Cuando la partícula entra en ella:
+  </p>
+
+  <pre><code class="language-javascript">for (const vertex of hexagon.vertices) {
+    const dist = distance(particle, vertex);
+
+    if (dist < TRIGGER_RADIUS && !vertex.recentlyTriggered) {
+        playChord(vertex.chord);
+        vertex.recentlyTriggered = true;
+
+        // Cooldown para evitar repetición excesiva
+        setTimeout(() => vertex.recentlyTriggered = false, 200);
+    }
+}</code></pre>
+
+  <h3>6.3 Síntesis de acordes</h3>
+
+  <p>
+    Los acordes se sintetizan en tiempo real con Web Audio API:
+  </p>
+
+  <ul>
+    <li>Cada nota del acorde es un oscilador independiente</li>
+    <li>Envolvente ADSR para ataque y decaimiento naturales</li>
+    <li>Reverb para espacialidad</li>
+    <li>El volumen depende de la velocidad de la partícula</li>
+  </ul>
+
+  <h3>6.4 Modos armónicos</h3>
+
+  <p>
+    El usuario puede elegir diferentes "sabores" armónicos:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Modo</th><th>Carácter</th><th>Acordes típicos</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Mayor</td><td>Brillante, optimista</td><td>Mayores y menores relativos</td></tr>
+      <tr><td>Menor</td><td>Melancólico, introspectivo</td><td>Menores y disminuidos</td></tr>
+      <tr><td>Frigio</td><td>Español, tensión</td><td>Frigio con segunda menor</td></tr>
+      <tr><td>Lidio</td><td>Luminoso, flotante</td><td>Cuarta aumentada</td></tr>
+      <tr><td>Blues</td><td>Groove, séptimas</td><td>Dominantes y menores con 7ª</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="emergencia">
+  <h2>7. Lo que emerge</h2>
+
+  <h3>7.1 Observaciones</h3>
+
+  <p>
+    Después de horas de experimentación, emergen patrones interesantes:
+  </p>
+
+  <ul>
+    <li><strong>Frases:</strong> La partícula tiende a orbitar ciertos vértices antes de escapar a otros, creando "frases" musicales naturales</li>
+    <li><strong>Tensión-resolución:</strong> Cuando la partícula se acerca al centro y luego escapa, la música se vuelve más densa y luego se relaja</li>
+    <li><strong>Ritmo variable:</strong> La velocidad de la partícula crea aceleraciones y ralentizaciones que se sienten orgánicas</li>
+  </ul>
+
+  <h3>7.2 Lo que no es</h3>
+
+  <p>
+    Es importante ser honestos sobre lo que el sistema <em>no</em> hace:
+  </p>
+
+  <ul>
+    <li>No compone melodías (solo acordes)</li>
+    <li>No tiene estructura de canción (verso, estribillo)</li>
+    <li>No "entiende" música — solo sigue física</li>
+    <li>No siempre suena "bien" según estándares convencionales</li>
+  </ul>
+
+  <h3>7.3 Lo que sí es</h3>
+
+  <p>
+    Pero el sistema sí logra algo notable:
+  </p>
+
+  <div class="highlight-quote">
+    Produce música que <strong>no es aleatoria ni predeterminada</strong>.<br>
+    Es emergente: surge de reglas simples pero no está contenida en ellas.
+  </div>
+
+  <p>
+    Cada ejecución es única. No hay dos sesiones iguales. Y sin embargo, todas suenan como "el mismo sistema" — tienen una personalidad reconocible.
+  </p>
+</section>
+
+<section id="conclusiones">
+  <h2>8. Conclusiones</h2>
+
+  <p>
+    Este proyecto nació de una pregunta: ¿puede la física componer música?
+  </p>
+
+  <p>
+    La respuesta honesta es: <strong>no exactamente</strong>. La física no "compone" — no tiene intención ni gusto. Pero puede generar material musical que un humano reconoce como coherente.
+  </p>
+
+  <p>
+    La clave está en el Tonnetz. Al proyectar el caos sobre un espacio donde <em>cualquier camino es armónicamente válido</em>, garantizamos que el resultado será musical. El caos aporta variedad e impredecibilidad; el Tonnetz aporta estructura y coherencia.
+  </p>
+
+  <p>
+    El resultado no es composición tradicional ni ruido aleatorio. Es algo intermedio: <strong>música emergente</strong>. Un sistema que nadie diseñó específicamente para producir estas secuencias, pero que las produce inevitablemente.
+  </p>
+
+  <p style="text-align: center; font-style: italic; margin-top: 2rem;">
+    Quizá la música no está en la física ni en las reglas.<br>
+    Está en la geometría de las conexiones que permitimos.
+  </p>
+</section>
+
+<section id="referencias">
+  <h2>Referencias</h2>
+
+  <div class="references">
+    <p>[1] Cohn, R. (1998). "Introduction to Neo-Riemannian Theory: A Survey and Historical Perspective". <em>Journal of Music Theory</em>, 42(2), 167-180.</p>
+
+    <p>[2] Tymoczko, D. (2011). <em>A Geometry of Music: Harmony and Counterpoint in the Extended Common Practice</em>. Oxford University Press.</p>
+
+    <p>[3] Strogatz, S. (2015). <em>Nonlinear Dynamics and Chaos</em>. Westview Press.</p>
+
+    <p>[4] Gleick, J. (1987). <em>Chaos: Making a New Science</em>. Viking Press.</p>
+
+    <p>[5] Roads, C. (1996). <em>The Computer Music Tutorial</em>. MIT Press.</p>
+
+    <p>[6] Euler, L. (1739). <em>Tentamen novae theoriae musicae</em>. St. Petersburg Academy.</p>
+
+    <p>[7] Riemann, H. (1880). <em>Skizze einer neuen Methode der Harmonielehre</em>. Leipzig.</p>
+  </div>
+</section>
+
+<footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0; text-align: center; color: #666; font-size: 0.9em;">
+  <p>
+    Demo interactiva: <a href="https://cjlkaiser-cpu.github.io/tonnetz-atractor/">Tonnetz Atractor</a>
+  </p>
+  <p>
+    Physics Sound Lab · 2024
+  </p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+
+# Drafts (local only)
+papers/harmonices-mundi/ARTICLE_DRAFT_v1.md
+papers/paper-tonnetz-atractor/PAPER_DRAFT_*.md
+papers/paper-tonnetz-atractor/PAPER_DRAFT_*.html
+papers/paper-tonnetz-atractor/PAPER_DRAFT_*.pdf
+papers/paper-tonnetz-atractor/figures/
+papers/paper-tonnetz-atractor/*_draft*
+papers/paper-tonnetz-atractor/OUTLINE.md
+papers/paper-tonnetz-atractor/0*
+
+# Plan files
+PLAN_EXPANSION.md
+
+# Sub-repos (they have their own repos)
+generativos/harmonices-mundi/
+generativos/tonnetz-atractor/
+
+# Individual metronomo repos
+metronomos/pendulo/.git
+metronomos/resorte/.git
+metronomos/rebote/.git
+metronomos/onda/.git
+metronomos/lissajous/.git
+metronomos/polirritmico/.git
+metronomos/kepler/.git

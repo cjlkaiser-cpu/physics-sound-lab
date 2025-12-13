@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Physics Sound Lab - Metrónomos Físicos</title>
+    <title>Physics Sound Lab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -14,552 +14,279 @@
         }
         .card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(251, 191, 36, 0.15);
         }
-        .card-link {
-            text-decoration: none;
-            color: inherit;
-            display: block;
+        .card-metronomo:hover {
+            box-shadow: 0 20px 60px rgba(251, 191, 36, 0.2);
         }
-        .card:hover .card-border {
-            opacity: 1;
-        }
-        .card-border {
-            position: absolute;
-            inset: 0;
-            border-radius: 1rem;
-            padding: 2px;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b, #fbbf24);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            opacity: 0;
-            transition: opacity 0.3s;
+        .card-generativo:hover {
+            box-shadow: 0 20px 60px rgba(168, 85, 247, 0.2);
         }
         .preview-canvas {
-            border-radius: 0.5rem;
-        }
-        .equation {
-            font-family: 'Times New Roman', serif;
-            font-style: italic;
+            border-radius: 0.75rem;
         }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen">
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-light">
-                        <span class="text-amber-400 font-medium">Physics</span> Sound Lab
-                    </h1>
-                    <p class="text-gray-500 text-sm">Metrónomos Físicos Interactivos</p>
-                </div>
-                <a href="https://github.com/cjlkaiser-cpu" target="_blank" class="text-gray-400 hover:text-white transition">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-                </a>
+    <header class="border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+        <div class="max-w-4xl mx-auto px-6 py-6">
+            <div class="text-center">
+                <h1 class="text-3xl font-light mb-2">
+                    <span class="text-amber-400 font-medium">Physics</span> Sound Lab
+                </h1>
+                <p class="text-gray-400">Donde las ecuaciones se convierten en sonido</p>
             </div>
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-6 py-12">
-        <!-- Breadcrumb -->
-        <div class="mb-8">
-            <a href="../index.html" class="text-gray-400 hover:text-white text-sm">← Physics Sound Lab</a>
+    <main class="flex-1 flex items-center justify-center px-6 py-12">
+        <div class="grid md:grid-cols-2 gap-8 max-w-4xl w-full">
+            <!-- Metronomos -->
+            <a href="metronomos/index.html" class="card-link">
+                <div class="card card-metronomo bg-gray-900 border border-gray-800 rounded-2xl p-6 h-full">
+                    <canvas id="preview-metronomo" class="preview-canvas w-full h-32 bg-gray-950 mb-5"></canvas>
+                    <div class="flex items-center gap-3 mb-4">
+                        <h2 class="text-2xl font-medium text-amber-400">Metronomos</h2>
+                        <span class="text-gray-500 text-sm">7 simulaciones</span>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">
+                        Sistemas fisicos que generan ritmo: pendulos, resortes, ondas, orbitas.
+                        Cada simulacion convierte ecuaciones de movimiento en beats.
+                    </p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-2 py-1 bg-gray-800 rounded text-xs text-gray-400">Pendulo</span>
+                        <span class="px-2 py-1 bg-gray-800 rounded text-xs text-gray-400">Resorte</span>
+                        <span class="px-2 py-1 bg-gray-800 rounded text-xs text-gray-400">Lissajous</span>
+                        <span class="px-2 py-1 bg-gray-800 rounded text-xs text-gray-400">Kepler</span>
+                        <span class="px-2 py-1 bg-gray-800 rounded text-xs text-gray-400">+3</span>
+                    </div>
+                    <div class="text-amber-400 text-sm font-medium flex items-center gap-2">
+                        Explorar <span>→</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Generativos -->
+            <a href="generativos/index.html" class="card-link">
+                <div class="card card-generativo bg-gray-900 border border-gray-800 rounded-2xl p-6 h-full">
+                    <canvas id="preview-generativo" class="preview-canvas w-full h-32 bg-gray-950 mb-5"></canvas>
+                    <div class="flex items-center gap-3 mb-4">
+                        <h2 class="text-2xl font-medium text-purple-400">Generativos</h2>
+                        <span class="text-gray-500 text-sm">2 proyectos</span>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">
+                        Musica emergente desde fisica y matematicas. Sistemas donde el caos
+                        y la armonia crean composiciones unicas e irrepetibles.
+                    </p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-2 py-1 bg-gray-800 rounded text-xs text-gray-400">Harmonices Mundi</span>
+                        <span class="px-2 py-1 bg-gray-800 rounded text-xs text-gray-400">Tonnetz Atractor</span>
+                    </div>
+                    <div class="text-purple-400 text-sm font-medium flex items-center gap-2">
+                        Explorar <span>→</span>
+                    </div>
+                </div>
+            </a>
         </div>
-
-        <!-- Hero -->
-        <section class="text-center mb-16">
-            <h2 class="text-4xl font-light mb-4">
-                Física que <span class="text-amber-400 font-medium">suena</span>
-            </h2>
-            <p class="text-gray-400 max-w-2xl mx-auto">
-                7 simulaciones interactivas donde las ecuaciones del movimiento se convierten en ritmo.
-                Cada metrónomo genera beats basados en física real.
-            </p>
-        </section>
-
-        <!-- Grid de Metrónomos -->
-        <section class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-            <!-- Péndulo Simple -->
-            <a href="https://cjlkaiser-cpu.github.io/metronomo-fisico/" target="_blank" class="card-link">
-                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                    <div class="card-border"></div>
-                    <div class="p-4">
-                        <canvas id="preview-pendulo" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                        <h3 class="text-lg font-medium mb-1">Péndulo Simple</h3>
-                        <p class="text-gray-400 text-sm mb-3">El sistema oscilatorio más fundamental. A diferencia de la aproximación lineal, esta simulación resuelve la ecuación completa con el método Runge-Kutta de 4º orden, capturando el comportamiento no lineal donde el período depende de la amplitud.</p>
-                        <div class="equation text-amber-400/70 text-sm mb-4">θ'' + (g/L)sin(θ) = 0</div>
-                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                            Abrir Demo →
-                        </span>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Oscilador Armónico -->
-            <a href="https://cjlkaiser-cpu.github.io/metronomo-resorte/" target="_blank" class="card-link">
-                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                    <div class="card-border"></div>
-                    <div class="p-4">
-                        <canvas id="preview-resorte" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                        <h3 class="text-lg font-medium mb-1">Oscilador Armónico</h3>
-                        <p class="text-gray-400 text-sm mb-3">Sistema masa-resorte: la forma más pura de movimiento armónico simple. La energía se conserva oscilando entre cinética y potencial elástica. El período T = 2π√(m/k) es independiente de la amplitud.</p>
-                        <div class="equation text-amber-400/70 text-sm mb-4">ẍ + (k/m)x = 0</div>
-                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                            Abrir Demo →
-                        </span>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Péndulos Acoplados -->
-            <a href="https://cjlkaiser-cpu.github.io/metronomo-polirritmico/" target="_blank" class="card-link">
-                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                    <div class="card-border"></div>
-                    <div class="p-4">
-                        <canvas id="preview-acoplados" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                        <h3 class="text-lg font-medium mb-1">Péndulos Acoplados</h3>
-                        <p class="text-gray-400 text-sm mb-3">Dos péndulos con longitudes diferentes generan polirritmos naturales. La relación de períodos sigue √(L₁/L₂), creando patrones rítmicos como 2:3 o 3:4 que se repiten cíclicamente. Física de superposición de osciladores.</p>
-                        <div class="equation text-amber-400/70 text-sm mb-4">T₁/T₂ = √(L₁/L₂)</div>
-                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                            Abrir Demo →
-                        </span>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Lissajous -->
-            <a href="https://cjlkaiser-cpu.github.io/metronomo-lissajous/" target="_blank" class="card-link">
-                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                    <div class="card-border"></div>
-                    <div class="p-4">
-                        <canvas id="preview-lissajous" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                        <h3 class="text-lg font-medium mb-1">Figuras de Lissajous</h3>
-                        <p class="text-gray-400 text-sm mb-3">Combinación de dos oscilaciones perpendiculares que crean patrones geométricos hipnóticos. Los ratios de frecuencia (1:2, 2:3, 3:4) generan figuras cerradas; la fase relativa δ las deforma continuamente.</p>
-                        <div class="equation text-amber-400/70 text-sm mb-4">x = sin(ωₓt), y = sin(ωᵧt + δ)</div>
-                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                            Abrir Demo →
-                        </span>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Onda Estacionaria -->
-            <a href="https://cjlkaiser-cpu.github.io/metronomo-onda/" target="_blank" class="card-link">
-                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                    <div class="card-border"></div>
-                    <div class="p-4">
-                        <canvas id="preview-onda" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                        <h3 class="text-lg font-medium mb-1">Onda Estacionaria</h3>
-                        <p class="text-gray-400 text-sm mb-3">Cuerda vibrante con modos normales: nodos fijos y antinodos oscilantes. Las frecuencias armónicas fₙ = n·f₁ forman la serie que fundamenta toda la música occidental. Visualiza cómo emergen los armónicos.</p>
-                        <div class="equation text-amber-400/70 text-sm mb-4">fₙ = n·v/(2L)</div>
-                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                            Abrir Demo →
-                        </span>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Rebote Elástico -->
-            <a href="https://cjlkaiser-cpu.github.io/metronomo-rebote/" target="_blank" class="card-link">
-                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                    <div class="card-border"></div>
-                    <div class="p-4">
-                        <canvas id="preview-rebote" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                        <h3 class="text-lg font-medium mb-1">Rebote Elástico</h3>
-                        <p class="text-gray-400 text-sm mb-3">Pelota bajo gravedad con coeficiente de restitución e. Cada rebote pierde energía: v' = -e·v. El tiempo entre impactos sigue una progresión geométrica, creando ritmos acelerados naturalmente.</p>
-                        <div class="equation text-amber-400/70 text-sm mb-4">v' = -e·v, h = ½gt²</div>
-                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                            Abrir Demo →
-                        </span>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Metrónomo Kepleriano -->
-            <a href="https://cjlkaiser-cpu.github.io/metronomo-kepler/" target="_blank" class="card-link">
-                <div class="card relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                    <div class="card-border"></div>
-                    <div class="p-4">
-                        <canvas id="preview-kepler" class="preview-canvas w-full h-40 bg-gray-950 mb-4"></canvas>
-                        <h3 class="text-lg font-medium mb-1">Metrónomo Kepleriano</h3>
-                        <p class="text-gray-400 text-sm mb-3">Órbitas elípticas resueltas con la ecuación de Kepler (Newton-Raphson). La velocidad orbital varía según la 2ª ley: más rápido en el perihelio, más lento en el afelio. Beat en cada paso por el perihelio.</p>
-                        <div class="equation text-amber-400/70 text-sm mb-4">T² = a³ (3ª Ley de Kepler)</div>
-                        <span class="block w-full text-center py-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20 transition text-sm font-medium">
-                            Abrir Demo →
-                        </span>
-                    </div>
-                </div>
-            </a>
-        </section>
-
-        <!-- Tech Stack -->
-        <section class="text-center">
-            <h3 class="text-lg font-medium mb-4 text-gray-400">Tecnologías</h3>
-            <div class="flex flex-wrap justify-center gap-3">
-                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Canvas 2D</span>
-                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Web Audio API</span>
-                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Runge-Kutta 4</span>
-                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Newton-Raphson</span>
-                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Ecuaciones de Kepler</span>
-            </div>
-        </section>
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-gray-800 py-6 mt-12">
-        <div class="max-w-6xl mx-auto px-6 text-center text-gray-500 text-sm">
-            Physics Sound Lab · Simulaciones donde la física genera música
+    <footer class="border-t border-gray-800 py-6">
+        <div class="max-w-4xl mx-auto px-6 flex justify-between items-center text-gray-500 text-sm">
+            <span>Physics Sound Lab</span>
+            <a href="https://github.com/cjlkaiser-cpu" target="_blank" class="hover:text-white transition">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            </a>
         </div>
     </footer>
 
     <script>
-        // Mini simulaciones para previews
         const previews = {};
         let time = 0;
 
-        // Inicializar todos los canvas
         function initPreviews() {
-            // Péndulo Simple
-            const pendulo = document.getElementById('preview-pendulo');
-            if (pendulo) {
-                previews.pendulo = {
-                    ctx: pendulo.getContext('2d'),
-                    w: pendulo.width = pendulo.offsetWidth * 2,
-                    h: pendulo.height = pendulo.offsetHeight * 2,
-                    theta: Math.PI / 4,
-                    omega: 0
-                };
-            }
-
-            // Oscilador Armónico (Resorte)
-            const resorte = document.getElementById('preview-resorte');
-            if (resorte) {
-                previews.resorte = {
-                    ctx: resorte.getContext('2d'),
-                    w: resorte.width = resorte.offsetWidth * 2,
-                    h: resorte.height = resorte.offsetHeight * 2,
-                    x: 0.3,
-                    v: 0
-                };
-            }
-
-            // Péndulos Acoplados
-            const acoplados = document.getElementById('preview-acoplados');
-            if (acoplados) {
-                previews.acoplados = {
-                    ctx: acoplados.getContext('2d'),
-                    w: acoplados.width = acoplados.offsetWidth * 2,
-                    h: acoplados.height = acoplados.offsetHeight * 2,
-                    theta1: Math.PI / 5,
-                    theta2: Math.PI / 4,
+            // Metronomo - Pendulo doble
+            const metronomo = document.getElementById('preview-metronomo');
+            if (metronomo) {
+                previews.metronomo = {
+                    ctx: metronomo.getContext('2d'),
+                    w: metronomo.width = metronomo.offsetWidth * 2,
+                    h: metronomo.height = metronomo.offsetHeight * 2,
+                    theta1: Math.PI / 3,
+                    theta2: Math.PI / 2,
                     omega1: 0,
                     omega2: 0
                 };
             }
 
-            // Lissajous
-            const lissajous = document.getElementById('preview-lissajous');
-            if (lissajous) {
-                previews.lissajous = {
-                    ctx: lissajous.getContext('2d'),
-                    w: lissajous.width = lissajous.offsetWidth * 2,
-                    h: lissajous.height = lissajous.offsetHeight * 2,
+            // Generativo - Tonnetz con particula
+            const generativo = document.getElementById('preview-generativo');
+            if (generativo) {
+                previews.generativo = {
+                    ctx: generativo.getContext('2d'),
+                    w: generativo.width = generativo.offsetWidth * 2,
+                    h: generativo.height = generativo.offsetHeight * 2,
                     trail: []
                 };
             }
-
-            // Onda Estacionaria
-            const onda = document.getElementById('preview-onda');
-            if (onda) {
-                previews.onda = {
-                    ctx: onda.getContext('2d'),
-                    w: onda.width = onda.offsetWidth * 2,
-                    h: onda.height = onda.offsetHeight * 2
-                };
-            }
-
-            // Rebote Elástico
-            const rebote = document.getElementById('preview-rebote');
-            if (rebote) {
-                previews.rebote = {
-                    ctx: rebote.getContext('2d'),
-                    w: rebote.width = rebote.offsetWidth * 2,
-                    h: rebote.height = rebote.offsetHeight * 2,
-                    y: 0.2,
-                    vy: 0
-                };
-            }
-
-            // Metrónomo Kepleriano
-            const kepler = document.getElementById('preview-kepler');
-            if (kepler) {
-                previews.kepler = {
-                    ctx: kepler.getContext('2d'),
-                    w: kepler.width = kepler.offsetWidth * 2,
-                    h: kepler.height = kepler.offsetHeight * 2
-                };
-            }
-
         }
 
-        // Animaciones
         function animate() {
-            time += 0.02;
+            time += 0.016;
 
-            // Péndulo Simple
-            if (previews.pendulo) {
-                const p = previews.pendulo;
-                const dt = 0.05;
-                const g = 9.8, L = 1;
-                p.omega += -g/L * Math.sin(p.theta) * dt;
-                p.theta += p.omega * dt;
-                p.omega *= 0.999;
-
-                p.ctx.fillStyle = '#030712';
-                p.ctx.fillRect(0, 0, p.w, p.h);
-
-                const cx = p.w / 2, cy = 30;
-                const bobX = cx + Math.sin(p.theta) * 100;
-                const bobY = cy + Math.cos(p.theta) * 100;
-
-                p.ctx.strokeStyle = '#fbbf24';
-                p.ctx.lineWidth = 3;
-                p.ctx.beginPath();
-                p.ctx.moveTo(cx, cy);
-                p.ctx.lineTo(bobX, bobY);
-                p.ctx.stroke();
-
-                p.ctx.fillStyle = '#fbbf24';
-                p.ctx.beginPath();
-                p.ctx.arc(bobX, bobY, 15, 0, Math.PI * 2);
-                p.ctx.fill();
-            }
-
-            // Oscilador Armónico
-            if (previews.resorte) {
-                const r = previews.resorte;
-                const dt = 0.05;
-                const k = 5, m = 1;
-                r.v += -k/m * r.x * dt;
-                r.x += r.v * dt;
-
-                r.ctx.fillStyle = '#030712';
-                r.ctx.fillRect(0, 0, r.w, r.h);
-
-                const cy = r.h / 2;
-                const baseX = 40;
-                const massX = baseX + 100 + r.x * 150;
-
-                // Resorte
-                r.ctx.strokeStyle = '#6b7280';
-                r.ctx.lineWidth = 3;
-                r.ctx.beginPath();
-                const coils = 10;
-                for (let i = 0; i <= coils; i++) {
-                    const px = baseX + (massX - baseX - 20) * (i / coils);
-                    const py = cy + (i % 2 === 0 ? 15 : -15);
-                    if (i === 0) r.ctx.moveTo(px, cy);
-                    else r.ctx.lineTo(px, py);
-                }
-                r.ctx.lineTo(massX - 20, cy);
-                r.ctx.stroke();
-
-                // Masa
-                r.ctx.fillStyle = '#fbbf24';
-                r.ctx.fillRect(massX - 20, cy - 20, 40, 40);
-
-                // Pared
-                r.ctx.fillStyle = '#4b5563';
-                r.ctx.fillRect(20, cy - 40, 20, 80);
-            }
-
-            // Péndulos Acoplados
-            if (previews.acoplados) {
-                const a = previews.acoplados;
+            // Metronomo - Pendulo doble simplificado
+            if (previews.metronomo) {
+                const m = previews.metronomo;
                 const dt = 0.05;
                 const g = 9.8;
-                const L1 = 0.8, L2 = 1.2;
+                const L1 = 1, L2 = 0.8;
 
-                a.omega1 += -g/L1 * Math.sin(a.theta1) * dt;
-                a.theta1 += a.omega1 * dt;
-                a.omega1 *= 0.999;
+                // Fisica simplificada del pendulo doble
+                const sin1 = Math.sin(m.theta1);
+                const sin2 = Math.sin(m.theta2);
+                const sin12 = Math.sin(m.theta1 - m.theta2);
+                const cos12 = Math.cos(m.theta1 - m.theta2);
 
-                a.omega2 += -g/L2 * Math.sin(a.theta2) * dt;
-                a.theta2 += a.omega2 * dt;
-                a.omega2 *= 0.999;
+                m.omega1 += (-g * (2) * sin1 - sin12 * (m.omega2 * m.omega2 * L2 + m.omega1 * m.omega1 * L1 * cos12)) / (L1 * (2 - cos12 * cos12)) * dt * 0.3;
+                m.omega2 += (sin12 * (m.omega1 * m.omega1 * L1 * 2 + g * 2 * Math.cos(m.theta1) + m.omega2 * m.omega2 * L2 * cos12)) / (L2 * (2 - cos12 * cos12)) * dt * 0.3;
 
-                a.ctx.fillStyle = '#030712';
-                a.ctx.fillRect(0, 0, a.w, a.h);
+                m.theta1 += m.omega1 * dt;
+                m.theta2 += m.omega2 * dt;
 
-                const cx1 = a.w * 0.35, cx2 = a.w * 0.65, cy = 30;
-                const len1 = 80, len2 = 100;
+                // Damping suave
+                m.omega1 *= 0.9995;
+                m.omega2 *= 0.9995;
 
-                // Péndulo 1
-                const bob1X = cx1 + Math.sin(a.theta1) * len1;
-                const bob1Y = cy + Math.cos(a.theta1) * len1;
-                a.ctx.strokeStyle = '#4ade80';
-                a.ctx.lineWidth = 3;
-                a.ctx.beginPath();
-                a.ctx.moveTo(cx1, cy);
-                a.ctx.lineTo(bob1X, bob1Y);
-                a.ctx.stroke();
-                a.ctx.fillStyle = '#4ade80';
-                a.ctx.beginPath();
-                a.ctx.arc(bob1X, bob1Y, 12, 0, Math.PI * 2);
-                a.ctx.fill();
+                // Reset si se detiene
+                if (Math.abs(m.omega1) < 0.01 && Math.abs(m.omega2) < 0.01) {
+                    m.theta1 = Math.PI / 3;
+                    m.theta2 = Math.PI / 2;
+                    m.omega1 = 0.5;
+                    m.omega2 = -0.3;
+                }
 
-                // Péndulo 2
-                const bob2X = cx2 + Math.sin(a.theta2) * len2;
-                const bob2Y = cy + Math.cos(a.theta2) * len2;
-                a.ctx.strokeStyle = '#60a5fa';
-                a.ctx.lineWidth = 3;
-                a.ctx.beginPath();
-                a.ctx.moveTo(cx2, cy);
-                a.ctx.lineTo(bob2X, bob2Y);
-                a.ctx.stroke();
-                a.ctx.fillStyle = '#60a5fa';
-                a.ctx.beginPath();
-                a.ctx.arc(bob2X, bob2Y, 12, 0, Math.PI * 2);
-                a.ctx.fill();
+                m.ctx.fillStyle = '#030712';
+                m.ctx.fillRect(0, 0, m.w, m.h);
+
+                const cx = m.w / 2, cy = 20;
+                const scale = 45;
+
+                const x1 = cx + L1 * scale * Math.sin(m.theta1);
+                const y1 = cy + L1 * scale * Math.cos(m.theta1);
+                const x2 = x1 + L2 * scale * Math.sin(m.theta2);
+                const y2 = y1 + L2 * scale * Math.cos(m.theta2);
+
+                // Brazos
+                m.ctx.strokeStyle = '#fbbf24';
+                m.ctx.lineWidth = 3;
+                m.ctx.beginPath();
+                m.ctx.moveTo(cx, cy);
+                m.ctx.lineTo(x1, y1);
+                m.ctx.lineTo(x2, y2);
+                m.ctx.stroke();
+
+                // Pivote
+                m.ctx.fillStyle = '#6b7280';
+                m.ctx.beginPath();
+                m.ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+                m.ctx.fill();
+
+                // Masas
+                m.ctx.fillStyle = '#fbbf24';
+                m.ctx.beginPath();
+                m.ctx.arc(x1, y1, 10, 0, Math.PI * 2);
+                m.ctx.fill();
+
+                m.ctx.fillStyle = '#f59e0b';
+                m.ctx.beginPath();
+                m.ctx.arc(x2, y2, 12, 0, Math.PI * 2);
+                m.ctx.fill();
             }
 
-            // Lissajous
-            if (previews.lissajous) {
-                const l = previews.lissajous;
-                const cx = l.w / 2, cy = l.h / 2;
-                const A = 70;
-                const fx = 3, fy = 2, delta = Math.PI / 2;
+            // Generativo - Hexagono Tonnetz con particula caotica
+            if (previews.generativo) {
+                const g = previews.generativo;
+                g.ctx.fillStyle = '#030712';
+                g.ctx.fillRect(0, 0, g.w, g.h);
 
-                const x = cx + A * Math.sin(fx * time);
-                const y = cy + A * Math.sin(fy * time + delta);
+                const cx = g.w / 2, cy = g.h / 2;
+                const hexR = 50;
 
-                l.trail.push({ x, y });
-                if (l.trail.length > 200) l.trail.shift();
+                // Dibujar hexagono
+                g.ctx.strokeStyle = '#a855f730';
+                g.ctx.lineWidth = 2;
+                g.ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI / 3) - Math.PI / 6;
+                    const x = cx + hexR * Math.cos(angle);
+                    const y = cy + hexR * Math.sin(angle);
+                    if (i === 0) g.ctx.moveTo(x, y);
+                    else g.ctx.lineTo(x, y);
+                }
+                g.ctx.closePath();
+                g.ctx.stroke();
 
-                l.ctx.fillStyle = '#030712';
-                l.ctx.fillRect(0, 0, l.w, l.h);
+                // Lineas internas del tonnetz
+                g.ctx.strokeStyle = '#a855f715';
+                g.ctx.lineWidth = 1;
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI / 3) - Math.PI / 6;
+                    g.ctx.beginPath();
+                    g.ctx.moveTo(cx, cy);
+                    g.ctx.lineTo(cx + hexR * Math.cos(angle), cy + hexR * Math.sin(angle));
+                    g.ctx.stroke();
+                }
 
-                // Trail
-                l.ctx.beginPath();
-                l.trail.forEach((p, i) => {
-                    if (i === 0) l.ctx.moveTo(p.x, p.y);
-                    else l.ctx.lineTo(p.x, p.y);
+                // Nodos en vertices
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI / 3) - Math.PI / 6;
+                    const x = cx + hexR * Math.cos(angle);
+                    const y = cy + hexR * Math.sin(angle);
+
+                    // Brillo cuando la particula esta cerca
+                    const px = cx + 35 * Math.sin(time * 2.3) * Math.cos(time * 1.7);
+                    const py = cy + 35 * Math.cos(time * 1.9) * Math.sin(time * 2.1);
+                    const dist = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
+                    const glow = Math.max(0, 1 - dist / 40);
+
+                    g.ctx.fillStyle = `rgba(168, 85, 247, ${0.5 + glow * 0.5})`;
+                    g.ctx.beginPath();
+                    g.ctx.arc(x, y, 5 + glow * 3, 0, Math.PI * 2);
+                    g.ctx.fill();
+                }
+
+                // Particula caotica
+                const orbitR = 35;
+                const px = cx + orbitR * Math.sin(time * 2.3) * Math.cos(time * 1.7);
+                const py = cy + orbitR * Math.cos(time * 1.9) * Math.sin(time * 2.1);
+
+                g.trail.push({ x: px, y: py });
+                if (g.trail.length > 60) g.trail.shift();
+
+                // Trail con gradiente
+                g.ctx.beginPath();
+                g.trail.forEach((p, i) => {
+                    if (i === 0) g.ctx.moveTo(p.x, p.y);
+                    else g.ctx.lineTo(p.x, p.y);
                 });
-                l.ctx.strokeStyle = '#fbbf24';
-                l.ctx.lineWidth = 2;
-                l.ctx.stroke();
+                g.ctx.strokeStyle = '#ec489950';
+                g.ctx.lineWidth = 2;
+                g.ctx.stroke();
 
-                // Punto actual
-                l.ctx.fillStyle = '#fff';
-                l.ctx.beginPath();
-                l.ctx.arc(x, y, 6, 0, Math.PI * 2);
-                l.ctx.fill();
-            }
-
-            // Onda Estacionaria
-            if (previews.onda) {
-                const o = previews.onda;
-                o.ctx.fillStyle = '#030712';
-                o.ctx.fillRect(0, 0, o.w, o.h);
-
-                const cy = o.h / 2;
-                const n = 3; // Modo
-                const A = 40;
-
-                o.ctx.beginPath();
-                for (let x = 40; x < o.w - 40; x++) {
-                    const xNorm = (x - 40) / (o.w - 80);
-                    const y = cy + A * Math.sin(n * Math.PI * xNorm) * Math.cos(time * 3);
-                    if (x === 40) o.ctx.moveTo(x, y);
-                    else o.ctx.lineTo(x, y);
-                }
-                o.ctx.strokeStyle = '#fbbf24';
-                o.ctx.lineWidth = 3;
-                o.ctx.stroke();
-
-                // Nodos
-                o.ctx.fillStyle = '#ef4444';
-                for (let i = 0; i <= n; i++) {
-                    const nodeX = 40 + (o.w - 80) * (i / n);
-                    o.ctx.beginPath();
-                    o.ctx.arc(nodeX, cy, 5, 0, Math.PI * 2);
-                    o.ctx.fill();
-                }
-            }
-
-            // Rebote Elástico
-            if (previews.rebote) {
-                const b = previews.rebote;
-                const dt = 0.03;
-                const g = 2;
-                const e = 0.85;
-
-                b.vy += g * dt;
-                b.y += b.vy * dt;
-
-                if (b.y > 0.85) {
-                    b.y = 0.85;
-                    b.vy = -b.vy * e;
-                }
-
-                b.ctx.fillStyle = '#030712';
-                b.ctx.fillRect(0, 0, b.w, b.h);
-
-                // Suelo
-                b.ctx.fillStyle = '#374151';
-                b.ctx.fillRect(0, b.h * 0.9, b.w, b.h * 0.1);
-
-                // Pelota
-                const ballY = 20 + b.y * (b.h * 0.9 - 40);
-                b.ctx.fillStyle = '#fbbf24';
-                b.ctx.beginPath();
-                b.ctx.arc(b.w / 2, ballY, 18, 0, Math.PI * 2);
-                b.ctx.fill();
-            }
-
-            // Metrónomo Kepleriano (órbita elíptica)
-            if (previews.kepler) {
-                const k = previews.kepler;
-                k.ctx.fillStyle = '#030712';
-                k.ctx.fillRect(0, 0, k.w, k.h);
-
-                const cx = k.w / 2, cy = k.h / 2;
-                const a = 80, e = 0.6;
-                const b = a * Math.sqrt(1 - e * e);
-
-                // Órbita
-                k.ctx.strokeStyle = '#4b556320';
-                k.ctx.lineWidth = 2;
-                k.ctx.beginPath();
-                k.ctx.ellipse(cx + a * e * 0.3, cy, a, b, 0, 0, Math.PI * 2);
-                k.ctx.stroke();
-
-                // Sol
-                k.ctx.fillStyle = '#fbbf24';
-                k.ctx.beginPath();
-                k.ctx.arc(cx, cy, 12, 0, Math.PI * 2);
-                k.ctx.fill();
-
-                // Planeta
-                const theta = time * 1.5;
-                const r = a * (1 - e * e) / (1 + e * Math.cos(theta));
-                const px = cx + r * Math.cos(theta);
-                const py = cy + r * Math.sin(theta) * (b / a);
-
-                k.ctx.fillStyle = '#60a5fa';
-                k.ctx.beginPath();
-                k.ctx.arc(px, py, 8, 0, Math.PI * 2);
-                k.ctx.fill();
+                // Particula
+                const particleGrad = g.ctx.createRadialGradient(px, py, 0, px, py, 10);
+                particleGrad.addColorStop(0, '#fff');
+                particleGrad.addColorStop(0.5, '#ec4899');
+                particleGrad.addColorStop(1, '#ec489900');
+                g.ctx.fillStyle = particleGrad;
+                g.ctx.beginPath();
+                g.ctx.arc(px, py, 10, 0, Math.PI * 2);
+                g.ctx.fill();
             }
 
             requestAnimationFrame(animate);
         }
 
-        // Iniciar
         window.addEventListener('load', () => {
             initPreviews();
             animate();

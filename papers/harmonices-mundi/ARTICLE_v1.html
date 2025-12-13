@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>De Kepler a Web Audio: Reviviendo la Música de las Esferas</title>
+  <link rel="stylesheet" href="paper-style.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <style>
+    .epigraph {
+      font-style: italic;
+      text-align: right;
+      margin: 2rem 0;
+      padding-right: 2rem;
+      color: #555;
+    }
+    .epigraph-source {
+      font-size: 0.9em;
+      margin-top: 0.5rem;
+    }
+    .note-box {
+      background: #fffde7;
+      border-left: 3px solid #f9a825;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .diagram {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.85em;
+      background: #f5f5f5;
+      padding: 1rem;
+      overflow-x: auto;
+      border-radius: 4px;
+      line-height: 1.4;
+    }
+    .planet-table td:first-child {
+      font-weight: 600;
+    }
+    .highlight-quote {
+      font-size: 1.1em;
+      text-align: center;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<header id="title-block-header">
+  <h1 class="title">De Kepler a Web Audio: Reviviendo la Música de las Esferas</h1>
+  <p style="font-style: italic; color: #666;">Cómo una idea de 1619 se convierte en música generativa en el navegador</p>
+  <p style="margin-top: 1.5rem; font-size: 1.1rem;"><strong>Carlos Lorente Kaiser</strong></p>
+  <p style="font-size: 0.9rem; color: #666;">Diciembre 2024</p>
+</header>
+
+<nav id="TOC" role="doc-toc">
+  <strong>Contenidos</strong>
+  <ul>
+    <li><a href="#abstract">Resumen</a></li>
+    <li><a href="#introduccion">1. Introducción</a></li>
+    <li><a href="#contexto">2. Contexto histórico</a>
+      <ul>
+        <li><a href="#pitagoras">2.1 Pitágoras y el descubrimiento fundacional</a></li>
+        <li><a href="#platon">2.2 Platón y la tradición medieval</a></li>
+        <li><a href="#problema">2.3 El problema: nadie la había calculado</a></li>
+      </ul>
+    </li>
+    <li><a href="#kepler">3. Kepler: El cálculo de la armonía celestial</a>
+      <ul>
+        <li><a href="#contexto-cientifico">3.1 El contexto científico</a></li>
+        <li><a href="#logica">3.2 La lógica de Harmonices Mundi</a></li>
+        <li><a href="#notas">3.3 Las notas de los planetas</a></li>
+        <li><a href="#coro">3.4 El coro planetario</a></li>
+      </ul>
+    </li>
+    <li><a href="#fracaso">4. Por qué Kepler "fracasó"</a></li>
+    <li><a href="#sonificacion">5. Sonificación: De Kepler al siglo XXI</a></li>
+    <li><a href="#implementacion">6. Implementación</a>
+      <ul>
+        <li><a href="#arquitectura">6.1 Arquitectura del sistema</a></li>
+        <li><a href="#fisica">6.2 Física orbital</a></li>
+        <li><a href="#mapeo">6.3 Mapeo de velocidad a frecuencia</a></li>
+        <li><a href="#sintesis">6.4 Síntesis de audio</a></li>
+      </ul>
+    </li>
+    <li><a href="#decisiones">7. Decisiones de diseño</a></li>
+    <li><a href="#reflexiones">8. Reflexiones</a></li>
+    <li><a href="#conclusiones">9. Conclusiones</a></li>
+    <li><a href="#referencias">Referencias</a></li>
+    <li><a href="#apendice">Apéndice: Parámetros orbitales</a></li>
+  </ul>
+</nav>
+
+<section id="abstract">
+  <h2>Resumen</h2>
+  <p>
+    En 1619, Johannes Kepler publicó <em>Harmonices Mundi</em>, un tratado donde argumentaba que los planetas producen música mientras orbitan el Sol. Aunque científicamente superada, su idea de que las proporciones matemáticas del cosmos pueden traducirse en sonido permanece extraordinariamente fértil. Este artículo traza la línea desde la visión mística de Kepler hasta una implementación moderna en JavaScript que sonifica el Sistema Solar en tiempo real, explorando qué significa "escuchar" el universo 400 años después.
+  </p>
+  <p class="keywords"><strong>Palabras clave:</strong> Kepler, música de las esferas, sonificación, música generativa, Web Audio API, astronomía</p>
+</section>
+
+<section id="introduccion">
+  <h2>1. Introducción: El astrónomo que quería oír el cosmos</h2>
+
+  <div class="epigraph">
+    "La Tierra canta Mi-Fa-Mi, de modo que incluso desde la sílaba puedes adivinar que en nuestro hogar predominan la Miseria y el Hambre."
+    <div class="epigraph-source">— Johannes Kepler, <em>Harmonices Mundi</em> (1619)</div>
+  </div>
+
+  <p>
+    En la primavera de 1619, mientras Europa se desangraba en la Guerra de los Treinta Años, un matemático de 47 años publicó en Linz un libro extraño. No era un tratado de astronomía convencional, aunque su autor había descubierto las leyes que llevan su nombre. Era un libro sobre música.
+  </p>
+
+  <p>
+    Johannes Kepler había dedicado dos décadas a una obsesión: demostrar que el universo estaba construido sobre proporciones musicales. Que los planetas, en sus órbitas elípticas, literalmente <em>cantaban</em>. No como metáfora —Kepler era demasiado matemático para eso— sino como realidad física: cada planeta producía una nota cuya frecuencia dependía de su velocidad orbital.
+  </p>
+
+  <p>
+    El libro se llamó <em>Harmonices Mundi</em> (Las armonías del mundo), y su quinta parte contenía algo sin precedentes: una partitura del Sistema Solar.
+  </p>
+
+  <p>
+    Kepler fracasó, por supuesto. Los planetas no producen sonido en el vacío del espacio. Pero su fracaso fue extraordinariamente productivo. Cuatro siglos después, tenemos la tecnología para hacer exactamente lo que él soñó: convertir las órbitas planetarias en música audible. No porque el cosmos "suene", sino porque podemos <em>hacerlo sonar</em>.
+  </p>
+
+  <p>
+    Este artículo cuenta esa historia y su continuación digital.
+  </p>
+</section>
+
+<section id="contexto">
+  <h2>2. Contexto: La música de las esferas antes de Kepler</h2>
+
+  <p>La idea de que el cosmos es musical no empezó con Kepler. Tiene 2000 años.</p>
+
+  <h3 id="pitagoras">2.1 Pitágoras y el descubrimiento fundacional</h3>
+
+  <p>
+    Según la leyenda, Pitágoras (siglo VI a.C.) descubrió que los intervalos musicales consonantes corresponden a proporciones numéricas simples:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Intervalo</th><th>Proporción</th><th>Ejemplo</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Octava</td><td>2:1</td><td>Do₃ → Do₄</td></tr>
+      <tr><td>Quinta justa</td><td>3:2</td><td>Do → Sol</td></tr>
+      <tr><td>Cuarta justa</td><td>4:3</td><td>Do → Fa</td></tr>
+      <tr><td>Tercera mayor</td><td>5:4</td><td>Do → Mi</td></tr>
+    </tbody>
+  </table>
+
+  <p>
+    Este descubrimiento fue revolucionario. Significaba que la belleza musical —algo aparentemente subjetivo— tenía una base matemática objetiva. Si la música era matemáticas, razonó Pitágoras, y el cosmos también seguía leyes matemáticas, entonces el cosmos debía ser musical.
+  </p>
+
+  <p>
+    Los pitagóricos creían literalmente que los planetas, al moverse, producían sonidos. No los oíamos porque habíamos nacido con ese ruido de fondo, como quien vive junto a una cascada y deja de percibirla.
+  </p>
+
+  <h3 id="platon">2.2 Platón y la tradición medieval</h3>
+
+  <p>
+    Platón recogió estas ideas en el <em>Timeo</em>, donde describió la creación del universo como un acto musical: el Demiurgo organizó el cosmos según proporciones armónicas. Durante la Edad Media, la <em>musica universalis</em> (música de las esferas) se consideraba la forma más elevada de música —superior incluso a la que podíamos oír— porque reflejaba el orden divino.
+  </p>
+
+  <p>
+    Boecio (siglo VI) clasificó la música en tres tipos:
+  </p>
+
+  <ol>
+    <li><strong>Musica mundana:</strong> la armonía de las esferas celestes</li>
+    <li><strong>Musica humana:</strong> la armonía del cuerpo y el alma</li>
+    <li><strong>Musica instrumentalis:</strong> la música audible (¡la menos importante!)</li>
+  </ol>
+
+  <h3 id="problema">2.3 El problema: nadie la había calculado</h3>
+
+  <p>
+    Durante dos milenios, la música de las esferas fue una idea filosófica, no científica. Nadie había intentado calcular <em>qué notas</em> producirían los planetas. Faltaban dos cosas: un modelo preciso del Sistema Solar y alguien lo suficientemente obsesivo para hacer las cuentas.
+  </p>
+
+  <p>Kepler tenía ambas.</p>
+</section>
+
+<section id="kepler">
+  <h2>3. Kepler: El cálculo de la armonía celestial</h2>
+
+  <h3 id="contexto-cientifico">3.1 El contexto científico</h3>
+
+  <p>
+    Kepler llegó a Praga en 1600 para trabajar con Tycho Brahe, quien poseía las observaciones astronómicas más precisas de la historia. Cuando Brahe murió al año siguiente, Kepler heredó sus datos.
+  </p>
+
+  <p>De esos datos extrajo sus tres leyes del movimiento planetario:</p>
+
+  <ol>
+    <li>Los planetas orbitan en <strong>elipses</strong>, no círculos, con el Sol en un foco</li>
+    <li>La línea que conecta el planeta con el Sol barre <strong>áreas iguales en tiempos iguales</strong></li>
+    <li>El cuadrado del período orbital es proporcional al cubo del semieje mayor: \(T^2 \propto a^3\)</li>
+  </ol>
+
+  <p>
+    Pero Kepler no veía estas leyes como el objetivo final. Para él eran herramientas para descubrir algo más profundo: la estructura armónica del cosmos.
+  </p>
+
+  <h3 id="logica">3.2 La lógica de Harmonices Mundi</h3>
+
+  <p>El razonamiento de Kepler fue el siguiente:</p>
+
+  <ol>
+    <li>La velocidad orbital de un planeta varía: es <strong>máxima en el perihelio</strong> (punto más cercano al Sol) y <strong>mínima en el afelio</strong> (punto más lejano)</li>
+    <li>Esta variación de velocidad puede expresarse como una proporción</li>
+    <li>Las proporciones de velocidad corresponden a intervalos musicales</li>
+  </ol>
+
+  <p>
+    Por ejemplo, Saturno tiene una velocidad angular en el afelio de aproximadamente 106"/día y en el perihelio de 135"/día. La proporción es aproximadamente 4:5, que corresponde a una <strong>tercera mayor</strong>.
+  </p>
+
+  <h3 id="notas">3.3 Las notas de los planetas</h3>
+
+  <p>Kepler asignó a cada planeta un rango de notas basado en sus velocidades orbitales extremas:</p>
+
+  <table class="planet-table">
+    <thead>
+      <tr><th>Planeta</th><th>Afelio</th><th>Perihelio</th><th>Intervalo</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Saturno</td><td>Sol</td><td>Si</td><td>Tercera mayor</td></tr>
+      <tr><td>Júpiter</td><td>Sol</td><td>Si♭</td><td>Tercera menor</td></tr>
+      <tr><td>Marte</td><td>Fa</td><td>Do</td><td>Quinta</td></tr>
+      <tr><td>Tierra</td><td>Sol</td><td>La♭</td><td>Semitono</td></tr>
+      <tr><td>Venus</td><td>Mi</td><td>Mi</td><td>Casi unísono</td></tr>
+      <tr><td>Mercurio</td><td>Do</td><td>Mi</td><td>Décima mayor</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note-box">
+    <strong>Mi-Fa:</strong> La Tierra, notó Kepler con asombro, canta las notas "Mi-Fa" (E-F en notación anglosajona). En latín: <strong>Mi</strong>seria y <strong>Fa</strong>mes. Miseria y hambre. Kepler vio en esto una confirmación teológica del estado caído de la humanidad.
+  </div>
+
+  <h3 id="coro">3.4 El coro planetario</h3>
+
+  <p>
+    Kepler fue más allá de las notas individuales. Intentó determinar cuándo los planetas cantarían <em>juntos</em> en consonancia perfecta.
+  </p>
+
+  <p>
+    Descubrió que las configuraciones armónicas completas eran extremadamente raras. Calculó que el Sistema Solar había "cantado" en armonía perfecta solo dos veces en la historia: al comienzo de los tiempos y... una vez más. Kepler estaba convencido de que había presenciado (matemáticamente) el sonido de la Creación.
+  </p>
+</section>
+
+<section id="fracaso">
+  <h2>4. Por qué Kepler "fracasó" (y por qué no importa)</h2>
+
+  <h3>4.1 Los problemas científicos</h3>
+
+  <p>Desde una perspectiva moderna, <em>Harmonices Mundi</em> tiene problemas fundamentales:</p>
+
+  <ol>
+    <li><strong>No hay sonido en el vacío:</strong> Las ondas sonoras necesitan un medio. El espacio interplanetario no puede transmitir música.</li>
+    <li><strong>Las proporciones son aproximadas:</strong> Kepler ajustó los datos para que encajaran con intervalos musicales. Con datos más precisos, las proporciones no son tan "limpias".</li>
+    <li><strong>Selección arbitraria:</strong> ¿Por qué usar la proporción de velocidades angulares y no de distancias? ¿Por qué perihelio/afelio y no otros puntos? Kepler eligió lo que daba resultados musicales.</li>
+    <li><strong>El marco teológico:</strong> Kepler buscaba confirmar un diseño divino. Esto sesgó su interpretación.</li>
+  </ol>
+
+  <h3>4.2 Lo que Kepler sí logró</h3>
+
+  <p>Sin embargo, reducir <em>Harmonices Mundi</em> a un error sería injusto:</p>
+
+  <ol>
+    <li><strong>Método cuantitativo:</strong> Fue el primer intento de calcular matemáticamente qué sonaría el cosmos. Pasó de filosofía a ciencia (aunque fallida).</li>
+    <li><strong>La tercera ley:</strong> El libro contiene la tercera ley del movimiento planetario, uno de los fundamentos de la mecánica celeste.</li>
+    <li><strong>Inspiración duradera:</strong> La idea de sonificar fenómenos naturales —convertir datos no auditivos en sonido— es hoy una disciplina legítima.</li>
+  </ol>
+
+  <div class="highlight-quote">
+    Kepler entendió algo que sigue siendo válido: <strong>las proporciones matemáticas pueden hacerse audibles</strong>. No porque el cosmos "suene", sino porque cualquier dato periódico puede mapearse a frecuencias.
+  </div>
+</section>
+
+<section id="sonificacion">
+  <h2>5. Sonificación: De Kepler al siglo XXI</h2>
+
+  <h3>5.1 ¿Qué es la sonificación?</h3>
+
+  <p>
+    La sonificación es la representación de datos mediante sonido. Así como la visualización usa la vista para revelar patrones, la sonificación usa el oído.
+  </p>
+
+  <p>Ejemplos cotidianos:</p>
+  <ul>
+    <li>El pitido del detector de metales (más agudo = más cerca del metal)</li>
+    <li>El contador Geiger (más clics = más radiación)</li>
+    <li>El monitor cardíaco (frecuencia del pitido = pulso)</li>
+  </ul>
+
+  <h3>5.2 Sonificación astronómica moderna</h3>
+
+  <p>La NASA y otras agencias han sonificado datos espaciales:</p>
+
+  <ul>
+    <li><strong>Ondas de plasma de Júpiter</strong> (Voyager): Convertidas a audio, suenan como un océano alienígena</li>
+    <li><strong>Agujeros negros</strong> (Chandra X-ray Observatory): Ondas de presión en gas intergaláctico, transpuestas 57 octavas hacia arriba para hacerlas audibles</li>
+    <li><strong>Púlsares:</strong> Sus pulsos electromagnéticos regulares se convierten naturalmente en ritmo</li>
+  </ul>
+
+  <h3>5.3 La diferencia fundamental con Kepler</h3>
+
+  <p>Hay una diferencia crucial entre la sonificación moderna y la visión de Kepler:</p>
+
+  <ul>
+    <li><strong>Kepler creía que la música era inherente:</strong> El cosmos <em>era</em> musical; él solo lo descubría</li>
+    <li><strong>Nosotros sabemos que la música es asignada:</strong> Elegimos cómo mapear datos a sonido</li>
+  </ul>
+
+  <p>Esta diferencia no hace que la sonificación sea menos valiosa. Solo más honesta.</p>
+</section>
+
+<section id="implementacion">
+  <h2>6. Implementación: Harmonices Mundi en JavaScript</h2>
+
+  <h3>6.1 Objetivo del proyecto</h3>
+
+  <p>Crear una implementación web que:</p>
+  <ol>
+    <li>Simule las órbitas planetarias con física real (leyes de Kepler)</li>
+    <li>Convierta la posición/velocidad orbital en sonido en tiempo real</li>
+    <li>Permita "escuchar" el Sistema Solar como Kepler imaginó</li>
+  </ol>
+
+  <h3 id="arquitectura">6.2 Arquitectura del sistema</h3>
+
+  <div class="diagram">
+┌─────────────────────────────────────────────────────┐
+│                   SIMULACIÓN                         │
+│  ┌───────────┐    ┌───────────┐    ┌─────────────┐  │
+│  │  Órbitas  │───▶│ Velocidad │───▶│   Notas     │  │
+│  │ (Kepler)  │    │  orbital  │    │             │  │
+│  └───────────┘    └───────────┘    └──────┬──────┘  │
+└───────────────────────────────────────────┼─────────┘
+                                            │
+┌───────────────────────────────────────────┼─────────┐
+│                  WEB AUDIO API            ▼         │
+│  ┌───────────┐    ┌───────────┐    ┌─────────────┐  │
+│  │Oscillator │───▶│  Envelope │───▶│    Mixer    │  │
+│  │           │    │  (ADSR)   │    │             │  │
+│  └───────────┘    └───────────┘    └─────────────┘  │
+└─────────────────────────────────────────────────────┘
+  </div>
+
+  <h3 id="fisica">6.3 Física orbital</h3>
+
+  <p>Cada planeta se simula usando las leyes de Kepler. El problema central es resolver la <strong>ecuación de Kepler</strong>:</p>
+
+  <p style="text-align: center;">
+    \[ M = E - e \sin(E) \]
+  </p>
+
+  <p>donde \(M\) es la anomalía media, \(E\) la anomalía excéntrica, y \(e\) la excentricidad orbital.</p>
+
+  <p>Esta ecuación trascendental se resuelve numéricamente con el método de Newton-Raphson:</p>
+
+<pre><code class="language-javascript">function solveKepler(M, e, tolerance = 1e-6) {
+    let E = M; // Aproximación inicial
+    for (let i = 0; i < 100; i++) {
+        const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+        E -= dE;
+        if (Math.abs(dE) < tolerance) break;
+    }
+    return E;
+}</code></pre>
+
+  <p>La velocidad orbital se calcula con la ecuación vis-viva:</p>
+
+  <p style="text-align: center;">
+    \[ v = \sqrt{\mu \left( \frac{2}{r} - \frac{1}{a} \right)} \]
+  </p>
+
+  <h3 id="mapeo">6.4 Mapeo de velocidad a frecuencia</h3>
+
+  <p>Seguimos el espíritu de Kepler: la velocidad orbital determina la altura del sonido.</p>
+
+<pre><code class="language-javascript">// Mapeo de velocidad a nota MIDI
+function velocityToNote(velocity, vMin, vMax, noteMin, noteMax) {
+    const t = (velocity - vMin) / (vMax - vMin);
+    const note = noteMin + t * (noteMax - noteMin);
+    return Math.round(note);
+}
+
+// Frecuencia desde nota MIDI (A4 = 440 Hz)
+function midiToFreq(note) {
+    return 440 * Math.pow(2, (note - 69) / 12);
+}</code></pre>
+
+  <h3 id="sintesis">6.5 Síntesis de audio</h3>
+
+  <p>Cada planeta tiene su propio oscilador con características tímbricas únicas que reflejan su "personalidad" astronómica:</p>
+
+  <table>
+    <thead>
+      <tr><th>Planeta</th><th>Forma de onda</th><th>Octava</th><th>Carácter</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Mercurio</td><td>Sine</td><td>5</td><td>Agudo, veloz</td></tr>
+      <tr><td>Venus</td><td>Triangle</td><td>4</td><td>Suave, estable</td></tr>
+      <tr><td>Tierra</td><td>Sine</td><td>4</td><td>Familiar</td></tr>
+      <tr><td>Marte</td><td>Sawtooth</td><td>3</td><td>Áspero, guerrero</td></tr>
+      <tr><td>Júpiter</td><td>Sine</td><td>2</td><td>Profundo, majestuoso</td></tr>
+      <tr><td>Saturno</td><td>Sine</td><td>2</td><td>Grave, lento</td></tr>
+      <tr><td>Urano</td><td>Triangle</td><td>2</td><td>Distante, frío</td></tr>
+      <tr><td>Neptuno</td><td>Sine</td><td>1</td><td>El más grave</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.6 El problema del tiempo</h3>
+
+  <p>
+    Un año de Neptuno dura 165 años terrestres. Si mapeáramos el tiempo 1:1, el usuario moriría antes de oír una órbita completa. La solución es una <strong>compresión temporal logarítmica</strong> que mantiene las proporciones relativas mientras hace el sistema audible en tiempo humano.
+  </p>
+</section>
+
+<section id="decisiones">
+  <h2>7. Decisiones de diseño</h2>
+
+  <h3>7.1 ¿Fieles a Kepler o a la física?</h3>
+
+  <p>Teníamos dos opciones:</p>
+  <ol>
+    <li><strong>Réplica histórica:</strong> Usar exactamente las notas que Kepler asignó</li>
+    <li><strong>Reinterpretación física:</strong> Calcular notas desde datos orbitales modernos</li>
+  </ol>
+
+  <p>Elegimos un <strong>híbrido</strong>:</p>
+  <ul>
+    <li>Los rangos de notas respetan el espíritu de Kepler (planetas interiores agudos, exteriores graves)</li>
+    <li>Los valores exactos vienen de datos de la NASA</li>
+    <li>El usuario puede elegir entre "modo Kepler" y "modo físico"</li>
+  </ul>
+
+  <h3>7.2 Escalas musicales</h3>
+
+  <p>Kepler usó la escala diatónica de su época. Nuestra implementación ofrece varias opciones:</p>
+
+  <table>
+    <thead>
+      <tr><th>Escala</th><th>Carácter</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Mayor</td><td>Brillante, "celestial"</td></tr>
+      <tr><td>Menor</td><td>Melancólico, espacial</td></tr>
+      <tr><td>Pentatónica</td><td>Ambiental, sin tensión</td></tr>
+      <tr><td>Cromática</td><td>Máxima fidelidad física</td></tr>
+      <tr><td>Modos griegos</td><td>Conexión histórica</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.3 Visualización</h3>
+
+  <p>La visualización no es decorativa; es funcional:</p>
+  <ul>
+    <li>Muestra qué planeta está "cantando" activamente</li>
+    <li>Indica la velocidad orbital mediante brillo/tamaño</li>
+    <li>El analizador FFT revela la estructura armónica del coro planetario</li>
+  </ul>
+</section>
+
+<section id="reflexiones">
+  <h2>8. Reflexiones: ¿Qué significa escuchar los planetas?</h2>
+
+  <h3>8.1 No es ciencia, pero tampoco es mentira</h3>
+
+  <p>
+    Nuestra implementación no "descubre" nada sobre el cosmos. Las frecuencias son arbitrarias (podrían ser otras). El mapeo es una elección estética.
+  </p>
+
+  <p>
+    Pero tampoco es pura ficción. Las relaciones entre planetas son reales:
+  </p>
+  <ul>
+    <li>Mercurio <em>sí es</em> más rápido que Neptuno</li>
+    <li>Las órbitas <em>sí son</em> elípticas</li>
+    <li>Los períodos <em>sí siguen</em> la tercera ley de Kepler</li>
+  </ul>
+
+  <p>Lo que hacemos es <strong>traducir relaciones reales a un medio diferente</strong>.</p>
+
+  <h3>8.2 Conocimiento encarnado</h3>
+
+  <p>
+    Hay algo que la sonificación ofrece y la visualización no: <strong>temporalidad encarnada</strong>.
+  </p>
+
+  <p>
+    Cuando <em>vemos</em> un gráfico de períodos orbitales, entendemos intelectualmente que Neptuno es lento. Cuando <em>oímos</em> su nota grave sostenida mientras Mercurio gorjea frenéticamente, lo sentimos en el cuerpo.
+  </p>
+
+  <p>Este "conocimiento encarnado" tiene valor pedagógico y estético.</p>
+
+  <h3>8.3 Kepler estaría fascinado</h3>
+
+  <p>
+    Kepler creía que la música de las esferas existía pero era inaudible para los humanos. Ahora podemos hacerla audible —no porque descubramos lo que siempre estuvo ahí, sino porque tenemos el poder de crear la experiencia que él imaginó.
+  </p>
+
+  <div class="highlight-quote">
+    En cierto sentido, no estamos probando que Kepler tenía razón.<br>
+    Estamos <strong>haciéndole tener razón</strong>, 400 años después.
+  </div>
+</section>
+
+<section id="conclusiones">
+  <h2>9. Conclusiones</h2>
+
+  <p>
+    <em>Harmonices Mundi</em> fue un fracaso científico y un éxito imaginativo. Kepler buscaba descubrir música en el cosmos; nosotros podemos crearla.
+  </p>
+
+  <p>
+    La implementación web que acompaña este artículo no es una réplica arqueológica ni una simulación científica. Es algo intermedio: una <strong>traducción creativa</strong> de una idea antigua a medios modernos.
+  </p>
+
+  <p>
+    Cuando el usuario presiona "Play" y los planetas comienzan a cantar, no está escuchando el universo. Está escuchando a Kepler soñando con el universo, renderizado en JavaScript.
+  </p>
+
+  <p style="text-align: center; font-style: italic; margin-top: 2rem;">
+    Quizá eso sea suficiente.
+  </p>
+</section>
+
+<section id="referencias">
+  <h2>Referencias</h2>
+
+  <div class="references">
+    <p>[1] Kepler, J. (1619). <em>Harmonices Mundi</em>. Linz: Johann Planck.</p>
+
+    <p>[2] Stephenson, B. (1994). <em>The Music of the Heavens: Kepler's Harmonic Astronomy</em>. Princeton University Press.</p>
+
+    <p>[3] Walker, D.P. (1967). "Kepler's Celestial Music". <em>Journal of the Warburg and Courtauld Institutes</em>, 30, 228-250.</p>
+
+    <p>[4] Pesic, P. (2014). <em>Music and the Making of Modern Science</em>. MIT Press.</p>
+
+    <p>[5] Dunn, J. & Clark, M.A. (1999). "Life Music: The Sonification of Proteins". <em>Leonardo</em>, 32(1), 25-32.</p>
+
+    <p>[6] Hermann, T., Hunt, A., & Neuhoff, J.G. (Eds.). (2011). <em>The Sonification Handbook</em>. Logos Verlag Berlin.</p>
+
+    <p>[7] NASA Chandra X-ray Observatory. (2022). "A New NASA Sonification Turns Astronomical Images Into Music".</p>
+
+    <p>[8] Caspar, M. (1993). <em>Kepler</em>. Dover Publications. (Traducción de C. Doris Hellman)</p>
+  </div>
+</section>
+
+<section id="apendice">
+  <h2>Apéndice: Parámetros orbitales utilizados</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Planeta</th>
+        <th>Semieje mayor (UA)</th>
+        <th>Excentricidad</th>
+        <th>Período (años)</th>
+        <th>v<sub>peri</sub> (km/s)</th>
+        <th>v<sub>afel</sub> (km/s)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Mercurio</td><td>0.387</td><td>0.206</td><td>0.24</td><td>58.98</td><td>38.86</td></tr>
+      <tr><td>Venus</td><td>0.723</td><td>0.007</td><td>0.62</td><td>35.26</td><td>34.79</td></tr>
+      <tr><td>Tierra</td><td>1.000</td><td>0.017</td><td>1.00</td><td>30.29</td><td>29.29</td></tr>
+      <tr><td>Marte</td><td>1.524</td><td>0.093</td><td>1.88</td><td>26.50</td><td>21.97</td></tr>
+      <tr><td>Júpiter</td><td>5.203</td><td>0.049</td><td>11.86</td><td>13.72</td><td>12.44</td></tr>
+      <tr><td>Saturno</td><td>9.537</td><td>0.056</td><td>29.46</td><td>10.18</td><td>9.09</td></tr>
+      <tr><td>Urano</td><td>19.191</td><td>0.046</td><td>84.01</td><td>7.11</td><td>6.49</td></tr>
+      <tr><td>Neptuno</td><td>30.069</td><td>0.010</td><td>164.8</td><td>5.50</td><td>5.37</td></tr>
+    </tbody>
+  </table>
+
+  <p style="font-size: 0.9em; color: #666; margin-top: 1rem;">
+    <em>Fuente: NASA Jet Propulsion Laboratory, Horizons System</em>
+  </p>
+</section>
+
+<footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0; text-align: center; color: #666; font-size: 0.9em;">
+  <p>
+    Demo interactiva: <a href="https://cjlkaiser-cpu.github.io/harmonices-mundi/">Harmonices Mundi</a>
+  </p>
+  <p>
+    Physics Sound Lab · 2024
+  </p>
+</footer>
+
+</body>
+</html>

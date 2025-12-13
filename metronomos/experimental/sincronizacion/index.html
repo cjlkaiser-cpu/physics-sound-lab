@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="description" content="Sincronización de metrónomos - Fenómeno de Huygens 1665">
+    <title>Metrónomo Físico - Sincronización de Huygens</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Covered+By+Your+Grace&family=Inter:wght@300;400;500&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0a0a0a;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 12px 20px;
+            text-align: center;
+            background: linear-gradient(180deg, #1a1a1a 0%, transparent 100%);
+        }
+
+        .header h1 {
+            font-family: 'Covered By Your Grace', cursive;
+            font-size: 1.6rem;
+            font-weight: normal;
+            color: rgba(255,255,255,0.95);
+        }
+
+        .header .subtitle {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+            min-height: 280px;
+        }
+
+        #canvas {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 12px;
+            background: #0d0d0d;
+            touch-action: none;
+        }
+
+        .controls {
+            padding: 12px 16px 20px;
+            background: linear-gradient(180deg, transparent 0%, #1a1a1a 30%);
+            overflow-y: auto;
+            max-height: 55vh;
+        }
+
+        .slider-group {
+            margin-bottom: 12px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .slider-label {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .slider-value {
+            font-family: 'Covered By Your Grace', cursive;
+            font-size: 1.1rem;
+            color: #fbbf24;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #fbbf24;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .btn-play { background: #4ade80; color: #000; }
+        .btn-stop { background: #f87171; color: #000; }
+        .btn-random { background: #a855f7; color: #fff; }
+
+        .toggles {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .toggle input { display: none; }
+
+        .toggle-switch {
+            width: 36px;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            position: relative;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+        }
+
+        .toggle input:checked + .toggle-switch { background: #4ade80; }
+        .toggle input:checked + .toggle-switch::after { transform: translateX(16px); }
+        .toggle-label { font-size: 0.75rem; color: #aaa; }
+
+        .info-panel {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .info-item {
+            text-align: center;
+            padding: 8px 4px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+        }
+
+        .info-item .label {
+            font-size: 0.65rem;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .info-item .value {
+            font-family: 'Covered By Your Grace', cursive;
+            font-size: 1rem;
+            color: #fff;
+        }
+
+        .sync-indicator {
+            padding: 12px;
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .sync-indicator.synced {
+            background: rgba(74, 222, 128, 0.2);
+            border-color: #4ade80;
+        }
+
+        .sync-indicator.anti {
+            background: rgba(251, 191, 36, 0.2);
+            border-color: #fbbf24;
+        }
+
+        .sync-status {
+            font-family: 'Covered By Your Grace', cursive;
+            font-size: 1.4rem;
+            color: #4ade80;
+        }
+
+        .sync-indicator.anti .sync-status { color: #fbbf24; }
+
+        .sync-detail {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .huygens-box {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .huygens-box .title {
+            font-family: 'Covered By Your Grace', cursive;
+            font-size: 1.1rem;
+            color: #a855f7;
+            margin-bottom: 4px;
+        }
+
+        .huygens-box .desc {
+            font-size: 0.68rem;
+            color: #888;
+            line-height: 1.4;
+        }
+
+        .equations {
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .section-title {
+            font-size: 0.7rem;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .equation-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .equation-row:last-child { border-bottom: none; }
+        .equation-name { font-size: 0.65rem; color: #666; }
+        .equation-text {
+            font-family: 'Covered By Your Grace', cursive;
+            font-size: 1rem;
+            color: rgba(255,255,255,0.9);
+        }
+
+        @media (min-width: 768px) {
+            .app {
+                flex-direction: row;
+                padding: 20px;
+                gap: 25px;
+                justify-content: center;
+                align-items: flex-start;
+            }
+
+            .header { display: none; }
+            .canvas-container { padding: 0; }
+
+            #canvas {
+                width: 600px;
+                height: 600px;
+            }
+
+            .controls {
+                width: 380px;
+                padding: 20px;
+                background: #1a1a1a;
+                border-radius: 12px;
+                max-height: 90vh;
+            }
+
+            .controls::before {
+                content: 'Sincronización de Huygens';
+                display: block;
+                font-family: 'Covered By Your Grace', cursive;
+                font-size: 1.5rem;
+                margin-bottom: 4px;
+            }
+
+            .controls::after {
+                content: 'Metrónomos acoplados - 1665';
+                display: block;
+                font-size: 0.7rem;
+                color: #666;
+                margin-bottom: 15px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid #333;
+            }
+
+            .info-panel {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-height: 700px) {
+            .controls { max-height: 50vh; }
+            .equations { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>Sincronización de Huygens</h1>
+            <div class="subtitle">Metrónomos acoplados - 1665</div>
+        </header>
+
+        <div class="canvas-section">
+            <div class="canvas-container">
+                <canvas id="canvas"></canvas>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="huygens-box">
+                <div class="title">Fenómeno de Huygens (1665)</div>
+                <div class="desc">
+                    Christiaan Huygens descubrió que dos relojes de péndulo montados en la misma
+                    viga se sincronizan. La plataforma móvil transfiere energía entre los péndulos
+                    hasta alcanzar un estado estable: en fase o en antifase.
+                </div>
+            </div>
+
+            <div class="sync-indicator" id="syncIndicator">
+                <div class="sync-status" id="syncStatus">Desincronizados</div>
+                <div class="sync-detail" id="syncDetail">Diferencia de fase: --</div>
+            </div>
+
+            <!-- Number of pendulums -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span class="slider-label">Número de péndulos</span>
+                    <span class="slider-value" id="numDisplay">3</span>
+                </div>
+                <input type="range" id="numSlider" min="2" max="5" step="1" value="3">
+            </div>
+
+            <!-- Coupling strength -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span class="slider-label">Acoplamiento (rigidez plataforma)</span>
+                    <span class="slider-value" id="couplingDisplay">0.5</span>
+                </div>
+                <input type="range" id="couplingSlider" min="0.1" max="2" step="0.1" value="0.5">
+            </div>
+
+            <!-- Damping -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span class="slider-label">Amortiguamiento</span>
+                    <span class="slider-value" id="dampingDisplay">0.02</span>
+                </div>
+                <input type="range" id="dampingSlider" min="0" max="0.1" step="0.005" value="0.02">
+            </div>
+
+            <div class="buttons">
+                <button class="btn-play" id="playBtn">▶ Iniciar</button>
+                <button class="btn-stop" id="stopBtn">⏹ Detener</button>
+                <button class="btn-random" id="randomBtn">🎲</button>
+            </div>
+
+            <div class="toggles">
+                <label class="toggle">
+                    <input type="checkbox" id="soundToggle" checked>
+                    <span class="toggle-switch"></span>
+                    <span class="toggle-label">🔊 Sonido</span>
+                </label>
+                <label class="toggle">
+                    <input type="checkbox" id="platformToggle" checked>
+                    <span class="toggle-switch"></span>
+                    <span class="toggle-label">📊 Plataforma</span>
+                </label>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-item">
+                    <div class="label">Tiempo</div>
+                    <div class="value" id="timeVal">0.0 s</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Fase Δφ</div>
+                    <div class="value" id="phaseVal">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Beats</div>
+                    <div class="value" id="beatsVal">0</div>
+                </div>
+            </div>
+
+            <div class="equations">
+                <div class="section-title">Física del Acoplamiento</div>
+                <div class="equation-row">
+                    <span class="equation-name">Péndulo i</span>
+                    <span class="equation-text">θᵢ'' + (g/L)sinθᵢ = -x''cosθᵢ/L</span>
+                </div>
+                <div class="equation-row">
+                    <span class="equation-name">Plataforma</span>
+                    <span class="equation-text">Mx'' = -kx + ΣFᵢ</span>
+                </div>
+                <div class="equation-row">
+                    <span class="equation-name">Estado final</span>
+                    <span class="equation-text">Δφ → 0° o 180°</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function setupCanvas() {
+            const container = canvas.parentElement;
+            const size = Math.min(container.clientWidth - 16, container.clientHeight - 16, 600);
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+            canvas.style.width = size + 'px';
+            canvas.style.height = size + 'px';
+            ctx.scale(dpr, dpr);
+
+            return size;
+        }
+
+        let canvasSize = setupCanvas();
+        window.addEventListener('resize', () => {
+            canvasSize = setupCanvas();
+            if (!running) draw();
+        });
+
+        // Physics constants
+        const g = 9.81;
+        const L = 1.0;  // Pendulum length
+        const m = 1.0;  // Bob mass
+        const M = 3.0;  // Platform mass
+
+        // Parameters
+        let numPendulums = 3;
+        let coupling = 0.5;  // Coupling strength
+        let damping = 0.02;
+
+        // State arrays
+        let thetas = [];
+        let omegas = [];
+        let platformX = 0;
+        let platformV = 0;
+
+        let running = false;
+        let lastTime = 0;
+        let simTime = 0;
+        let beatCount = 0;
+        let prevOmegas = [];
+        let beatFlashes = [];
+
+        let soundEnabled = true;
+        let showPlatform = true;
+
+        // Colors for pendulums
+        const colors = ['#fbbf24', '#60a5fa', '#4ade80', '#f472b6', '#a78bfa'];
+
+        // Audio
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playClick(index) {
+            if (!audioCtx || !soundEnabled) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            // Different pitch per pendulum
+            const baseFreq = 800 + index * 150;
+            osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(baseFreq / 2, audioCtx.currentTime + 0.03);
+
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function initState() {
+            thetas = [];
+            omegas = [];
+            prevOmegas = [];
+            beatFlashes = [];
+
+            for (let i = 0; i < numPendulums; i++) {
+                // Start with different phases to see synchronization
+                const angle = 0.4;  // ~23 degrees
+                const phase = (i / numPendulums) * Math.PI;  // Spread phases
+                thetas.push(angle * Math.cos(phase));
+                omegas.push(angle * Math.sin(phase) * Math.sqrt(g / L));
+                prevOmegas.push(0);
+                beatFlashes.push(0);
+            }
+
+            platformX = 0;
+            platformV = 0;
+            simTime = 0;
+            beatCount = 0;
+        }
+
+        // Simplified model: pendulums coupled through platform motion
+        function step(dt) {
+            // Calculate horizontal force from each pendulum on platform
+            let totalForce = 0;
+            for (let i = 0; i < numPendulums; i++) {
+                // Horizontal component of tension reaction
+                totalForce += m * L * omegas[i] * omegas[i] * Math.sin(thetas[i]);
+                totalForce += m * g * Math.sin(thetas[i]) * Math.cos(thetas[i]);
+            }
+
+            // Platform dynamics: spring + damping + forces from pendulums
+            const platformAcc = (totalForce - coupling * 10 * platformX - damping * 20 * platformV) / (M + numPendulums * m);
+
+            // Update platform
+            platformV += platformAcc * dt;
+            platformX += platformV * dt;
+
+            // Update each pendulum with platform feedback
+            for (let i = 0; i < numPendulums; i++) {
+                // Pendulum in non-inertial frame (platform accelerating)
+                const alpha = -(g / L) * Math.sin(thetas[i])
+                            - (platformAcc / L) * Math.cos(thetas[i])
+                            - damping * omegas[i];
+
+                omegas[i] += alpha * dt;
+                thetas[i] += omegas[i] * dt;
+            }
+        }
+
+        function calculateSync() {
+            if (numPendulums < 2) return { synced: false, phase: 0 };
+
+            // Calculate phase difference between first two pendulums
+            // Phase = atan2(omega, theta) normalized
+            const phase1 = Math.atan2(omegas[0], thetas[0]);
+            const phase2 = Math.atan2(omegas[1], thetas[1]);
+
+            let phaseDiff = Math.abs(phase1 - phase2);
+            if (phaseDiff > Math.PI) phaseDiff = 2 * Math.PI - phaseDiff;
+
+            const inPhase = phaseDiff < 0.3;  // ~17 degrees
+            const antiPhase = Math.abs(phaseDiff - Math.PI) < 0.3;
+
+            return {
+                synced: inPhase || antiPhase,
+                inPhase,
+                antiPhase,
+                phaseDiff: phaseDiff * 180 / Math.PI
+            };
+        }
+
+        function simulate(currentTime) {
+            if (!running) return;
+
+            const dt = Math.min((currentTime - lastTime) / 1000, 0.02);
+            lastTime = currentTime;
+            simTime += dt;
+
+            // Multiple smaller steps for stability
+            const steps = 8;
+            for (let i = 0; i < steps; i++) {
+                step(dt / steps);
+            }
+
+            // Detect beats (zero crossing of angular velocity)
+            for (let i = 0; i < numPendulums; i++) {
+                if ((prevOmegas[i] > 0 && omegas[i] <= 0) || (prevOmegas[i] < 0 && omegas[i] >= 0)) {
+                    playClick(i);
+                    beatCount++;
+                    beatFlashes[i] = 1.0;
+                }
+                prevOmegas[i] = omegas[i];
+                beatFlashes[i] *= 0.9;
+            }
+
+            draw();
+            updateDisplay();
+            requestAnimationFrame(simulate);
+        }
+
+        function updateDisplay() {
+            document.getElementById('numDisplay').textContent = numPendulums;
+            document.getElementById('couplingDisplay').textContent = coupling.toFixed(1);
+            document.getElementById('dampingDisplay').textContent = damping.toFixed(3);
+
+            document.getElementById('timeVal').textContent = simTime.toFixed(1) + ' s';
+            document.getElementById('beatsVal').textContent = beatCount;
+
+            const sync = calculateSync();
+            document.getElementById('phaseVal').textContent = sync.phaseDiff.toFixed(1) + '°';
+
+            const indicator = document.getElementById('syncIndicator');
+            const status = document.getElementById('syncStatus');
+            const detail = document.getElementById('syncDetail');
+
+            indicator.classList.remove('synced', 'anti');
+
+            if (sync.inPhase) {
+                indicator.classList.add('synced');
+                status.textContent = '¡Sincronizados en fase!';
+                detail.textContent = 'Los péndulos oscilan juntos';
+            } else if (sync.antiPhase) {
+                indicator.classList.add('anti');
+                status.textContent = '¡Sincronizados en antifase!';
+                detail.textContent = 'Los péndulos se oponen (más estable)';
+            } else {
+                status.textContent = 'Sincronizando...';
+                detail.textContent = 'Diferencia de fase: ' + sync.phaseDiff.toFixed(1) + '°';
+            }
+        }
+
+        function draw() {
+            const size = canvasSize;
+            const cx = size / 2;
+            const cy = size * 0.3;
+
+            ctx.fillStyle = '#0d0d0d';
+            ctx.fillRect(0, 0, size, size);
+
+            const scale = size * 0.25;
+            const spacing = size / (numPendulums + 1);
+
+            // Platform
+            const platformWidth = spacing * numPendulums + 60;
+            const platformY = cy - 15;
+            const platformOffset = platformX * scale * 0.5;
+
+            ctx.fillStyle = '#333';
+            ctx.fillRect(cx - platformWidth / 2 + platformOffset, platformY, platformWidth, 12);
+
+            // Rails (to show platform can move)
+            if (showPlatform) {
+                ctx.strokeStyle = '#222';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(cx - platformWidth / 2 - 30, platformY + 20);
+                ctx.lineTo(cx + platformWidth / 2 + 30, platformY + 20);
+                ctx.stroke();
+
+                // Wheels
+                ctx.fillStyle = '#444';
+                ctx.beginPath();
+                ctx.arc(cx - platformWidth / 3 + platformOffset, platformY + 15, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(cx + platformWidth / 3 + platformOffset, platformY + 15, 8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw each pendulum
+            for (let i = 0; i < numPendulums; i++) {
+                const pivotX = cx - (numPendulums - 1) * spacing / 2 + i * spacing + platformOffset;
+                const pivotY = platformY;
+
+                const bobX = pivotX + scale * Math.sin(thetas[i]);
+                const bobY = pivotY + scale * Math.cos(thetas[i]);
+
+                const color = colors[i % colors.length];
+
+                // Rod
+                ctx.beginPath();
+                ctx.moveTo(pivotX, pivotY);
+                ctx.lineTo(bobX, bobY);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 5;
+                ctx.stroke();
+
+                // Pivot
+                ctx.beginPath();
+                ctx.arc(pivotX, pivotY, 6, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+
+                // Beat flash glow
+                if (beatFlashes[i] > 0.05) {
+                    const glowR = 25 + 20 * beatFlashes[i];
+                    const glow = ctx.createRadialGradient(bobX, bobY, 10, bobX, bobY, glowR);
+                    glow.addColorStop(0, color.replace(')', `, ${beatFlashes[i] * 0.6})`).replace('rgb', 'rgba').replace('#', 'rgba('));
+
+                    // Parse hex color for glow
+                    const r = parseInt(color.slice(1, 3), 16);
+                    const gr = parseInt(color.slice(3, 5), 16);
+                    const b = parseInt(color.slice(5, 7), 16);
+
+                    const glowGrad = ctx.createRadialGradient(bobX, bobY, 10, bobX, bobY, glowR);
+                    glowGrad.addColorStop(0, `rgba(${r},${gr},${b},${beatFlashes[i] * 0.6})`);
+                    glowGrad.addColorStop(1, `rgba(${r},${gr},${b},0)`);
+
+                    ctx.beginPath();
+                    ctx.arc(bobX, bobY, glowR, 0, Math.PI * 2);
+                    ctx.fillStyle = glowGrad;
+                    ctx.fill();
+                }
+
+                // Bob
+                const bobRadius = 16;
+                const r = parseInt(color.slice(1, 3), 16);
+                const gr = parseInt(color.slice(3, 5), 16);
+                const b = parseInt(color.slice(5, 7), 16);
+
+                const grad = ctx.createRadialGradient(bobX - 3, bobY - 3, 0, bobX, bobY, bobRadius);
+                grad.addColorStop(0, `rgb(${Math.min(255, r + 60)},${Math.min(255, gr + 60)},${Math.min(255, b + 60)})`);
+                grad.addColorStop(0.5, color);
+                grad.addColorStop(1, `rgb(${r * 0.5},${gr * 0.5},${b * 0.5})`);
+
+                ctx.beginPath();
+                ctx.arc(bobX, bobY, bobRadius, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                // Number label
+                ctx.font = "12px 'Inter'";
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.textAlign = 'center';
+                ctx.fillText((i + 1).toString(), bobX, bobY + 4);
+            }
+
+            // Sync status on canvas
+            const sync = calculateSync();
+            ctx.font = "bold 22px 'Covered By Your Grace'";
+            ctx.textAlign = 'center';
+
+            if (sync.inPhase) {
+                ctx.fillStyle = '#4ade80';
+                ctx.fillText('En Fase', cx, size - 20);
+            } else if (sync.antiPhase) {
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillText('Antifase', cx, size - 20);
+            } else {
+                ctx.fillStyle = 'rgba(168, 85, 247, 0.6)';
+                ctx.fillText('Sincronizando...', cx, size - 20);
+            }
+
+            ctx.textAlign = 'left';
+        }
+
+        // Controls
+        document.getElementById('numSlider').addEventListener('input', (e) => {
+            numPendulums = parseInt(e.target.value);
+            if (!running) {
+                initState();
+                draw();
+            }
+            updateDisplay();
+        });
+
+        document.getElementById('couplingSlider').addEventListener('input', (e) => {
+            coupling = parseFloat(e.target.value);
+            updateDisplay();
+        });
+
+        document.getElementById('dampingSlider').addEventListener('input', (e) => {
+            damping = parseFloat(e.target.value);
+            updateDisplay();
+        });
+
+        document.getElementById('playBtn').addEventListener('click', () => {
+            if (!running) {
+                initAudio();
+                running = true;
+                initState();
+                lastTime = performance.now();
+                requestAnimationFrame(simulate);
+            }
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            running = false;
+            initState();
+            draw();
+            updateDisplay();
+        });
+
+        document.getElementById('randomBtn').addEventListener('click', () => {
+            if (running) {
+                // Randomize current angles
+                for (let i = 0; i < numPendulums; i++) {
+                    const angle = (20 + Math.random() * 35) * Math.PI / 180;
+                    thetas[i] = Math.random() > 0.5 ? angle : -angle;
+                    omegas[i] = (Math.random() - 0.5) * 2;
+                }
+            }
+        });
+
+        document.getElementById('soundToggle').addEventListener('change', (e) => {
+            soundEnabled = e.target.checked;
+            if (soundEnabled) initAudio();
+        });
+
+        document.getElementById('platformToggle').addEventListener('change', (e) => {
+            showPlatform = e.target.checked;
+            if (!running) draw();
+        });
+
+        document.body.addEventListener('touchstart', () => {
+            initAudio();
+        }, { once: true });
+
+        // Init
+        initState();
+        updateDisplay();
+        draw();
+    </script>
+</body>
+</html>
