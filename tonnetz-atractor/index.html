@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atractor del Tonnetz - Fase 0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #60a5fa;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        #canvas {
+            background: #111118;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .control-group {
+            background: #1a1a24;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .control-group .value {
+            font-size: 0.85rem;
+            color: #60a5fa;
+            float: right;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+            accent-color: #60a5fa;
+        }
+
+        .buttons {
+            grid-column: span 2;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        button {
+            background: #60a5fa;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #3b82f6;
+        }
+
+        button.secondary {
+            background: #333;
+            color: #e0e0e0;
+        }
+
+        button.secondary:hover {
+            background: #444;
+        }
+
+        .chord-section {
+            grid-column: span 2;
+            background: #1a1a24;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .chord-section label {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .chord-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chord-btn {
+            background: #333;
+            color: #e0e0e0;
+            border: 2px solid #444;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .chord-btn:hover {
+            border-color: #60a5fa;
+        }
+
+        .chord-btn.active {
+            background: #60a5fa;
+            color: #000;
+            border-color: #60a5fa;
+        }
+
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1a24;
+            border-radius: 6px;
+            max-width: 500px;
+            font-size: 0.8rem;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        .info code {
+            color: #f59e0b;
+        }
+
+        .stats {
+            margin-top: 15px;
+            font-size: 0.75rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>El Atractor del Tonnetz</h1>
+    <p class="subtitle">Red Hexagonal Neo-Riemanniana</p>
+
+    <canvas id="canvas" width="650" height="500"></canvas>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Fuerza Magnetica <span class="value" id="forceVal">150</span></label>
+            <input type="range" id="force" min="50" max="400" value="150">
+        </div>
+
+        <div class="control-group">
+            <label>Friccion <span class="value" id="frictionVal">0.005</span></label>
+            <input type="range" id="friction" min="0" max="50" value="5">
+        </div>
+
+        <div class="control-group">
+            <label>Velocidad Inicial <span class="value" id="velocityVal">12</span></label>
+            <input type="range" id="velocity" min="5" max="150" value="120">
+        </div>
+
+        <div class="control-group">
+            <label>Trail Length <span class="value" id="trailVal">300</span></label>
+            <input type="range" id="trail" min="50" max="800" value="300">
+        </div>
+
+        <div class="buttons">
+            <button id="resetBtn">Reset Particula</button>
+            <button id="pauseBtn" class="secondary">Pausar</button>
+            <button id="fieldBtn" class="secondary">Campo: ON</button>
+            <button id="clearTrailBtn" class="secondary">Limpiar Trail</button>
+        </div>
+
+        <div class="chord-section">
+            <label>Atraer hacia acorde (click = impulso):</label>
+            <div class="chord-buttons">
+                <button class="chord-btn" data-chord="C">C</button>
+                <button class="chord-btn" data-chord="Am">Am</button>
+                <button class="chord-btn" data-chord="F">F</button>
+                <button class="chord-btn" data-chord="G">G</button>
+                <button class="chord-btn" data-chord="Em">Em</button>
+                <button class="chord-btn" data-chord="Dm">Dm</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="info">
+        <strong>Click en canvas o Reset para activar audio</strong><br><br>
+        <strong>Fisica:</strong> Pendulo magnetico multiple<br>
+        <code>F = Σ K·(r_i - r) / |r_i - r|² - friction·v</code><br><br>
+        <strong>Sonido:</strong> Nota suena cuando la particula entra en el radio de cada nodo
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <script>
+        // === CONFIGURACION ===
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width;
+        const H = canvas.height;
+        const CX = W / 2;
+        const CY = H / 2;
+
+        // === PARAMETROS ===
+        let params = {
+            force: 150,
+            friction: 0.005,
+            initialVelocity: 12,
+            trailLength: 300
+        };
+
+        // === FRECUENCIAS ===
+        const NOTE_FREQ = {
+            'C': 261.63, 'D': 293.66, 'E': 329.63, 'F': 349.23,
+            'G': 392.00, 'A': 440.00, 'B': 493.88
+        };
+
+        const NOTE_COLORS = {
+            'C': '#ef4444', 'D': '#06b6d4', 'E': '#22c55e', 'F': '#8b5cf6',
+            'G': '#3b82f6', 'A': '#f59e0b', 'B': '#ec4899'
+        };
+
+        // === TONNETZ HEXAGONAL ===
+        const HEX_RADIUS = 120;  // Radio del hexágono
+        const TRIGGER_RADIUS = 55;  // Casi se tocan (HEX_RADIUS/2 - pequeño hueco)
+
+        const nodes = [];
+
+        // Hexágono: E en el centro, rodeado por C, G, B, D, A, F
+        // Disposición que permite formar los acordes correctos
+        //
+        //           C
+        //       F       G
+        //           E
+        //       A       B
+        //           D
+        //
+        // Acordes formados:
+        // C mayor: C-E-G (arriba)
+        // Am: A-C-E (izquierda-arriba)
+        // Em: E-G-B (derecha)
+        // G mayor: G-B-D (derecha-abajo) - necesita D
+        // Dm: D-F-A (abajo-izquierda)
+        // F mayor: F-A-C (izquierda)
+
+        const hexLayout = [
+            { name: 'E', angle: null, radius: 0 },           // Centro
+            { name: 'C', angle: -Math.PI/2, radius: 1 },     // Arriba
+            { name: 'G', angle: -Math.PI/6, radius: 1 },     // Arriba-derecha
+            { name: 'B', angle: Math.PI/6, radius: 1 },      // Abajo-derecha
+            { name: 'D', angle: Math.PI/2, radius: 1 },      // Abajo
+            { name: 'A', angle: 5*Math.PI/6, radius: 1 },    // Abajo-izquierda
+            { name: 'F', angle: -5*Math.PI/6, radius: 1 },   // Arriba-izquierda
+        ];
+
+        hexLayout.forEach((item, i) => {
+            const x = item.radius === 0 ? CX : CX + HEX_RADIUS * Math.cos(item.angle);
+            const y = item.radius === 0 ? CY : CY + HEX_RADIUS * Math.sin(item.angle);
+            nodes.push({
+                id: i,
+                name: item.name,
+                x: x,
+                y: y,
+                color: NOTE_COLORS[item.name],
+                freq: NOTE_FREQ[item.name],
+                triggered: false,
+                glow: 0
+            });
+        });
+
+        // Acordes con sus índices de nodos
+        const chords = [
+            { name: 'C',  notes: ['C', 'E', 'G'],  type: 'major' },
+            { name: 'Am', notes: ['A', 'C', 'E'],  type: 'minor' },
+            { name: 'Em', notes: ['E', 'G', 'B'],  type: 'minor' },
+            { name: 'G',  notes: ['G', 'B', 'D'],  type: 'major' },
+            { name: 'Dm', notes: ['D', 'F', 'A'],  type: 'minor' },
+            { name: 'F',  notes: ['F', 'A', 'C'],  type: 'major' },
+        ];
+
+        // Construir triángulos a partir de acordes
+        const trianglesData = chords.map(chord => {
+            const nodeIds = chord.notes.map(note => {
+                const found = nodes.find(n => n.name === note);
+                return found ? found.id : -1;
+            }).filter(id => id !== -1);
+
+            return {
+                name: chord.name,
+                nodeIds: nodeIds,
+                type: chord.type
+            };
+        });
+
+        // === PARTICULA ===
+        let particle = {
+            x: 0,
+            y: 0,
+            vx: 0,
+            vy: 0,
+            trail: []
+        };
+
+        // === ESTADO ===
+        let paused = false;
+        let lastTime = 0;
+        let audioStarted = false;
+        let isDragging = false;
+
+        // === AUDIO ===
+        let audioCtx = null;
+        let masterGain = null;
+        let reverb = null;
+
+        async function initAudio() {
+            if (audioCtx) {
+                // Resumir si está suspendido
+                if (audioCtx.state === 'suspended') {
+                    await audioCtx.resume();
+                }
+                return;
+            }
+
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            await audioCtx.resume();
+
+            // Master gain
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.3;
+
+            // Reverb simple (delay + feedback)
+            const convolver = audioCtx.createConvolver();
+            const reverbGain = audioCtx.createGain();
+            reverbGain.gain.value = 0.3;
+
+            // Crear impulse response sintético
+            const length = audioCtx.sampleRate * 2;
+            const impulse = audioCtx.createBuffer(2, length, audioCtx.sampleRate);
+            for (let channel = 0; channel < 2; channel++) {
+                const data = impulse.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.5));
+                }
+            }
+            convolver.buffer = impulse;
+
+            // Routing: master -> convolver -> reverbGain -> destination
+            //          master -> destination (dry)
+            masterGain.connect(audioCtx.destination);
+            masterGain.connect(convolver);
+            convolver.connect(reverbGain);
+            reverbGain.connect(audioCtx.destination);
+
+            audioStarted = true;
+        }
+
+        function playNote(freq, velocity = 1) {
+            if (!audioCtx || !audioStarted) return;
+
+            const now = audioCtx.currentTime;
+
+            // Oscillator
+            const osc = audioCtx.createOscillator();
+            osc.type = 'triangle';
+            osc.frequency.value = freq;
+
+            // Envelope
+            const env = audioCtx.createGain();
+            env.gain.setValueAtTime(0, now);
+            env.gain.linearRampToValueAtTime(velocity * 0.5, now + 0.02);
+            env.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+
+            // Connect
+            osc.connect(env);
+            env.connect(masterGain);
+
+            // Play
+            osc.start(now);
+            osc.stop(now + 0.8);
+        }
+
+        // === DETECCION DE TRIANGULO (ACORDE) ===
+        let currentTriangle = null;
+
+        // Detectar si punto está dentro de un triángulo
+        function pointInTriangle(px, py, ax, ay, bx, by, cx, cy) {
+            const v0x = cx - ax, v0y = cy - ay;
+            const v1x = bx - ax, v1y = by - ay;
+            const v2x = px - ax, v2y = py - ay;
+
+            const dot00 = v0x * v0x + v0y * v0y;
+            const dot01 = v0x * v1x + v0y * v1y;
+            const dot02 = v0x * v2x + v0y * v2y;
+            const dot11 = v1x * v1x + v1y * v1y;
+            const dot12 = v1x * v2x + v1y * v2y;
+
+            const inv = 1 / (dot00 * dot11 - dot01 * dot01);
+            const u = (dot11 * dot02 - dot01 * dot12) * inv;
+            const v = (dot00 * dot12 - dot01 * dot02) * inv;
+
+            return (u >= 0) && (v >= 0) && (u + v <= 1);
+        }
+
+        function checkTriangle() {
+            const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
+
+            // Decay del glow de todos los nodos
+            for (const node of nodes) {
+                node.glow *= 0.92;
+            }
+
+            // Buscar en qué triángulo está la partícula
+            let foundTriangle = null;
+
+            for (const tri of trianglesData) {
+                if (tri.nodeIds.length !== 3) continue;
+
+                const n0 = nodes[tri.nodeIds[0]];
+                const n1 = nodes[tri.nodeIds[1]];
+                const n2 = nodes[tri.nodeIds[2]];
+
+                if (n0 && n1 && n2) {
+                    if (pointInTriangle(particle.x, particle.y,
+                                        n0.x, n0.y, n1.x, n1.y, n2.x, n2.y)) {
+                        foundTriangle = tri;
+                        break;
+                    }
+                }
+            }
+
+            // Si entramos en un nuevo triángulo, tocar el acorde
+            if (foundTriangle && foundTriangle !== currentTriangle) {
+                currentTriangle = foundTriangle;
+
+                // Activar glow de los 3 nodos
+                for (const nodeId of foundTriangle.nodeIds) {
+                    nodes[nodeId].glow = 1;
+                    nodes[nodeId].triggered = true;
+                }
+
+                // Tocar la tríada
+                if (audioStarted && audioCtx && audioCtx.state === 'running') {
+                    const velocity = Math.min(1, speed / 10);
+                    const chord = chords.find(c => c.name === foundTriangle.name);
+                    if (chord) {
+                        // Tocar las 3 notas con pequeño delay para arpegio sutil
+                        chord.notes.forEach((noteName, i) => {
+                            setTimeout(() => {
+                                playNote(NOTE_FREQ[noteName], 0.3 + velocity * 0.4);
+                            }, i * 30); // 30ms entre notas
+                        });
+                    }
+                }
+            } else if (!foundTriangle) {
+                currentTriangle = null;
+            }
+        }
+
+        // === INICIALIZACION ===
+        function resetParticle() {
+            // Posicion inicial: entre el centro y un vértice
+            const startAngle = Math.random() * Math.PI * 2;
+            particle.x = CX + HEX_RADIUS * 0.5 * Math.cos(startAngle);
+            particle.y = CY + HEX_RADIUS * 0.5 * Math.sin(startAngle);
+
+            // Velocidad inicial tangencial para orbitar
+            const velAngle = startAngle + Math.PI / 2;
+            particle.vx = params.initialVelocity * 2 * Math.cos(velAngle);
+            particle.vy = params.initialVelocity * 2 * Math.sin(velAngle);
+
+            particle.trail = [];
+        }
+
+        // === FISICA ===
+        function updatePhysics(dt) {
+            if (paused || isDragging) return;
+
+            // Substepping para estabilidad
+            const steps = 8;
+            const subDt = dt / steps;
+
+            for (let step = 0; step < steps; step++) {
+                // Calcular fuerza total
+                let fx = 0;
+                let fy = 0;
+
+                // Fuerza de atraccion de cada nodo
+                for (const node of nodes) {
+                    const dx = node.x - particle.x;
+                    const dy = node.y - particle.y;
+                    const distSq = dx * dx + dy * dy;
+                    const dist = Math.sqrt(distSq);
+
+                    // Evitar singularidad (distancia minima)
+                    const minDist = 20;
+                    const safeDist = Math.max(dist, minDist);
+
+                    // Fuerza inversamente proporcional al cuadrado de la distancia
+                    // F = K / r^2, direccion = (dx, dy) / r
+                    const forceMag = params.force * 1000 / (safeDist * safeDist);
+                    fx += forceMag * dx / dist;
+                    fy += forceMag * dy / dist;
+                }
+
+                // Friccion
+                fx -= params.friction * particle.vx;
+                fy -= params.friction * particle.vy;
+
+                // Integracion (Velocity Verlet simplificado)
+                particle.vx += fx * subDt;
+                particle.vy += fy * subDt;
+                particle.x += particle.vx * subDt;
+                particle.y += particle.vy * subDt;
+            }
+
+            // Guardar trail
+            particle.trail.push({ x: particle.x, y: particle.y });
+            if (particle.trail.length > params.trailLength) {
+                particle.trail.shift();
+            }
+
+            // Limites del canvas (rebote suave)
+            const margin = 20;
+            if (particle.x < margin) { particle.x = margin; particle.vx *= -0.5; }
+            if (particle.x > W - margin) { particle.x = W - margin; particle.vx *= -0.5; }
+            if (particle.y < margin) { particle.y = margin; particle.vy *= -0.5; }
+            if (particle.y > H - margin) { particle.y = H - margin; particle.vy *= -0.5; }
+        }
+
+        // === CAMPO DE POTENCIAL ===
+        let fieldImageData = null;
+        let showField = true;
+
+        function calculateField() {
+            const resolution = 15; // Tamaño de celda en pixels
+            const cols = Math.ceil(W / resolution);
+            const rows = Math.ceil(H / resolution);
+
+            fieldImageData = ctx.createImageData(W, H);
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const x = col * resolution + resolution / 2;
+                    const y = row * resolution + resolution / 2;
+
+                    // Calcular potencial (suma de -K/r para cada nodo)
+                    let potential = 0;
+                    for (const node of nodes) {
+                        const dx = node.x - x;
+                        const dy = node.y - y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        const safeDist = Math.max(dist, 20);
+                        potential += -1 / safeDist;
+                    }
+
+                    // Normalizar potencial a color (más negativo = más intenso)
+                    // Rango típico: -0.15 a -0.02
+                    const normalized = Math.min(1, Math.max(0, (-potential - 0.015) / 0.1));
+
+                    // Color: mucho más visible - púrpura/magenta
+                    const r = Math.floor(normalized * 120);
+                    const g = Math.floor(normalized * 30);
+                    const b = Math.floor(normalized * 150);
+
+                    // Rellenar la celda
+                    for (let py = row * resolution; py < Math.min((row + 1) * resolution, H); py++) {
+                        for (let px = col * resolution; px < Math.min((col + 1) * resolution, W); px++) {
+                            const idx = (py * W + px) * 4;
+                            fieldImageData.data[idx] = 17 + r;     // R (base: #111118)
+                            fieldImageData.data[idx + 1] = 17 + g; // G
+                            fieldImageData.data[idx + 2] = 24 + b; // B
+                            fieldImageData.data[idx + 3] = 255;    // A
+                        }
+                    }
+                }
+            }
+        }
+
+        // Precalcular campo al inicio
+        calculateField();
+
+        // === RENDERIZADO ===
+        function draw() {
+            // Dibujar campo de potencial como fondo
+            if (showField && fieldImageData) {
+                ctx.putImageData(fieldImageData, 0, 0);
+            } else {
+                ctx.fillStyle = '#111118';
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            // Dibujar hexágono exterior
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let i = 1; i <= 6; i++) {
+                const node = nodes[i];
+                const nextNode = nodes[i === 6 ? 1 : i + 1];
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(nextNode.x, nextNode.y);
+            }
+            ctx.stroke();
+
+            // Dibujar líneas del centro a cada vértice
+            ctx.strokeStyle = '#333';
+            const center = nodes[0];
+            for (let i = 1; i <= 6; i++) {
+                ctx.beginPath();
+                ctx.moveTo(center.x, center.y);
+                ctx.lineTo(nodes[i].x, nodes[i].y);
+                ctx.stroke();
+            }
+
+            // Dibujar triángulos y nombres de acordes
+            trianglesData.forEach(tri => {
+                if (tri.nodeIds.length === 3) {
+                    const n0 = nodes[tri.nodeIds[0]];
+                    const n1 = nodes[tri.nodeIds[1]];
+                    const n2 = nodes[tri.nodeIds[2]];
+                    if (n0 && n1 && n2) {
+                        const cx = (n0.x + n1.x + n2.x) / 3;
+                        const cy = (n0.y + n1.y + n2.y) / 3;
+
+                        // Highlight si es el triángulo activo
+                        if (currentTriangle && currentTriangle.name === tri.name) {
+                            ctx.beginPath();
+                            ctx.moveTo(n0.x, n0.y);
+                            ctx.lineTo(n1.x, n1.y);
+                            ctx.lineTo(n2.x, n2.y);
+                            ctx.closePath();
+                            ctx.fillStyle = 'rgba(96, 165, 250, 0.15)';
+                            ctx.fill();
+                            ctx.strokeStyle = '#60a5fa';
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+
+                            // Nombre más visible
+                            ctx.font = 'bold 14px SF Mono, Consolas, monospace';
+                            ctx.fillStyle = '#60a5fa';
+                        } else {
+                            ctx.font = '11px SF Mono, Consolas, monospace';
+                            ctx.fillStyle = '#555';
+                        }
+
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(tri.name, cx, cy);
+                    }
+                }
+            });
+
+            // Dibujar trail
+            if (particle.trail.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(particle.trail[0].x, particle.trail[0].y);
+
+                for (let i = 1; i < particle.trail.length; i++) {
+                    ctx.lineTo(particle.trail[i].x, particle.trail[i].y);
+                }
+
+                // Gradiente de opacidad
+                const gradient = ctx.createLinearGradient(
+                    particle.trail[0].x, particle.trail[0].y,
+                    particle.x, particle.y
+                );
+                gradient.addColorStop(0, 'rgba(96, 165, 250, 0)');
+                gradient.addColorStop(1, 'rgba(96, 165, 250, 0.8)');
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Dibujar nodos
+            for (const node of nodes) {
+                // Radio de trigger (circulo sutil)
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, TRIGGER_RADIUS, 0, Math.PI * 2);
+                ctx.strokeStyle = node.color + '30';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Glow dinamico (se expande cuando triggea)
+                const glowSize = 40 + node.glow * 30;
+                const glowOpacity = Math.floor(64 + node.glow * 191).toString(16).padStart(2, '0');
+                const glowGradient = ctx.createRadialGradient(
+                    node.x, node.y, 0,
+                    node.x, node.y, glowSize
+                );
+                glowGradient.addColorStop(0, node.color + glowOpacity);
+                glowGradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = glowGradient;
+                ctx.fillRect(node.x - glowSize, node.y - glowSize, glowSize * 2, glowSize * 2);
+
+                // Nodo (mas grande cuando triggea)
+                const nodeSize = 15 + node.glow * 8;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, nodeSize, 0, Math.PI * 2);
+                ctx.fillStyle = node.color;
+                ctx.fill();
+
+                // Etiqueta
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px SF Mono, Consolas, monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.name, node.x, node.y);
+            }
+
+            // Dibujar particula
+            ctx.beginPath();
+            ctx.arc(particle.x, particle.y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+
+            // Vector velocidad
+            const velScale = 10;
+            ctx.beginPath();
+            ctx.moveTo(particle.x, particle.y);
+            ctx.lineTo(
+                particle.x + particle.vx * velScale,
+                particle.y + particle.vy * velScale
+            );
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Punta de flecha
+            const angle = Math.atan2(particle.vy, particle.vx);
+            const arrowLen = 6;
+            ctx.beginPath();
+            ctx.moveTo(
+                particle.x + particle.vx * velScale,
+                particle.y + particle.vy * velScale
+            );
+            ctx.lineTo(
+                particle.x + particle.vx * velScale - arrowLen * Math.cos(angle - 0.4),
+                particle.y + particle.vy * velScale - arrowLen * Math.sin(angle - 0.4)
+            );
+            ctx.moveTo(
+                particle.x + particle.vx * velScale,
+                particle.y + particle.vy * velScale
+            );
+            ctx.lineTo(
+                particle.x + particle.vx * velScale - arrowLen * Math.cos(angle + 0.4),
+                particle.y + particle.vy * velScale - arrowLen * Math.sin(angle + 0.4)
+            );
+            ctx.stroke();
+
+            // Stats
+            const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
+            document.getElementById('stats').textContent =
+                `Posicion: (${particle.x.toFixed(0)}, ${particle.y.toFixed(0)}) | ` +
+                `Velocidad: ${speed.toFixed(2)} | ` +
+                `Trail: ${particle.trail.length} puntos`;
+        }
+
+        // === GAME LOOP ===
+        function loop(time) {
+            const dt = (time - lastTime) / 1000;
+            lastTime = time;
+
+            updatePhysics(dt);
+            checkTriangle();
+            draw();
+
+            requestAnimationFrame(loop);
+        }
+
+        // === CONTROLES ===
+        document.getElementById('force').addEventListener('input', (e) => {
+            params.force = parseFloat(e.target.value);
+            document.getElementById('forceVal').textContent = params.force;
+        });
+
+        document.getElementById('friction').addEventListener('input', (e) => {
+            params.friction = parseFloat(e.target.value) / 1000;
+            document.getElementById('frictionVal').textContent = params.friction.toFixed(3);
+        });
+
+        document.getElementById('velocity').addEventListener('input', (e) => {
+            params.initialVelocity = parseFloat(e.target.value) / 10;
+            document.getElementById('velocityVal').textContent = params.initialVelocity.toFixed(0);
+        });
+
+        document.getElementById('trail').addEventListener('input', (e) => {
+            params.trailLength = parseInt(e.target.value);
+            document.getElementById('trailVal').textContent = params.trailLength;
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', async () => {
+            await initAudio();
+            resetParticle();
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            paused = !paused;
+            document.getElementById('pauseBtn').textContent = paused ? 'Reanudar' : 'Pausar';
+        });
+
+        document.getElementById('clearTrailBtn').addEventListener('click', () => {
+            particle.trail = [];
+        });
+
+        document.getElementById('fieldBtn').addEventListener('click', () => {
+            showField = !showField;
+            document.getElementById('fieldBtn').textContent = `Campo: ${showField ? 'ON' : 'OFF'}`;
+        });
+
+        // Botones de acordes - dan impulso hacia ese acorde
+        document.querySelectorAll('.chord-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                await initAudio();
+
+                const chordName = btn.dataset.chord;
+                const chord = chords.find(c => c.name === chordName);
+                if (!chord) return;
+
+                // Calcular centro del acorde
+                let cx = 0, cy = 0, count = 0;
+                chord.notes.forEach(noteName => {
+                    const node = nodes.find(n => n.name === noteName);
+                    if (node) {
+                        cx += node.x;
+                        cy += node.y;
+                        count++;
+                    }
+                });
+                if (count > 0) {
+                    cx /= count;
+                    cy /= count;
+
+                    // Dar impulso hacia el centro del acorde
+                    const dx = cx - particle.x;
+                    const dy = cy - particle.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const impulse = 8;
+                    particle.vx += (dx / dist) * impulse;
+                    particle.vy += (dy / dist) * impulse;
+                }
+
+                // Visual feedback
+                btn.classList.add('active');
+                setTimeout(() => btn.classList.remove('active'), 200);
+            });
+        });
+
+        // Arrastrar partícula con mouse
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        let lastMouseTime = 0;
+
+        canvas.addEventListener('mousedown', async (e) => {
+            await initAudio();
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+
+            // Verificar si click cerca de la partícula
+            const dx = mx - particle.x;
+            const dy = my - particle.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < 30) {
+                // Arrastrar partícula existente
+                isDragging = true;
+                particle.vx = 0;
+                particle.vy = 0;
+            } else {
+                // Teletransportar partícula
+                particle.x = mx;
+                particle.y = my;
+                particle.vx = 0;
+                particle.vy = 0;
+                particle.trail = [];
+                isDragging = true;
+            }
+
+            lastMouseX = mx;
+            lastMouseY = my;
+            lastMouseTime = performance.now();
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+
+            particle.x = mx;
+            particle.y = my;
+
+            // Guardar para calcular velocidad al soltar
+            lastMouseX = mx;
+            lastMouseY = my;
+            lastMouseTime = performance.now();
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+
+            // Calcular velocidad basada en movimiento reciente
+            const dt = (performance.now() - lastMouseTime) / 1000;
+            if (dt > 0 && dt < 0.1) {
+                const vx = (mx - lastMouseX) / dt;
+                const vy = (my - lastMouseY) / dt;
+                // Limitar velocidad máxima
+                const maxV = 20;
+                const speed = Math.sqrt(vx * vx + vy * vy);
+                if (speed > maxV) {
+                    particle.vx = (vx / speed) * maxV;
+                    particle.vy = (vy / speed) * maxV;
+                } else {
+                    particle.vx = vx * 0.3;
+                    particle.vy = vy * 0.3;
+                }
+            }
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+
+        // === INICIO ===
+        resetParticle();
+        requestAnimationFrame(loop);
+    </script>
+</body>
+</html>
