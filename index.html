@@ -65,6 +65,11 @@
     </header>
 
     <main class="max-w-6xl mx-auto px-6 py-12">
+        <!-- Breadcrumb -->
+        <div class="mb-8">
+            <a href="../index.html" class="text-gray-400 hover:text-white text-sm">← Physics Sound Lab</a>
+        </div>
+
         <!-- Hero -->
         <section class="text-center mb-16">
             <h2 class="text-4xl font-light mb-4">
@@ -191,83 +196,6 @@
             </a>
         </section>
 
-        <!-- Destacado: Coro Planetario -->
-        <!-- Música Generativa -->
-        <section class="mb-8">
-            <h2 class="text-2xl font-light text-center mb-6">
-                <span class="text-purple-400 font-medium">Música Generativa</span>
-            </h2>
-            <p class="text-gray-400 text-center max-w-2xl mx-auto mb-8">
-                Proyectos donde la física y las matemáticas generan música emergente.
-            </p>
-        </section>
-
-        <section class="bg-gradient-to-r from-amber-900/20 to-purple-900/20 border border-amber-500/30 rounded-2xl p-8 mb-6">
-            <div class="flex flex-col md:flex-row gap-8 items-center">
-                <div class="flex-1">
-                    <span class="text-amber-400 text-sm font-medium">HARMONICES MUNDI</span>
-                    <h2 class="text-3xl font-light mt-2 mb-4">
-                        <span class="text-amber-400 font-medium">Coro Planetario</span>
-                    </h2>
-                    <p class="text-gray-400 mb-6">
-                        El Sistema Solar completo sonificado según la visión de Kepler (1619).
-                        8 planetas cantando en armonía con física orbital real, FFT spectrum analyzer,
-                        y modo Concert Hall inmersivo.
-                    </p>
-                    <div class="flex flex-wrap gap-3">
-                        <a href="https://cjlkaiser-cpu.github.io/harmonices-mundi/" target="_blank"
-                           class="px-5 py-2.5 bg-amber-500 text-gray-900 rounded-lg font-medium hover:bg-amber-400 transition">
-                            ▶ Demo
-                        </a>
-                        <a href="https://cjlkaiser-cpu.github.io/harmonices-mundi/tutorial.html" target="_blank"
-                           class="px-5 py-2.5 bg-gray-800 text-gray-200 rounded-lg font-medium hover:bg-gray-700 transition">
-                            📖 Tutorial
-                        </a>
-                        <a href="https://github.com/cjlkaiser-cpu/harmonices-mundi" target="_blank"
-                           class="px-5 py-2.5 bg-gray-800 text-gray-200 rounded-lg font-medium hover:bg-gray-700 transition">
-                            GitHub
-                        </a>
-                    </div>
-                </div>
-                <div class="w-full md:w-80">
-                    <canvas id="preview-coro" class="w-full h-48 bg-gray-950 rounded-xl"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <section class="bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-500/30 rounded-2xl p-8 mb-16">
-            <div class="flex flex-col md:flex-row gap-8 items-center">
-                <div class="flex-1">
-                    <span class="text-purple-400 text-sm font-medium">TONNETZ ATRACTOR</span>
-                    <h2 class="text-3xl font-light mt-2 mb-4">
-                        <span class="text-purple-400 font-medium">El Atractor del Tonnetz</span>
-                    </h2>
-                    <p class="text-gray-400 mb-6">
-                        Física del caos + teoría Neo-Riemanniana = música emergente.
-                        Una partícula magnética orbita un hexágono Tonnetz, disparando acordes
-                        según su trayectoria caótica. 5 modos armónicos: Mayor, Menor, Frigio, Lidio, Blues.
-                    </p>
-                    <div class="flex flex-wrap gap-3">
-                        <a href="https://cjlkaiser-cpu.github.io/tonnetz-atractor/" target="_blank"
-                           class="px-5 py-2.5 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-400 transition">
-                            ▶ Demo
-                        </a>
-                        <a href="https://cjlkaiser-cpu.github.io/tonnetz-atractor/tutorial.html" target="_blank"
-                           class="px-5 py-2.5 bg-gray-800 text-gray-200 rounded-lg font-medium hover:bg-gray-700 transition">
-                            📖 Tutorial
-                        </a>
-                        <a href="https://github.com/cjlkaiser-cpu/tonnetz-atractor" target="_blank"
-                           class="px-5 py-2.5 bg-gray-800 text-gray-200 rounded-lg font-medium hover:bg-gray-700 transition">
-                            GitHub
-                        </a>
-                    </div>
-                </div>
-                <div class="w-full md:w-80">
-                    <canvas id="preview-tonnetz" class="w-full h-48 bg-gray-950 rounded-xl"></canvas>
-                </div>
-            </div>
-        </section>
-
         <!-- Tech Stack -->
         <section class="text-center">
             <h3 class="text-lg font-medium mb-4 text-gray-400">Tecnologías</h3>
@@ -276,9 +204,7 @@
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Web Audio API</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Runge-Kutta 4</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Newton-Raphson</span>
-                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">FFT Analyser</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Ecuaciones de Kepler</span>
-                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300">Neo-Riemannian</span>
             </div>
         </section>
     </main>
@@ -378,15 +304,6 @@
                 };
             }
 
-            // Coro Planetario (Sistema Solar)
-            const coro = document.getElementById('preview-coro');
-            if (coro) {
-                previews.coro = {
-                    ctx: coro.getContext('2d'),
-                    w: coro.width = coro.offsetWidth * 2,
-                    h: coro.height = coro.offsetHeight * 2
-                };
-            }
         }
 
         // Animaciones
@@ -637,54 +554,6 @@
                 k.ctx.beginPath();
                 k.ctx.arc(px, py, 8, 0, Math.PI * 2);
                 k.ctx.fill();
-            }
-
-            // Coro Planetario (Sistema Solar)
-            if (previews.coro) {
-                const c = previews.coro;
-                c.ctx.fillStyle = '#030712';
-                c.ctx.fillRect(0, 0, c.w, c.h);
-
-                const cx = c.w / 2, cy = c.h / 2;
-
-                // Sol
-                const sunGrad = c.ctx.createRadialGradient(cx, cy, 0, cx, cy, 20);
-                sunGrad.addColorStop(0, '#fff');
-                sunGrad.addColorStop(0.5, '#fbbf24');
-                sunGrad.addColorStop(1, '#f59e0b');
-                c.ctx.fillStyle = sunGrad;
-                c.ctx.beginPath();
-                c.ctx.arc(cx, cy, 15, 0, Math.PI * 2);
-                c.ctx.fill();
-
-                // Planetas
-                const planets = [
-                    { r: 30, speed: 4, color: '#a0a0a0', size: 3 },   // Mercurio
-                    { r: 45, speed: 3, color: '#e6c87a', size: 4 },   // Venus
-                    { r: 60, speed: 2.5, color: '#6b93d6', size: 4 }, // Tierra
-                    { r: 80, speed: 2, color: '#c1440e', size: 3.5 }, // Marte
-                    { r: 110, speed: 1, color: '#d8ca9d', size: 8 },  // Júpiter
-                    { r: 140, speed: 0.7, color: '#f4d59e', size: 7 } // Saturno
-                ];
-
-                planets.forEach(p => {
-                    // Órbita
-                    c.ctx.strokeStyle = p.color + '20';
-                    c.ctx.lineWidth = 1;
-                    c.ctx.beginPath();
-                    c.ctx.arc(cx, cy, p.r, 0, Math.PI * 2);
-                    c.ctx.stroke();
-
-                    // Planeta
-                    const angle = time * p.speed;
-                    const px = cx + p.r * Math.cos(angle);
-                    const py = cy + p.r * Math.sin(angle);
-
-                    c.ctx.fillStyle = p.color;
-                    c.ctx.beginPath();
-                    c.ctx.arc(px, py, p.size, 0, Math.PI * 2);
-                    c.ctx.fill();
-                });
             }
 
             requestAnimationFrame(animate);
