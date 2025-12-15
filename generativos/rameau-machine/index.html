@@ -269,6 +269,94 @@
         .prob-bar.func-S { background: #3b82f6; }
         .prob-bar.func-D { background: #ef4444; }
 
+        /* Matriz de transiciones */
+        .matrix-container {
+            font-size: 10px;
+            overflow: hidden;
+        }
+
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: 28px repeat(7, 1fr);
+            gap: 1px;
+        }
+
+        .matrix-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            font-size: 8px;
+            border-radius: 2px;
+            transition: background 0.2s ease;
+        }
+
+        .matrix-header {
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 9px;
+        }
+
+        .matrix-row-label {
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .matrix-cell.current-row {
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
+        }
+
+        /* Botón de caos */
+        .chaos-btn {
+            background: linear-gradient(135deg, #7c3aed, #ec4899);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 12px;
+        }
+
+        .chaos-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+        }
+
+        .chaos-btn:active {
+            transform: scale(0.95);
+        }
+
+        .chaos-btn.active {
+            animation: chaos-pulse 0.3s ease;
+        }
+
+        @keyframes chaos-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); box-shadow: 0 0 30px rgba(236, 72, 153, 0.8); }
+            100% { transform: scale(1); }
+        }
+
+        /* Barra de entropía */
+        .entropy-bar {
+            height: 6px;
+            background: #1e293b;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .entropy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+            transition: width 0.3s ease;
+        }
+
         @keyframes pulse-glow {
             0%, 100% { opacity: 0.5; }
             50% { opacity: 1; }
@@ -365,14 +453,60 @@
                     </div>
                 </section>
 
-                <!-- Probabilidades -->
+                <!-- Gravedad Tonal -->
                 <section>
                     <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider">Probabilidades</h3>
+                        <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider">Gravedad Tonal</h3>
+                        <span class="text-sm font-mono text-slate-300" id="gravityValue">50%</span>
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-track">
+                            <div class="slider-fill" id="gravityFill" style="width: 50%"></div>
+                        </div>
+                        <input type="range" id="gravitySlider" min="0" max="100" value="50">
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-500 mt-1">
+                        <span>Caos</span>
+                        <span>Estricto</span>
+                    </div>
+                </section>
+
+                <!-- Caos y Entropía -->
+                <section>
+                    <div class="flex items-center justify-between mb-2">
+                        <button id="chaosBtn" class="chaos-btn">
+                            💥 Inyectar Caos
+                        </button>
+                        <div class="text-right">
+                            <span class="text-xs text-slate-500">Caos: </span>
+                            <span class="text-xs font-mono text-purple-400" id="chaosLevel">0%</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs text-slate-500">Entropía</span>
+                        <span class="text-xs font-mono text-slate-400" id="entropyValue">0.50</span>
+                    </div>
+                    <div class="entropy-bar">
+                        <div class="entropy-fill" id="entropyFill" style="width: 50%"></div>
+                    </div>
+                </section>
+
+                <!-- Matriz de Transiciones -->
+                <section>
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider">Matriz P(j|i)</h3>
                         <span class="text-xs text-slate-500">desde <span id="currentChordLabel" class="text-white font-mono">I</span></span>
                     </div>
+                    <div class="matrix-container" id="matrixDisplay">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </section>
+
+                <!-- Probabilidades (barras) -->
+                <section>
+                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Siguiente →</h3>
                     <div class="space-y-1" id="probDisplay">
-                        <!-- Se llena dinamicamente -->
+                        <!-- Se llena dinámicamente -->
                     </div>
                 </section>
 
@@ -723,6 +857,20 @@
     // TONAL GRAVITY (Harmonic State Machine)
     // ============================================================
 
+    // Matriz de transiciones "estrictas" (gravedad alta)
+    const STRICT_TRANSITIONS = {
+        'I':    { 'I': 0.02, 'ii': 0.15, 'iii': 0.03, 'IV': 0.35, 'V': 0.35, 'vi': 0.08, 'viio': 0.02 },
+        'ii':   { 'I': 0.02, 'ii': 0.02, 'iii': 0.01, 'IV': 0.05, 'V': 0.75, 'vi': 0.03, 'viio': 0.12 },
+        'iii':  { 'I': 0.05, 'ii': 0.05, 'iii': 0.02, 'IV': 0.35, 'V': 0.08, 'vi': 0.43, 'viio': 0.02 },
+        'IV':   { 'I': 0.10, 'ii': 0.08, 'iii': 0.02, 'IV': 0.02, 'V': 0.65, 'vi': 0.03, 'viio': 0.10 },
+        'V':    { 'I': 0.82, 'ii': 0.01, 'iii': 0.01, 'IV': 0.02, 'V': 0.02, 'vi': 0.10, 'viio': 0.02 },
+        'vi':   { 'I': 0.05, 'ii': 0.30, 'iii': 0.03, 'IV': 0.40, 'V': 0.15, 'vi': 0.02, 'viio': 0.05 },
+        'viio': { 'I': 0.88, 'ii': 0.01, 'iii': 0.03, 'IV': 0.01, 'V': 0.02, 'vi': 0.03, 'viio': 0.02 }
+    };
+
+    // Distribución uniforme (gravedad = 0, caos total)
+    const UNIFORM_PROB = 1 / 7;
+
     class TonalGravity {
         constructor() {
             this.position = 'I';
@@ -733,6 +881,11 @@
             this.bassDirection = 0;
             this.key = 'C';
             this.keyPitch = 0;
+
+            // Bias sliders
+            this.gravity = 0.5;        // 0 = caos, 1 = estricto
+            this.chaosNoise = 0;       // Ruido temporal inyectado
+            this.chaosDecayRate = 0.7; // Decae 30% por acorde
         }
 
         setKey(keyName) {
@@ -740,32 +893,116 @@
             this.keyPitch = KEY_PITCHES[keyName] || 0;
         }
 
+        setGravity(value) {
+            this.gravity = Math.max(0, Math.min(1, value));
+        }
+
+        injectChaos(amount = 0.4) {
+            this.chaosNoise = Math.min(1, this.chaosNoise + amount);
+        }
+
+        decayChaos() {
+            this.chaosNoise *= this.chaosDecayRate;
+            if (this.chaosNoise < 0.01) this.chaosNoise = 0;
+        }
+
         getTransitionProbabilities() {
             const base = DETAILED_TRANSITIONS[this.position];
+            const strict = STRICT_TRANSITIONS[this.position];
             const modified = {};
             let total = 0;
 
-            for (const [target, prob] of Object.entries(base)) {
-                const targetData = CHORDS[target];
-                let p = prob;
+            const chords = Object.keys(base);
 
-                // Tension-driven modification
+            for (const target of chords) {
+                const targetData = CHORDS[target];
+
+                // Interpolar entre uniforme, base y estricta según gravedad
+                // gravedad 0 → uniforme
+                // gravedad 0.5 → base (comportamiento original)
+                // gravedad 1 → estricta
+                let p;
+                if (this.gravity <= 0.5) {
+                    // Entre uniforme y base
+                    const t = this.gravity * 2; // 0→0, 0.5→1
+                    p = UNIFORM_PROB * (1 - t) + base[target] * t;
+                } else {
+                    // Entre base y estricta
+                    const t = (this.gravity - 0.5) * 2; // 0.5→0, 1→1
+                    p = base[target] * (1 - t) + strict[target] * t;
+                }
+
+                // Modificación por tensión (escalada por gravedad)
+                const tensionEffect = this.gravity; // A más gravedad, más efecto de tensión
                 if (this.tension > 0.7 && targetData.function === 'T') {
-                    p *= (1 + this.tension);
+                    p *= (1 + this.tension * tensionEffect);
                 } else if (this.tension < 0.3 && targetData.function === 'D') {
-                    p *= (1 + (0.5 - this.tension));
+                    p *= (1 + (0.5 - this.tension) * tensionEffect);
+                }
+
+                // Añadir ruido de caos (si hay)
+                if (this.chaosNoise > 0) {
+                    const noise = (Math.random() - 0.5) * this.chaosNoise * 0.5;
+                    p = Math.max(0.01, p + noise);
                 }
 
                 modified[target] = p;
                 total += p;
             }
 
-            // Normalize
+            // Normalizar
             for (const key of Object.keys(modified)) {
                 modified[key] /= total;
             }
 
             return modified;
+        }
+
+        // Obtener matriz completa para visualización
+        getFullMatrix() {
+            const matrix = {};
+            const originalPosition = this.position;
+
+            for (const from of Object.keys(DETAILED_TRANSITIONS)) {
+                this.position = from;
+                matrix[from] = this.getTransitionProbabilities();
+            }
+
+            this.position = originalPosition;
+            return matrix;
+        }
+
+        // Calcular entropía (medida de predictibilidad)
+        getEntropy() {
+            const probs = this.getTransitionProbabilities();
+            let entropy = 0;
+            for (const p of Object.values(probs)) {
+                if (p > 0) {
+                    entropy -= p * Math.log2(p);
+                }
+            }
+            // Normalizar: max entropy = log2(7) ≈ 2.807
+            return entropy / Math.log2(7);
+        }
+
+        // Actualizar tensión según función del acorde (afectada por gravedad)
+        updateTensionForChord(chordData) {
+            // A más gravedad, más rápido se resuelve/acumula la tensión
+            const gravityFactor = 0.5 + this.gravity * 0.5; // 0.5 a 1.0
+
+            if (chordData.function === 'T') {
+                // Resolución: más rápida con alta gravedad
+                const decayRate = 0.2 + (0.3 * gravityFactor); // 0.35 a 0.5
+                this.tension *= (1 - decayRate);
+            } else if (chordData.function === 'D') {
+                // Acumulación: más fuerte con alta gravedad
+                const buildRate = 0.2 + (0.2 * gravityFactor); // 0.3 a 0.4
+                this.tension = Math.min(1, this.tension + buildRate);
+            } else {
+                // S: acumulación moderada
+                const buildRate = 0.05 + (0.1 * gravityFactor); // 0.1 a 0.15
+                this.tension = Math.min(1, this.tension + buildRate);
+            }
         }
 
         step() {
@@ -781,15 +1018,11 @@
             this.bassHistory.push(bassChoice.bass);
             if (this.bassHistory.length > 16) this.bassHistory.shift();
 
-            // Update tension
-            const nextData = CHORDS[nextChord];
-            if (nextData.function === 'T') {
-                this.tension *= 0.3;
-            } else if (nextData.function === 'D') {
-                this.tension = Math.min(1, this.tension + 0.3);
-            } else {
-                this.tension = Math.min(1, this.tension + 0.1);
-            }
+            // Update tension (afectada por gravedad)
+            this.updateTensionForChord(CHORDS[nextChord]);
+
+            // Decay del caos
+            this.decayChaos();
 
             // Update history
             this.history.push(nextChord);
@@ -801,7 +1034,9 @@
                 chord: nextChord,
                 inversion: this.inversion,
                 tension: this.tension,
-                bass: bassChoice.bass
+                bass: bassChoice.bass,
+                entropy: this.getEntropy(),
+                chaosLevel: this.chaosNoise
             };
         }
 
@@ -814,14 +1049,11 @@
             this.bassHistory.push(bassChoice.bass);
             if (this.bassHistory.length > 16) this.bassHistory.shift();
 
-            const chordData = CHORDS[chord];
-            if (chordData.function === 'T') {
-                this.tension *= 0.3;
-            } else if (chordData.function === 'D') {
-                this.tension = Math.min(1, this.tension + 0.3);
-            } else {
-                this.tension = Math.min(1, this.tension + 0.1);
-            }
+            // Update tension (afectada por gravedad)
+            this.updateTensionForChord(CHORDS[chord]);
+
+            // Decay del caos
+            this.decayChaos();
 
             this.history.push(chord);
             if (this.history.length > 16) this.history.shift();
@@ -891,6 +1123,7 @@
             this.history = ['I'];
             this.bassHistory = [0];
             this.bassDirection = 0;
+            this.chaosNoise = 0; // Reset del caos
         }
 
         detectCadence() {
@@ -1592,6 +1825,9 @@
             this.updateDisplay();
             this.updateBassViz();
             this.updateProbabilities();
+            this.updateMatrix();
+            this.updateEntropy();
+            this.updateChaosLevel();
         }
 
         initAudio() {
@@ -1684,6 +1920,32 @@
             document.getElementById('exportBtn').addEventListener('click', () => {
                 this.exportProgression();
             });
+
+            // Gravity slider
+            const gravitySlider = document.getElementById('gravitySlider');
+            gravitySlider.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                this.tonalGravity.setGravity(value / 100);
+                document.getElementById('gravityValue').textContent = `${value}%`;
+                document.getElementById('gravityFill').style.width = `${value}%`;
+                // Actualizar visualización en tiempo real
+                this.updateProbabilities();
+                this.updateMatrix();
+                this.updateEntropy();
+            });
+
+            // Chaos button
+            document.getElementById('chaosBtn').addEventListener('click', () => {
+                this.tonalGravity.injectChaos(0.5);
+                const btn = document.getElementById('chaosBtn');
+                btn.classList.add('active');
+                setTimeout(() => btn.classList.remove('active'), 300);
+                // Actualizar visualización
+                this.updateProbabilities();
+                this.updateMatrix();
+                this.updateEntropy();
+                this.updateChaosLevel();
+            });
         }
 
         togglePlay() {
@@ -1736,6 +1998,9 @@
             this.updateDisplay();
             this.updateBassViz();
             this.updateProbabilities();
+            this.updateMatrix();
+            this.updateEntropy();
+            this.updateChaosLevel();
         }
 
         scheduleNextStep() {
@@ -1831,6 +2096,9 @@
             this.updateVoiceDisplay(voiceResult?.to || this.voiceLeader.getVoices());
             this.updateBassViz();
             this.updateProbabilities();
+            this.updateMatrix();
+            this.updateEntropy();
+            this.updateChaosLevel();
 
             // Check cadence
             const cadence = this.tonalGravity.detectCadence();
@@ -1934,6 +2202,77 @@
                 `;
                 container.appendChild(row);
             });
+        }
+
+        updateMatrix() {
+            const container = document.getElementById('matrixDisplay');
+            const currentChord = this.tonalGravity.position;
+            const chordOrder = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'viio'];
+
+            // Crear grid
+            let html = '<div class="matrix-grid">';
+
+            // Header row
+            html += '<div class="matrix-header"></div>'; // Esquina vacía
+            for (const chord of chordOrder) {
+                const func = CHORDS[chord].function;
+                html += `<div class="matrix-header" style="color: ${FUNCTION_COLORS[func]}">${chord}</div>`;
+            }
+
+            // Data rows
+            for (const fromChord of chordOrder) {
+                const fromFunc = CHORDS[fromChord].function;
+                const isCurrentRow = fromChord === currentChord;
+
+                // Row label
+                html += `<div class="matrix-row-label" style="color: ${FUNCTION_COLORS[fromFunc]}">${fromChord}</div>`;
+
+                // Temporarily set position to get probabilities for this row
+                const originalPos = this.tonalGravity.position;
+                this.tonalGravity.position = fromChord;
+                const probs = this.tonalGravity.getTransitionProbabilities();
+                this.tonalGravity.position = originalPos;
+
+                for (const toChord of chordOrder) {
+                    const prob = probs[toChord] || 0;
+                    const toFunc = CHORDS[toChord].function;
+
+                    // Color intensity based on probability
+                    const intensity = Math.min(1, prob * 2);
+                    const bgColor = this.probToColor(prob, toFunc);
+
+                    const cellClass = isCurrentRow ? 'matrix-cell current-row' : 'matrix-cell';
+                    const displayProb = prob >= 0.1 ? Math.round(prob * 100) : '';
+
+                    html += `<div class="${cellClass}" style="background: ${bgColor}" title="${fromChord}→${toChord}: ${(prob*100).toFixed(1)}%">${displayProb}</div>`;
+                }
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        probToColor(prob, func) {
+            // Devuelve color RGBA basado en probabilidad y función
+            const colors = {
+                'T': [34, 197, 94],   // Verde
+                'S': [59, 130, 246],  // Azul
+                'D': [239, 68, 68]    // Rojo
+            };
+            const rgb = colors[func] || [148, 163, 184];
+            const alpha = Math.min(0.9, prob * 1.5);
+            return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
+        }
+
+        updateEntropy() {
+            const entropy = this.tonalGravity.getEntropy();
+            document.getElementById('entropyValue').textContent = entropy.toFixed(2);
+            document.getElementById('entropyFill').style.width = `${entropy * 100}%`;
+        }
+
+        updateChaosLevel() {
+            const chaos = this.tonalGravity.chaosNoise;
+            document.getElementById('chaosLevel').textContent = `${Math.round(chaos * 100)}%`;
         }
 
         // ========== RECORDING ==========
