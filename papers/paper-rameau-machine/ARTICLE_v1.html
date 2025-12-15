@@ -129,10 +129,12 @@
     <li><a href="#funciones">3. Las Tres Funciones Armónicas</a></li>
     <li><a href="#gravedad">4. Gravedad Tonal: Un Modelo Físico</a></li>
     <li><a href="#markov">5. Cadenas de Markov con Memoria</a></li>
-    <li><a href="#voiceleading">6. Voice Leading: El Arte de la Conducción</a></li>
-    <li><a href="#implementacion">7. Implementación Técnica</a></li>
-    <li><a href="#comparativa">8. Rameau vs. Riemann: Dos Geometrías</a></li>
-    <li><a href="#conclusiones">9. Conclusiones</a></li>
+    <li><a href="#biassliders">6. Bias Sliders: Control de la Gravedad</a></li>
+    <li><a href="#voiceleading">7. Voice Leading: El Arte de la Conducción</a></li>
+    <li><a href="#implementacion">8. Implementación Técnica</a></li>
+    <li><a href="#comparativa">9. Rameau vs. Riemann: Dos Geometrías</a></li>
+    <li><a href="#futuro">10. Futuro: Modo Menor</a></li>
+    <li><a href="#conclusiones">11. Conclusiones</a></li>
     <li><a href="#referencias">Referencias</a></li>
   </ul>
 </nav>
@@ -436,8 +438,140 @@
   </div>
 </section>
 
+<section id="biassliders">
+  <h2>6. Bias Sliders: Control de la Gravedad</h2>
+
+  <p>
+    Una de las características más poderosas de <strong>Rameau Machine</strong> es la capacidad de manipular las probabilidades de transición en tiempo real. En lugar de editar la matriz completa, el usuario controla <em>modificadores globales</em> que "doblan" las reglas.
+  </p>
+
+  <h3>El Slider de Gravedad</h3>
+
+  <p>
+    El control principal es el <strong>slider de gravedad</strong> (0-100%):
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Gravedad</th>
+        <th>Comportamiento</th>
+        <th>Resultado Musical</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>0%</strong></td>
+        <td>Distribución uniforme (1/7 para cada acorde)</td>
+        <td>Caos, deriva aleatoria, sin dirección tonal</td>
+      </tr>
+      <tr>
+        <td><strong>50%</strong></td>
+        <td>Matriz base de transiciones</td>
+        <td>Comportamiento estándar, balance entre sorpresa y estructura</td>
+      </tr>
+      <tr>
+        <td><strong>100%</strong></td>
+        <td>Matriz estricta funcional (D→T al 95%)</td>
+        <td>Cadencias perfectas constantes, muy predecible</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    Matemáticamente, la gravedad interpola entre tres matrices:
+  </p>
+
+  <div class="highlight-quote">
+    P<sub>final</sub> = lerp(P<sub>uniforme</sub>, P<sub>base</sub>, P<sub>estricta</sub>, gravedad)
+  </div>
+
+  <pre><code class="language-javascript">// Interpolación según gravedad
+if (gravity <= 0.5) {
+    // Entre uniforme y base
+    const t = gravity * 2;
+    p = UNIFORM_PROB * (1 - t) + baseProb * t;
+} else {
+    // Entre base y estricta
+    const t = (gravity - 0.5) * 2;
+    p = baseProb * (1 - t) + strictProb * t;
+}</code></pre>
+
+  <h3>Inyección de Caos</h3>
+
+  <p>
+    El botón <strong>"Inyectar Caos"</strong> añade ruido temporal a todas las probabilidades, útil para escapar de bucles predecibles:
+  </p>
+
+  <pre><code class="language-javascript">injectChaos(amount = 0.4) {
+    this.chaosNoise = Math.min(1, this.chaosNoise + amount);
+}
+
+// El caos decae automáticamente cada acorde
+decayChaos() {
+    this.chaosNoise *= 0.7; // 30% de decay por paso
+    if (this.chaosNoise < 0.01) this.chaosNoise = 0;
+}</code></pre>
+
+  <p>
+    El caos inyectado perturba las probabilidades durante 4-8 acordes antes de disiparse, creando momentos de "sorpresa controlada".
+  </p>
+
+  <h3>Visualización de la Matriz</h3>
+
+  <p>
+    La interfaz muestra la <strong>matriz de transición P(j|i)</strong> como un heatmap 7×7 en tiempo real:
+  </p>
+
+  <div class="diagram">
+    <pre>
+        I    ii   iii   IV    V    vi   viiº
+    ┌─────────────────────────────────────────────┐
+ I  │ ░░░  ▓▓░  ░░░  ▓▓▓  ████  ▓░░  ░░░ │
+ ii │ ░░░  ░░░  ░░░  ░░░  ████  ░░░  ▓▓░ │
+iii │ ░░░  ░░░  ░░░  ▓▓▓  ░░░  ████  ░░░ │
+ IV │ ▓░░  ░░░  ░░░  ░░░  ████  ░░░  ▓░░ │
+ V  │ ████ ░░░  ░░░  ░░░  ░░░  ▓▓░  ░░░ │ ← V→I muy alto
+ vi │ ░░░  ▓▓▓  ░░░  ████  ▓▓░  ░░░  ░░░ │
+viiº│ ████ ░░░  ░░░  ░░░  ░░░  ░░░  ░░░ │
+    └─────────────────────────────────────────────┘
+
+    ░ = baja probabilidad   ▓ = media   █ = alta
+    </pre>
+  </div>
+
+  <p>
+    La fila actual (acorde presente) se resalta, permitiendo ver de un vistazo las probabilidades del siguiente paso. Los colores siguen la convención funcional: <span class="function-t">verde (T)</span>, <span class="function-s">azul (S)</span>, <span class="function-d">rojo (D)</span>.
+  </p>
+
+  <h3>Barra de Entropía</h3>
+
+  <p>
+    La <strong>entropía de Shannon</strong> mide la "predictibilidad" del estado actual:
+  </p>
+
+  <pre><code class="language-javascript">getEntropy() {
+    const probs = this.getTransitionProbabilities();
+    let entropy = 0;
+    for (const p of Object.values(probs)) {
+        if (p > 0) entropy -= p * Math.log2(p);
+    }
+    // Normalizar: max entropy = log2(7) ≈ 2.807
+    return entropy / Math.log2(7);
+}</code></pre>
+
+  <ul>
+    <li><strong>Entropía ≈ 0</strong>: Una transición domina (predecible)</li>
+    <li><strong>Entropía ≈ 1</strong>: Todas las transiciones equiprobables (máximo caos)</li>
+  </ul>
+
+  <div class="note-box">
+    <strong>Uso Pedagógico:</strong> Los bias sliders permiten explorar cómo la "rigidez" de las reglas armónicas afecta el resultado musical. ¿Qué suena mejor? ¿Estructura estricta o libertad caótica? La respuesta, como siempre en música, es "depende del contexto".
+  </div>
+</section>
+
 <section id="voiceleading">
-  <h2>6. Voice Leading: El Arte de la Conducción</h2>
+  <h2>7. Voice Leading: El Arte de la Conducción</h2>
 
   <p>
     Generar una secuencia de acordes es solo el primer paso. Para que suene como música real —no como una sucesión de bloques sonoros— necesitamos <em>voice leading</em>: la conducción suave de cada voz de un acorde al siguiente.
@@ -539,10 +673,89 @@ Bajo    ────────────────────────
   <div class="note-box">
     <strong>Resultado Audible:</strong> Gracias al voice leading, las transiciones suenan fluidas y naturales. Las voces "cantan" líneas melódicas coherentes en lugar de saltar erráticamente entre notas.
   </div>
+
+  <h3>Retorno al Centro</h3>
+
+  <p>
+    Un refinamiento importante: además de minimizar el movimiento, el <code>VoiceLeader</code> aplica una <em>penalización por distancia al centro ideal</em> de cada voz:
+  </p>
+
+  <pre><code class="language-javascript">// Centros ideales (registro más resonante)
+const voiceCenters = {
+    bass:    48,  // C3
+    tenor:   52,  // E3
+    alto:    64,  // E4
+    soprano: 72   // C5
+};
+
+// Costo total = movimiento + distancia_al_centro × 0.15
+const totalCost = movementCost + (centerCost * centerPenaltyWeight);</code></pre>
+
+  <p>
+    Esto evita que las voces se "escapen" a registros extremos donde los osciladores suenan delgados o fangosos.
+  </p>
+
+  <h3>Patrones de Bajo</h3>
+
+  <p>
+    El bajo no se limita a tocar notas sostenidas. Según el estilo seleccionado, ejecuta patrones rítmicos característicos:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Estilo</th>
+        <th>Patrón</th>
+        <th>Subdivisión</th>
+        <th>Carácter</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Clásico</strong></td>
+        <td>Alberti (1-5-3-5)</td>
+        <td>Semicorcheas</td>
+        <td>Mozartiano, elegante</td>
+      </tr>
+      <tr>
+        <td><strong>Barroco</strong></td>
+        <td>1-3-5-3</td>
+        <td>Corcheas</td>
+        <td>Bajo continuo</td>
+      </tr>
+      <tr>
+        <td><strong>Romántico</strong></td>
+        <td>Octavas rotas (1-8-1-8)</td>
+        <td>Corcheas</td>
+        <td>Expresivo, amplio</td>
+      </tr>
+      <tr>
+        <td><strong>Jazz</strong></td>
+        <td>Walking (aproximación cromática)</td>
+        <td>Negras</td>
+        <td>Swing, direccional</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><code class="language-javascript">// Generador de patrones de bajo
+const patterns = {
+    alberti: (root, third, fifth) => [root, fifth, third, fifth],
+    barroco: (root, third, fifth) => [root, third, fifth, third],
+    octaves: (root) => [root, root + 12, root, root + 12],
+    walking: (root, third, fifth, nextRoot) => {
+        const approach = nextRoot > root ? nextRoot - 1 : nextRoot + 1;
+        return [root, third, fifth, approach];
+    }
+};</code></pre>
+
+  <p>
+    Mientras el bajo ejecuta su patrón, las voces superiores (Soprano, Alto, Tenor) mantienen el "colchón" armónico, creando una textura más rica que los simples acordes en bloque.
+  </p>
 </section>
 
 <section id="implementacion">
-  <h2>7. Implementación Técnica</h2>
+  <h2>8. Implementación Técnica</h2>
 
   <h3>Arquitectura General</h3>
 
@@ -643,7 +856,7 @@ simulation
 </section>
 
 <section id="comparativa">
-  <h2>8. Rameau vs. Riemann: Dos Geometrías</h2>
+  <h2>9. Rameau vs. Riemann: Dos Geometrías</h2>
 
   <p>
     Es instructivo comparar <strong>Rameau Machine</strong> con <strong>Tonnetz Atractor</strong>, que implementa el paradigma neo-riemanniano.
@@ -701,8 +914,52 @@ simulation
   </div>
 </section>
 
+<section id="futuro">
+  <h2>10. Futuro: Modo Menor</h2>
+
+  <p>
+    La versión actual de <strong>Rameau Machine</strong> opera exclusivamente en modo mayor. Sin embargo, la armonía funcional brilla especialmente en el <strong>modo menor</strong>, donde las tensiones son más complejas y la sensible del acorde V juega un rol crucial.
+  </p>
+
+  <h3>Próximamente</h3>
+
+  <p>
+    La siguiente iteración incluirá:
+  </p>
+
+  <ul>
+    <li><strong>Set de acordes menor:</strong> i, iiº, III, iv, V, VI, viiº</li>
+    <li><strong>Escala armónica vs. natural:</strong> El V necesita la sensible elevada</li>
+    <li><strong>Selector de modo:</strong> Toggle Mayor/Menor en la UI</li>
+    <li><strong>Matriz de transiciones específica:</strong> Las probabilidades en menor son diferentes (V→i es aún más fuerte)</li>
+  </ul>
+
+  <div class="diagram">
+    <pre>
+    MODO MENOR (próximamente)
+    ═══════════════════════════
+
+    Grados:   i    iiº   III   iv    V    VI   viiº
+
+    Funciones:
+    ┌───────────────────────────────────────────────┐
+    │  <span class="function-t">T</span>: i, III, VI  (más ambiguo que en mayor)    │
+    │  <span class="function-s">S</span>: iv, iiº     (iv más oscuro que IV)        │
+    │  <span class="function-d">D</span>: V, viiº     (sensible DEBE resolver)       │
+    └───────────────────────────────────────────────┘
+
+    Cadencia típica: i → iv → V → i
+    </pre>
+  </div>
+
+  <div class="note-box info">
+    <strong>¿Por qué es importante?</strong><br>
+    El modo menor representa aproximadamente el 40% del repertorio tonal occidental. Sin él, Rameau Machine no puede generar progresiones al estilo de Bach (Tocata en Re menor), Beethoven (Moonlight Sonata), o jazz standards como "Autumn Leaves".
+  </div>
+</section>
+
 <section id="conclusiones">
-  <h2>9. Conclusiones</h2>
+  <h2>11. Conclusiones</h2>
 
   <p>
     <strong>Rameau Machine</strong> demuestra que los principios de armonía funcional de hace 300 años pueden implementarse como sistemas generativos contemporáneos. La combinación de:
@@ -710,13 +967,15 @@ simulation
 
   <ul>
     <li><strong>Cadenas de Markov</strong> con probabilidades dinámicas</li>
-    <li><strong>Gravedad tonal</strong> como metáfora física</li>
-    <li><strong>Voice leading</strong> algorítmico</li>
-    <li><strong>Visualización interactiva</strong> de funciones armónicas</li>
+    <li><strong>Gravedad tonal</strong> como metáfora física, controlable via slider</li>
+    <li><strong>Voice leading</strong> algorítmico con retorno al centro</li>
+    <li><strong>Patrones de bajo</strong> estilísticos (Alberti, Walking, Octavas)</li>
+    <li><strong>Visualización interactiva</strong> incluyendo matriz de transiciones</li>
+    <li><strong>Inyección de caos</strong> temporal para explorar lo inesperado</li>
   </ul>
 
   <p>
-    ...produce progresiones que suenan coherentes y "musicales" porque respetan las expectativas que tres siglos de práctica musical han inscrito en nuestros oídos.
+    ...produce progresiones que suenan coherentes y "musicales" porque respetan las expectativas que tres siglos de práctica musical han inscrito en nuestros oídos. Los <em>bias sliders</em> permiten explorar el espectro completo entre caos total y rigidez funcional, revelando que la música más interesante suele habitar el territorio intermedio.
   </p>
 
   <p>
