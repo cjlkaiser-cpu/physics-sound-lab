@@ -1314,6 +1314,11 @@
 
                 osc.frequency.linearRampToValueAtTime(freq, now + glideTime);
 
+                // Micro-detune humanizador: más detune en voces agudas
+                const detuneRange = [1, 2, 3, 4][i]; // Tenor ±2, Alto ±3, Soprano ±4 cents
+                const detune = (Math.random() - 0.5) * detuneRange * 2;
+                osc.detune.linearRampToValueAtTime(detune, now + glideTime);
+
                 gain.gain.cancelScheduledValues(now);
                 gain.gain.setValueAtTime(gain.gain.value, now);
                 gain.gain.linearRampToValueAtTime(articulation.velocity, now + articulation.attackTime);
@@ -1332,6 +1337,10 @@
                 const bassOsc = this.oscillators[0];
 
                 bassOsc.frequency.linearRampToValueAtTime(bassFreq, now + glideTime);
+
+                // Micro-detune bajo (mínimo, ±1 cent)
+                const bassDetune = (Math.random() - 0.5) * 2;
+                bassOsc.detune.linearRampToValueAtTime(bassDetune, now + glideTime);
 
                 bassGain.gain.cancelScheduledValues(now);
                 bassGain.gain.setValueAtTime(bassGain.gain.value, now);
