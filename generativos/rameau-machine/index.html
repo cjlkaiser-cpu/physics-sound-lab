@@ -968,6 +968,60 @@
     }
 
     // ============================================================
+    // BASS PATTERN GENERATOR
+    // ============================================================
+
+    class BassPatternGenerator {
+        constructor() {
+            this.patterns = {
+                // Alberti: 1-5-3-5 (clásico)
+                alberti: (root, third, fifth) => [root, fifth, third, fifth],
+                // Barroco: 1-3-5-3
+                barroco: (root, third, fifth) => [root, third, fifth, third],
+                // Octavas rotas: 1-8-1-8 (romántico)
+                octaves: (root, third, fifth) => [root, root + 12, root, root + 12],
+                // Walking: aproximación cromática (jazz)
+                walking: (root, third, fifth, nextRoot) => {
+                    // Si hay siguiente acorde, aproximar cromáticamente
+                    if (nextRoot !== undefined) {
+                        const approach = nextRoot > root ? nextRoot - 1 : nextRoot + 1;
+                        return [root, third, fifth, approach];
+                    }
+                    return [root, fifth, third, root];
+                },
+                // Block: nota sostenida (default)
+                block: (root) => [root]
+            };
+        }
+
+        generate(style, chordTones, nextRoot = undefined) {
+            const [root, third, fifth] = chordTones;
+
+            const stylePatterns = {
+                'barroco': 'barroco',
+                'clasico': 'alberti',
+                'romantico': 'octaves',
+                'jazz': 'walking'
+            };
+
+            const patternName = stylePatterns[style] || 'block';
+            const pattern = this.patterns[patternName];
+
+            return pattern(root, third, fifth, nextRoot);
+        }
+
+        getSubdivisions(style) {
+            // Número de notas por pulso
+            return {
+                'barroco': 2,    // corcheas
+                'clasico': 4,   // semicorcheas
+                'romantico': 2, // corcheas
+                'jazz': 1       // negras (walking bass)
+            }[style] || 1;
+        }
+    }
+
+    // ============================================================
     // AUDIO SYNTHESIZER
     // ============================================================
 
@@ -1014,12 +1068,13 @@
             }
         }
 
-        transitionTo(newVoicing, duration, articulation) {
+        transitionTo(newVoicing, duration, articulation, bassPattern = null) {
             const now = this.ctx.currentTime;
             const glideTime = Math.min(duration * 0.3, 0.1);
 
-            newVoicing.forEach((targetNote, i) => {
-                const freq = this.midiToFreq(targetNote);
+            // Voces superiores (Tenor, Alto, Soprano) - índices 1, 2, 3
+            for (let i = 1; i < newVoicing.length; i++) {
+                const freq = this.midiToFreq(newVoicing[i]);
                 const gain = this.gains[i];
                 const osc = this.oscillators[i];
 
@@ -1031,6 +1086,57 @@
                 gain.gain.linearRampToValueAtTime(articulation.sustainLevel, now + articulation.attackTime + articulation.decayTime);
                 gain.gain.setValueAtTime(articulation.sustainLevel, now + duration - articulation.releaseTime);
                 gain.gain.linearRampToValueAtTime(0.05, now + duration);
+            }
+
+            // Bajo - con patrón si se proporciona
+            if (bassPattern && bassPattern.length > 1) {
+                this.playBassPattern(bassPattern, duration, articulation);
+            } else {
+                // Bajo sostenido (comportamiento original)
+                const bassFreq = this.midiToFreq(newVoicing[0]);
+                const bassGain = this.gains[0];
+                const bassOsc = this.oscillators[0];
+
+                bassOsc.frequency.linearRampToValueAtTime(bassFreq, now + glideTime);
+
+                bassGain.gain.cancelScheduledValues(now);
+                bassGain.gain.setValueAtTime(bassGain.gain.value, now);
+                bassGain.gain.linearRampToValueAtTime(articulation.velocity, now + articulation.attackTime);
+                bassGain.gain.linearRampToValueAtTime(articulation.sustainLevel, now + articulation.attackTime + articulation.decayTime);
+                bassGain.gain.setValueAtTime(articulation.sustainLevel, now + duration - articulation.releaseTime);
+                bassGain.gain.linearRampToValueAtTime(0.05, now + duration);
+            }
+        }
+
+        playBassPattern(pattern, totalDuration, articulation) {
+            const now = this.ctx.currentTime;
+            const noteDuration = totalDuration / pattern.length;
+            const bassGain = this.gains[0];
+            const bassOsc = this.oscillators[0];
+
+            // Cancelar eventos previos
+            bassGain.gain.cancelScheduledValues(now);
+            bassOsc.frequency.cancelScheduledValues(now);
+
+            pattern.forEach((note, i) => {
+                const noteStart = now + (i * noteDuration);
+                const freq = this.midiToFreq(note);
+
+                // Transición de frecuencia rápida
+                if (i === 0) {
+                    bassOsc.frequency.setValueAtTime(freq, noteStart);
+                } else {
+                    bassOsc.frequency.setValueAtTime(freq, noteStart);
+                }
+
+                // Envolvente para cada nota del patrón
+                const attackTime = Math.min(0.02, noteDuration * 0.1);
+                const releaseTime = Math.min(0.03, noteDuration * 0.15);
+
+                bassGain.gain.setValueAtTime(0.05, noteStart);
+                bassGain.gain.linearRampToValueAtTime(articulation.velocity * 0.8, noteStart + attackTime);
+                bassGain.gain.setValueAtTime(articulation.velocity * 0.6, noteStart + noteDuration - releaseTime);
+                bassGain.gain.linearRampToValueAtTime(0.05, noteStart + noteDuration);
             });
         }
 
@@ -1416,6 +1522,7 @@
             this.voiceLeader = new VoiceLeader();
             this.tonalGravity = new TonalGravity();
             this.rhythm = new RhythmicHarmony(80);
+            this.bassPatternGen = new BassPatternGenerator();
             this.viz = null;
 
             this.isPlaying = false;
@@ -1652,9 +1759,39 @@
             const articulation = this.rhythm.computeArticulation(chord, context);
             const duration = this.rhythm.computeDuration(chord, context);
 
+            // Generar patrón de bajo según estilo
+            let bassPattern = null;
+            if (voiceResult) {
+                const chordData = CHORDS[chord];
+                const keyPitch = this.tonalGravity.keyPitch;
+
+                // Obtener las notas del acorde transpuestas
+                const bassNote = voiceResult.to[0]; // Nota MIDI del bajo
+                const bassPitchClass = bassNote % 12;
+
+                // Calcular tercera y quinta relativas al bajo actual
+                const thirdPC = (chordData.third + keyPitch) % 12;
+                const fifthPC = (chordData.fifth + keyPitch) % 12;
+
+                // Encontrar tercera y quinta en el registro del bajo
+                const bassOctave = Math.floor(bassNote / 12);
+                let third = thirdPC + (bassOctave * 12);
+                let fifth = fifthPC + (bassOctave * 12);
+
+                // Asegurar que están por encima del bajo
+                if (third <= bassNote) third += 12;
+                if (fifth <= bassNote) fifth += 12;
+
+                // Generar patrón
+                bassPattern = this.bassPatternGen.generate(
+                    this.style,
+                    [bassNote, third, fifth]
+                );
+            }
+
             // Play audio
             if (voiceResult) {
-                this.synth.transitionTo(voiceResult.to, duration, articulation);
+                this.synth.transitionTo(voiceResult.to, duration, articulation, bassPattern);
             }
 
             // Update visualization
