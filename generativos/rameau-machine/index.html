@@ -25,11 +25,12 @@
 
         .chord-node {
             cursor: pointer;
-            transition: transform 0.2s ease;
         }
 
-        .chord-node:hover {
-            transform: scale(1.1);
+        /* Hover effect solo en el círculo visual, no desplaza el grupo */
+        .chord-node:hover .node-visual {
+            filter: brightness(1.3);
+            transition: filter 0.15s ease;
         }
 
         .chord-node.active {
@@ -1173,21 +1174,23 @@
             this.trail = [];
             this.onChordClick = null;
 
+            // Radios de los anillos funcionales
+            const minDim = Math.min(width, height);
             this.functionRadii = {
-                'T': Math.min(width, height) * 0.08,  // Anillo interior para vi, iii
-                'D': Math.min(width, height) * 0.20,
-                'S': Math.min(width, height) * 0.32
+                'T': minDim * 0.12,   // Anillo T* para vi, iii (I va al centro)
+                'D': minDim * 0.22,   // Anillo dominante
+                'S': minDim * 0.34    // Anillo subdominante (exterior)
             };
 
+            // Ángulos de los acordes (vi y iii en lados opuestos para máxima separación)
             this.chordAngles = {
-                'I':    0,
-                'V':    Math.PI * 0.5,
-                'V7':   Math.PI * 0.4,
-                'viio': Math.PI * 0.7,
-                'IV':   Math.PI * 1.5,
-                'ii':   Math.PI * 1.2,
-                'vi':   Math.PI * 1.15,   // Separado de iii
-                'iii':  Math.PI * 0.85    // Separado de vi
+                'I':    0,              // Centro (ignorado, va a cx,cy)
+                'vi':   Math.PI,        // Izquierda (9 o'clock)
+                'iii':  0,              // Derecha (3 o'clock)
+                'V':    Math.PI * 0.5,  // Abajo-derecha
+                'viio': Math.PI * 0.75, // Abajo
+                'ii':   Math.PI * 1.25, // Arriba-izquierda
+                'IV':   Math.PI * 1.5   // Arriba
             };
 
             this.nodes = [
@@ -1262,11 +1265,19 @@
                     if (self.onChordClick) {
                         self.onChordClick(d.id);
                     }
-                })
-                ;
+                });
 
-            // Node circles
+            // Hit area invisible (más grande, captura eventos)
             this.nodeElements.append('circle')
+                .attr('class', 'hit-area')
+                .attr('r', d => d.id === 'I' ? 45 : 38)
+                .attr('fill', 'transparent')
+                .attr('stroke', 'none')
+                .style('cursor', 'pointer');
+
+            // Node circles visibles (pueden animar sin afectar hit area)
+            this.nodeElements.append('circle')
+                .attr('class', 'node-visual')
                 .attr('r', d => d.id === 'I' ? 32 : 24)
                 .attr('fill', d => {
                     const func = CHORDS[d.id].function;
@@ -1274,7 +1285,8 @@
                 })
                 .attr('fill-opacity', 0.2)
                 .attr('stroke', d => FUNCTION_COLORS[CHORDS[d.id].function])
-                .attr('stroke-width', 2);
+                .attr('stroke-width', 2)
+                .style('pointer-events', 'none');  // El visual no captura eventos
 
             // Node labels
             this.nodeElements.append('text')
@@ -1308,42 +1320,52 @@
             zones.append('circle')
                 .attr('cx', this.cx)
                 .attr('cy', this.cy)
-                .attr('r', this.functionRadii['S'] + 30)
+                .attr('r', this.functionRadii['S'])
                 .attr('fill', 'none')
                 .attr('stroke', FUNCTION_COLORS['S'])
-                .attr('stroke-width', 50)
+                .attr('stroke-width', 40)
                 .attr('stroke-opacity', 0.08);
 
             // Dominante ring (middle)
             zones.append('circle')
                 .attr('cx', this.cx)
                 .attr('cy', this.cy)
-                .attr('r', this.functionRadii['D'] + 20)
+                .attr('r', this.functionRadii['D'])
                 .attr('fill', 'none')
                 .attr('stroke', FUNCTION_COLORS['D'])
                 .attr('stroke-width', 35)
                 .attr('stroke-opacity', 0.08);
 
-            // Tonica zone (covers I at center plus vi/iii ring)
+            // Tonica T* ring (para vi/iii)
             zones.append('circle')
                 .attr('cx', this.cx)
                 .attr('cy', this.cy)
-                .attr('r', this.functionRadii['T'] + 25)
+                .attr('r', this.functionRadii['T'])
+                .attr('fill', 'none')
+                .attr('stroke', FUNCTION_COLORS['T'])
+                .attr('stroke-width', 25)
+                .attr('stroke-opacity', 0.1);
+
+            // Centro tónica (I)
+            zones.append('circle')
+                .attr('cx', this.cx)
+                .attr('cy', this.cy)
+                .attr('r', 40)
                 .attr('fill', FUNCTION_COLORS['T'])
-                .attr('fill-opacity', 0.08);
+                .attr('fill-opacity', 0.06);
 
             // Labels
             zones.append('text')
                 .attr('x', this.cx)
-                .attr('y', this.cy + this.functionRadii['T'] + 45)
+                .attr('y', this.cy + this.functionRadii['T'] + 35)
                 .attr('text-anchor', 'middle')
                 .attr('fill', '#64748b')
                 .attr('font-size', '10px')
-                .text('TONICA');
+                .text('TÓNICA');
 
             zones.append('text')
-                .attr('x', this.cx + this.functionRadii['D'] + 40)
-                .attr('y', this.cy)
+                .attr('x', this.cx + this.functionRadii['D'] + 35)
+                .attr('y', this.cy + 4)
                 .attr('text-anchor', 'start')
                 .attr('fill', '#64748b')
                 .attr('font-size', '10px')
@@ -1351,7 +1373,7 @@
 
             zones.append('text')
                 .attr('x', this.cx)
-                .attr('y', this.cy - this.functionRadii['S'] - 40)
+                .attr('y', this.cy - this.functionRadii['S'] - 30)
                 .attr('text-anchor', 'middle')
                 .attr('fill', '#64748b')
                 .attr('font-size', '10px')
@@ -1369,8 +1391,8 @@
                 if (this.trail.length > 8) this.trail.shift();
             }
 
-            // Update visuals
-            this.nodeElements.select('circle')
+            // Update visuals (solo el círculo visual, no el hit area)
+            this.nodeElements.select('.node-visual')
                 .attr('fill-opacity', d => d.id === chord ? 0.6 : 0.2)
                 .attr('stroke-width', d => d.id === chord ? 4 : 2)
                 .attr('filter', d => d.id === chord ? 'url(#glow)' : null);
@@ -1500,10 +1522,12 @@
             this.cx = width / 2;
             this.cy = height / 2;
 
+            // Mismos radios que en constructor
+            const minDim = Math.min(width, height);
             this.functionRadii = {
-                'T': 0,
-                'D': Math.min(width, height) * 0.18,
-                'S': Math.min(width, height) * 0.32
+                'T': minDim * 0.12,
+                'D': minDim * 0.22,
+                'S': minDim * 0.34
             };
 
             this.initPositions();
