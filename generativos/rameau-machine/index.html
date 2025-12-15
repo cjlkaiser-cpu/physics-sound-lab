@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rameau Machine - Armonia Funcional Generativa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #e2e8f0;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .function-zone {
+            pointer-events: none;
+        }
+
+        .chord-node {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .chord-node:hover {
+            transform: scale(1.1);
+        }
+
+        .chord-node.active {
+            filter: drop-shadow(0 0 20px currentColor);
+        }
+
+        .transition-arc {
+            fill: none;
+            pointer-events: none;
+        }
+
+        .trail-line {
+            fill: none;
+            stroke-linecap: round;
+        }
+
+        .control-panel {
+            background: rgba(15, 23, 42, 0.95);
+            border-left: 1px solid rgba(148, 163, 184, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .slider-container {
+            position: relative;
+        }
+
+        .slider-track {
+            height: 6px;
+            background: #1e293b;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .slider-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: width 0.1s ease;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: transparent;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .tension-bar {
+            height: 8px;
+            background: #1e293b;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .tension-fill {
+            height: 100%;
+            transition: width 0.3s ease, background 0.3s ease;
+        }
+
+        .key-btn {
+            padding: 6px 12px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+        }
+
+        .key-btn:hover {
+            background: #334155;
+        }
+
+        .key-btn.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .style-radio {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 4px 0;
+        }
+
+        .style-radio input {
+            display: none;
+        }
+
+        .style-radio .radio-dot {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #475569;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .style-radio input:checked + .radio-dot {
+            border-color: #3b82f6;
+        }
+
+        .style-radio input:checked + .radio-dot::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #3b82f6;
+            border-radius: 50%;
+        }
+
+        .play-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .play-btn.play {
+            background: #22c55e;
+        }
+
+        .play-btn.pause {
+            background: #f59e0b;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .info-panel {
+            background: rgba(15, 23, 42, 0.8);
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .cadence-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cadence-autentica { background: #166534; color: #bbf7d0; }
+        .cadence-plagal { background: #1e40af; color: #bfdbfe; }
+        .cadence-rota { background: #9f1239; color: #fecdd3; }
+        .cadence-semi { background: #854d0e; color: #fef08a; }
+        .cadence-frigia { background: #581c87; color: #e9d5ff; }
+
+        .voice-line {
+            position: relative;
+            height: 60px;
+            background: #0f172a;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .voice-note {
+            position: absolute;
+            height: 4px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .bass-line-viz {
+            height: 40px;
+            background: #0f172a;
+            border-radius: 4px;
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            padding: 4px;
+        }
+
+        .bass-bar {
+            flex: 1;
+            background: #3b82f6;
+            border-radius: 2px 2px 0 0;
+            transition: height 0.2s ease;
+        }
+
+        .prob-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+        }
+
+        .prob-label {
+            width: 32px;
+            font-family: monospace;
+            color: #94a3b8;
+        }
+
+        .prob-bar-container {
+            flex: 1;
+            height: 12px;
+            background: #1e293b;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .prob-bar {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .prob-value {
+            width: 36px;
+            text-align: right;
+            font-family: monospace;
+            color: #64748b;
+        }
+
+        .prob-bar.func-T { background: #22c55e; }
+        .prob-bar.func-S { background: #3b82f6; }
+        .prob-bar.func-D { background: #ef4444; }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes resolution-burst {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+
+        .resolution-particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: resolution-burst 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+    <!-- Header -->
+    <header class="flex items-center justify-between px-6 py-3 bg-slate-900/80 border-b border-slate-700/50">
+        <div class="flex items-center gap-3">
+            <h1 class="text-lg font-semibold text-white">Rameau Machine</h1>
+            <span class="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">Armonia Funcional</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <button id="helpBtn" class="text-slate-400 hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </button>
+            <button id="menuBtn" class="text-slate-400 hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex overflow-hidden">
+        <!-- Visualization Area -->
+        <div class="flex-1 relative" id="vizContainer">
+            <svg id="mainSvg" class="w-full h-full"></svg>
+            <div id="particles" class="absolute inset-0 pointer-events-none"></div>
+        </div>
+
+        <!-- Control Panel -->
+        <aside class="control-panel w-72 flex flex-col">
+            <div class="p-4 space-y-5 overflow-y-auto flex-1">
+                <!-- Tonalidad -->
+                <section>
+                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Tonalidad</h3>
+                    <div class="grid grid-cols-6 gap-1" id="keySelector">
+                        <button class="key-btn active" data-key="C">C</button>
+                        <button class="key-btn" data-key="G">G</button>
+                        <button class="key-btn" data-key="D">D</button>
+                        <button class="key-btn" data-key="A">A</button>
+                        <button class="key-btn" data-key="E">E</button>
+                        <button class="key-btn" data-key="B">B</button>
+                        <button class="key-btn" data-key="F">F</button>
+                        <button class="key-btn" data-key="Bb">Bb</button>
+                        <button class="key-btn" data-key="Eb">Eb</button>
+                        <button class="key-btn" data-key="Ab">Ab</button>
+                        <button class="key-btn" data-key="Db">Db</button>
+                        <button class="key-btn" data-key="Gb">Gb</button>
+                    </div>
+                </section>
+
+                <!-- Tempo -->
+                <section>
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider">Tempo</h3>
+                        <span class="text-sm font-mono text-slate-300" id="tempoValue">80 BPM</span>
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-track">
+                            <div class="slider-fill" id="tempoFill" style="width: 40%"></div>
+                        </div>
+                        <input type="range" id="tempoSlider" min="40" max="140" value="80">
+                    </div>
+                </section>
+
+                <!-- Tension -->
+                <section>
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider">Tension</h3>
+                        <span class="text-sm font-mono" id="tensionValue">0.00</span>
+                    </div>
+                    <div class="tension-bar">
+                        <div class="tension-fill" id="tensionFill" style="width: 0%; background: #22c55e;"></div>
+                    </div>
+                </section>
+
+                <!-- Probabilidades -->
+                <section>
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider">Probabilidades</h3>
+                        <span class="text-xs text-slate-500">desde <span id="currentChordLabel" class="text-white font-mono">I</span></span>
+                    </div>
+                    <div class="space-y-1" id="probDisplay">
+                        <!-- Se llena dinamicamente -->
+                    </div>
+                </section>
+
+                <!-- Estilo -->
+                <section>
+                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Estilo</h3>
+                    <div class="space-y-1">
+                        <label class="style-radio">
+                            <input type="radio" name="style" value="barroco">
+                            <span class="radio-dot"></span>
+                            <span class="text-sm text-slate-300">Barroco</span>
+                        </label>
+                        <label class="style-radio">
+                            <input type="radio" name="style" value="clasico" checked>
+                            <span class="radio-dot"></span>
+                            <span class="text-sm text-slate-300">Clasico</span>
+                        </label>
+                        <label class="style-radio">
+                            <input type="radio" name="style" value="romantico">
+                            <span class="radio-dot"></span>
+                            <span class="text-sm text-slate-300">Romantico</span>
+                        </label>
+                        <label class="style-radio">
+                            <input type="radio" name="style" value="jazz">
+                            <span class="radio-dot"></span>
+                            <span class="text-sm text-slate-300">Jazz</span>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Modo -->
+                <section>
+                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Modo</h3>
+                    <div class="flex gap-2">
+                        <button class="flex-1 py-2 px-3 bg-blue-600 text-white text-xs font-medium rounded-lg" id="modeAuto">
+                            Autonomo
+                        </button>
+                        <button class="flex-1 py-2 px-3 bg-slate-700 text-slate-300 text-xs font-medium rounded-lg" id="modeGuided">
+                            Guiado
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Voice Leading Display -->
+                <section>
+                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Voces SATB</h3>
+                    <div class="voice-line" id="voiceDisplay">
+                        <div class="voice-note bg-purple-500" data-voice="soprano" style="bottom: 80%; left: 0; width: 0;"></div>
+                        <div class="voice-note bg-blue-500" data-voice="alto" style="bottom: 60%; left: 0; width: 0;"></div>
+                        <div class="voice-note bg-green-500" data-voice="tenor" style="bottom: 40%; left: 0; width: 0;"></div>
+                        <div class="voice-note bg-orange-500" data-voice="bass" style="bottom: 20%; left: 0; width: 0;"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-500 mt-1">
+                        <span>S</span><span>A</span><span>T</span><span>B</span>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Transport Controls -->
+            <div class="p-4 border-t border-slate-700/50 flex items-center justify-center gap-4">
+                <button id="resetBtn" class="w-10 h-10 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                </button>
+                <button id="playBtn" class="play-btn play">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" id="playIcon">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </button>
+                <button id="recordBtn" class="w-10 h-10 rounded-full bg-slate-700 hover:bg-red-600 flex items-center justify-center transition-colors" title="Grabar audio">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" id="recordIcon">
+                        <circle cx="12" cy="12" r="6"/>
+                    </svg>
+                </button>
+                <button id="exportBtn" class="w-10 h-10 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors" title="Exportar progresion">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                    </svg>
+                </button>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Info Bar -->
+    <footer class="info-panel px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-6">
+            <div>
+                <span class="text-xs text-slate-500">Progresion:</span>
+                <span class="text-sm font-mono text-slate-300 ml-2" id="progressionDisplay">I</span>
+            </div>
+            <div>
+                <span class="text-xs text-slate-500">Bajo:</span>
+                <span class="text-sm font-mono text-slate-300 ml-2" id="bassDisplay">C</span>
+            </div>
+            <div>
+                <span class="text-xs text-slate-500">Cadencia:</span>
+                <span class="ml-2" id="cadenceDisplay">-</span>
+            </div>
+        </div>
+        <div class="bass-line-viz w-48" id="bassViz"></div>
+    </footer>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
+        <div class="bg-slate-800 rounded-xl p-6 max-w-lg mx-4 max-h-[80vh] overflow-y-auto">
+            <h2 class="text-xl font-semibold mb-4">Rameau Machine</h2>
+            <div class="text-sm text-slate-300 space-y-4">
+                <p><strong>Concepto:</strong> Un sistema generativo basado en la teoria de armonia funcional de Jean-Philippe Rameau (1722).</p>
+                <p><strong>Funciones armonicas:</strong></p>
+                <ul class="list-disc list-inside ml-2 space-y-1">
+                    <li><span class="text-green-400">Tonica (T)</span>: Centro, estabilidad (I, vi, iii)</li>
+                    <li><span class="text-blue-400">Subdominante (S)</span>: Alejarse (IV, ii)</li>
+                    <li><span class="text-red-400">Dominante (D)</span>: Tension, retorno (V, vii)</li>
+                </ul>
+                <p><strong>Gravedad tonal:</strong> La tension acumulada atrae hacia la resolucion en la tonica.</p>
+                <p><strong>Modos:</strong></p>
+                <ul class="list-disc list-inside ml-2 space-y-1">
+                    <li><strong>Autonomo:</strong> El sistema genera progresiones automaticamente</li>
+                    <li><strong>Guiado:</strong> Haz clic en los acordes para dirigir la progresion</li>
+                </ul>
+            </div>
+            <button id="closeHelp" class="mt-6 w-full py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <script>
+    // ============================================================
+    // CONSTANTES Y CONFIGURACION
+    // ============================================================
+
+    const KEY_PITCHES = {
+        'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3,
+        'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8,
+        'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
+    };
+
+    const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+    const CHORDS = {
+        'I':    { function: 'T', tension: 0.0, root: 0, third: 4, fifth: 7, quality: 'major' },
+        'vi':   { function: 'T', tension: 0.2, root: 9, third: 0, fifth: 4, quality: 'minor' },
+        'iii':  { function: 'T', tension: 0.3, root: 4, third: 7, fifth: 11, quality: 'minor' },
+        'IV':   { function: 'S', tension: 0.4, root: 5, third: 9, fifth: 0, quality: 'major' },
+        'ii':   { function: 'S', tension: 0.5, root: 2, third: 5, fifth: 9, quality: 'minor' },
+        'V':    { function: 'D', tension: 0.8, root: 7, third: 11, fifth: 2, quality: 'major' },
+        'V7':   { function: 'D', tension: 0.9, root: 7, third: 11, fifth: 2, seventh: 5, quality: 'dom7' },
+        'viio': { function: 'D', tension: 0.85, root: 11, third: 2, fifth: 5, quality: 'dim' }
+    };
+
+    const FUNCTION_COLORS = {
+        'T': '#22c55e',
+        'S': '#3b82f6',
+        'D': '#ef4444'
+    };
+
+    const DETAILED_TRANSITIONS = {
+        'I':    { 'I': 0.05, 'ii': 0.15, 'iii': 0.05, 'IV': 0.25, 'V': 0.30, 'vi': 0.15, 'viio': 0.05 },
+        'ii':   { 'I': 0.05, 'ii': 0.05, 'iii': 0.02, 'IV': 0.08, 'V': 0.60, 'vi': 0.05, 'viio': 0.15 },
+        'iii':  { 'I': 0.10, 'ii': 0.05, 'iii': 0.02, 'IV': 0.30, 'V': 0.10, 'vi': 0.40, 'viio': 0.03 },
+        'IV':   { 'I': 0.15, 'ii': 0.10, 'iii': 0.02, 'IV': 0.05, 'V': 0.50, 'vi': 0.05, 'viio': 0.13 },
+        'V':    { 'I': 0.70, 'ii': 0.02, 'iii': 0.02, 'IV': 0.05, 'V': 0.05, 'vi': 0.14, 'viio': 0.02 },
+        'vi':   { 'I': 0.10, 'ii': 0.25, 'iii': 0.05, 'IV': 0.30, 'V': 0.20, 'vi': 0.05, 'viio': 0.05 },
+        'viio': { 'I': 0.80, 'ii': 0.02, 'iii': 0.05, 'IV': 0.02, 'V': 0.03, 'vi': 0.05, 'viio': 0.03 }
+    };
+
+    const CADENCES = {
+        'autentica_perfecta': { pattern: ['V', 'I'], strength: 1.0, class: 'cadence-autentica', label: 'Aut. Perfecta' },
+        'autentica_imperfecta': { pattern: ['V7', 'I'], strength: 0.9, class: 'cadence-autentica', label: 'Aut. Imperfecta' },
+        'plagal': { pattern: ['IV', 'I'], strength: 0.6, class: 'cadence-plagal', label: 'Plagal' },
+        'semicadencia': { pattern: ['*', 'V'], strength: 0.5, class: 'cadence-semi', label: 'Semicadencia' },
+        'rota': { pattern: ['V', 'vi'], strength: 0.7, class: 'cadence-rota', label: 'Rota (Deceptiva)' }
+    };
+
+    const VOICE_LEADING_RULES = {
+        barroco: { strictParallels: true, resolveLeadingTone: true, maxLeap: 8 },
+        clasico: { strictParallels: true, resolveLeadingTone: true, maxLeap: 10 },
+        romantico: { strictParallels: false, resolveLeadingTone: false, maxLeap: 12 },
+        jazz: { strictParallels: false, resolveLeadingTone: false, maxLeap: 14 }
+    };
+
+    const STYLES = {
+        barroco: { tempo: 60, waveform: 'triangle', bassStyle: 'walking' },
+        clasico: { tempo: 80, waveform: 'sine', bassStyle: 'alberti' },
+        romantico: { tempo: 70, waveform: 'sawtooth', bassStyle: 'octaves' },
+        jazz: { tempo: 120, waveform: 'sine', bassStyle: 'walking' }
+    };
+
+    // ============================================================
+    // VOICE LEADER
+    // ============================================================
+
+    class VoiceLeader {
+        constructor() {
+            this.voices = [48, 52, 55, 60]; // Bass, Tenor, Alto, Soprano (C3, E3, G3, C4)
+            this.voiceRanges = {
+                bass:    { min: 36, max: 60 },
+                tenor:   { min: 48, max: 67 },
+                alto:    { min: 55, max: 74 },
+                soprano: { min: 60, max: 81 }
+            };
+            this.style = 'clasico';
+        }
+
+        setStyle(style) {
+            this.style = style;
+        }
+
+        getVoices() {
+            return [...this.voices];
+        }
+
+        transition(targetChord, inversion = 0, keyPitch = 0) {
+            const chordData = CHORDS[targetChord];
+            let pitchClasses = [chordData.root, chordData.third, chordData.fifth];
+            if (chordData.seventh !== undefined) pitchClasses.push(chordData.seventh);
+
+            // Apply key transposition
+            pitchClasses = pitchClasses.map(pc => (pc + keyPitch) % 12);
+
+            const bassPC = pitchClasses[inversion % pitchClasses.length];
+            const newVoicing = this.findOptimalVoicing(pitchClasses, bassPC);
+
+            if (newVoicing) {
+                const oldVoices = [...this.voices];
+                this.voices = newVoicing;
+                return { from: oldVoices, to: newVoicing };
+            }
+            return null;
+        }
+
+        findOptimalVoicing(pitchClasses, bassNote) {
+            const candidates = this.generateVoicings(pitchClasses, bassNote);
+            const rules = VOICE_LEADING_RULES[this.style];
+
+            let valid = candidates;
+            if (rules.strictParallels) {
+                valid = candidates.filter(v => this.isValidVoiceLeading(this.voices, v));
+            }
+
+            if (valid.length === 0) valid = candidates;
+            if (valid.length === 0) return null;
+
+            return valid.reduce((best, candidate) => {
+                const distance = this.totalVoiceDistance(this.voices, candidate);
+                return distance < best.distance ? { voicing: candidate, distance } : best;
+            }, { voicing: null, distance: Infinity }).voicing;
+        }
+
+        generateVoicings(pitchClasses, bassNote) {
+            const voicings = [];
+            const bassOptions = this.getNotesInRange(bassNote, this.voiceRanges.bass);
+
+            for (const b of bassOptions.slice(0, 2)) {
+                const remaining = pitchClasses.filter(p => p !== bassNote % 12);
+                const upperPCs = [...remaining, ...pitchClasses];
+
+                const tenorOptions = this.getNotesInRange(upperPCs, this.voiceRanges.tenor).slice(0, 4);
+                const altoOptions = this.getNotesInRange(upperPCs, this.voiceRanges.alto).slice(0, 4);
+                const sopranoOptions = this.getNotesInRange(pitchClasses, this.voiceRanges.soprano).slice(0, 4);
+
+                for (const t of tenorOptions) {
+                    for (const a of altoOptions) {
+                        for (const s of sopranoOptions) {
+                            if (b < t && t <= a && a <= s) {
+                                voicings.push([b, t, a, s]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return voicings;
+        }
+
+        getNotesInRange(pitchClassOrArray, range) {
+            const pcs = Array.isArray(pitchClassOrArray) ? pitchClassOrArray : [pitchClassOrArray];
+            const notes = [];
+
+            for (const pc of pcs) {
+                for (let octave = 0; octave < 8; octave++) {
+                    const note = pc + octave * 12;
+                    if (note >= range.min && note <= range.max) {
+                        notes.push(note);
+                    }
+                }
+            }
+
+            return [...new Set(notes)].sort((a, b) => a - b);
+        }
+
+        totalVoiceDistance(from, to) {
+            return from.reduce((sum, note, i) => sum + Math.abs(note - to[i]), 0);
+        }
+
+        isValidVoiceLeading(from, to) {
+            // Avoid parallel fifths and octaves
+            for (let i = 0; i < from.length - 1; i++) {
+                for (let j = i + 1; j < from.length; j++) {
+                    const interval1 = Math.abs(from[i] - from[j]) % 12;
+                    const interval2 = Math.abs(to[i] - to[j]) % 12;
+
+                    if ((interval1 === 7 && interval2 === 7) || (interval1 === 0 && interval2 === 0)) {
+                        const dir1 = Math.sign(to[i] - from[i]);
+                        const dir2 = Math.sign(to[j] - from[j]);
+                        if (dir1 === dir2 && dir1 !== 0) return false;
+                    }
+                }
+            }
+
+            // Check voice crossing
+            if (to[0] >= to[1] || to[1] > to[2] || to[2] > to[3]) {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    // ============================================================
+    // TONAL GRAVITY (Harmonic State Machine)
+    // ============================================================
+
+    class TonalGravity {
+        constructor() {
+            this.position = 'I';
+            this.inversion = 0;
+            this.tension = 0;
+            this.history = ['I'];
+            this.bassHistory = [0];
+            this.bassDirection = 0;
+            this.key = 'C';
+            this.keyPitch = 0;
+        }
+
+        setKey(keyName) {
+            this.key = keyName;
+            this.keyPitch = KEY_PITCHES[keyName] || 0;
+        }
+
+        getTransitionProbabilities() {
+            const base = DETAILED_TRANSITIONS[this.position];
+            const modified = {};
+            let total = 0;
+
+            for (const [target, prob] of Object.entries(base)) {
+                const targetData = CHORDS[target];
+                let p = prob;
+
+                // Tension-driven modification
+                if (this.tension > 0.7 && targetData.function === 'T') {
+                    p *= (1 + this.tension);
+                } else if (this.tension < 0.3 && targetData.function === 'D') {
+                    p *= (1 + (0.5 - this.tension));
+                }
+
+                modified[target] = p;
+                total += p;
+            }
+
+            // Normalize
+            for (const key of Object.keys(modified)) {
+                modified[key] /= total;
+            }
+
+            return modified;
+        }
+
+        step() {
+            const probs = this.getTransitionProbabilities();
+            const nextChord = this.weightedRandom(probs);
+
+            // Choose bass note with inertia
+            const currentBass = this.bassHistory[this.bassHistory.length - 1];
+            const bassChoice = this.chooseBassNote(nextChord, currentBass);
+            this.inversion = bassChoice.inversion;
+
+            // Update bass history
+            this.bassHistory.push(bassChoice.bass);
+            if (this.bassHistory.length > 16) this.bassHistory.shift();
+
+            // Update tension
+            const nextData = CHORDS[nextChord];
+            if (nextData.function === 'T') {
+                this.tension *= 0.3;
+            } else if (nextData.function === 'D') {
+                this.tension = Math.min(1, this.tension + 0.3);
+            } else {
+                this.tension = Math.min(1, this.tension + 0.1);
+            }
+
+            // Update history
+            this.history.push(nextChord);
+            if (this.history.length > 16) this.history.shift();
+
+            this.position = nextChord;
+
+            return {
+                chord: nextChord,
+                inversion: this.inversion,
+                tension: this.tension,
+                bass: bassChoice.bass
+            };
+        }
+
+        goTo(chord) {
+            // For guided mode - force transition to specific chord
+            const currentBass = this.bassHistory[this.bassHistory.length - 1];
+            const bassChoice = this.chooseBassNote(chord, currentBass);
+            this.inversion = bassChoice.inversion;
+
+            this.bassHistory.push(bassChoice.bass);
+            if (this.bassHistory.length > 16) this.bassHistory.shift();
+
+            const chordData = CHORDS[chord];
+            if (chordData.function === 'T') {
+                this.tension *= 0.3;
+            } else if (chordData.function === 'D') {
+                this.tension = Math.min(1, this.tension + 0.3);
+            } else {
+                this.tension = Math.min(1, this.tension + 0.1);
+            }
+
+            this.history.push(chord);
+            if (this.history.length > 16) this.history.shift();
+
+            this.position = chord;
+
+            return {
+                chord,
+                inversion: this.inversion,
+                tension: this.tension,
+                bass: bassChoice.bass
+            };
+        }
+
+        chooseBassNote(nextChord, currentBass) {
+            const chord = CHORDS[nextChord];
+            const candidates = [
+                { bass: chord.root, inversion: 0 },
+                { bass: chord.third, inversion: 1 },
+                { bass: chord.fifth, inversion: 2 }
+            ];
+
+            candidates.forEach(c => {
+                const distance = this.minDistance(currentBass, c.bass);
+                const direction = Math.sign(c.bass - currentBass);
+
+                c.score = 10 - distance;
+
+                if (direction === this.bassDirection && this.bassDirection !== 0) {
+                    c.score += 2;
+                }
+
+                if (distance <= 2) c.score += 2;
+                if (c.inversion === 0) c.score += 1; // Prefer root position slightly
+            });
+
+            const best = candidates.reduce((a, b) => a.score > b.score ? a : b);
+            this.bassDirection = Math.sign(best.bass - currentBass);
+
+            return best;
+        }
+
+        minDistance(a, b) {
+            a = ((a % 12) + 12) % 12;
+            b = ((b % 12) + 12) % 12;
+            return Math.min(
+                Math.abs(a - b),
+                Math.abs(a - (b + 12)),
+                Math.abs(a - (b - 12))
+            );
+        }
+
+        weightedRandom(probs) {
+            const r = Math.random();
+            let cumulative = 0;
+            for (const [key, prob] of Object.entries(probs)) {
+                cumulative += prob;
+                if (r < cumulative) return key;
+            }
+            return Object.keys(probs)[0];
+        }
+
+        reset() {
+            this.position = 'I';
+            this.inversion = 0;
+            this.tension = 0;
+            this.history = ['I'];
+            this.bassHistory = [0];
+            this.bassDirection = 0;
+        }
+
+        detectCadence() {
+            if (this.history.length < 2) return null;
+            const last2 = this.history.slice(-2);
+
+            for (const [name, cadence] of Object.entries(CADENCES)) {
+                const [p1, p2] = cadence.pattern;
+                if ((p1 === '*' || p1 === last2[0]) && p2 === last2[1]) {
+                    return { type: name, ...cadence };
+                }
+            }
+            return null;
+        }
+    }
+
+    // ============================================================
+    // RHYTHMIC HARMONY
+    // ============================================================
+
+    class RhythmicHarmony {
+        constructor(baseTempo = 80) {
+            this.baseTempo = baseTempo;
+            this.style = 'clasico';
+        }
+
+        setTempo(bpm) {
+            this.baseTempo = bpm;
+        }
+
+        setStyle(style) {
+            this.style = style;
+        }
+
+        computeDuration(chord, context) {
+            let baseDuration = 60 / this.baseTempo;
+
+            const functionMultipliers = {
+                'T': context.isResolution ? 1.8 : 1.0,
+                'S': 1.0,
+                'D': context.tensionLevel > 0.7 ? 0.8 : 0.95
+            };
+
+            const chordFunction = CHORDS[chord].function;
+            baseDuration *= functionMultipliers[chordFunction] || 1.0;
+
+            if (this.style === 'romantico') {
+                baseDuration *= this.computeRubato(context);
+            }
+
+            return baseDuration;
+        }
+
+        computeArticulation(chord, context) {
+            const tension = CHORDS[chord].tension;
+            const func = CHORDS[chord].function;
+
+            return {
+                attackTime: tension > 0.7 ? 0.02 : 0.05,
+                releaseTime: tension > 0.7 ? 0.08 : 0.15,
+                decayTime: func === 'D' ? 0.1 : 0.2,
+                sustainLevel: tension > 0.7 ? 0.25 : 0.20,
+                velocity: 0.2 + (tension * 0.1)
+            };
+        }
+
+        computeRubato(context) {
+            if (context.tensionRising && context.tensionLevel > 0.5) {
+                return 1.0 - (context.tensionLevel * 0.15);
+            }
+            if (context.approachingCadence) {
+                return 1.0 + (context.cadenceProximity * 0.3);
+            }
+            return 1.0 + (Math.random() - 0.5) * 0.08;
+        }
+    }
+
+    // ============================================================
+    // AUDIO SYNTHESIZER
+    // ============================================================
+
+    class VoiceLeadingSynth {
+        constructor(audioCtx) {
+            this.ctx = audioCtx;
+            this.oscillators = [];
+            this.gains = [];
+            this.filters = [];
+
+            this.masterGain = audioCtx.createGain();
+            this.masterGain.gain.value = 0.3;
+
+            // Simple reverb via delay
+            this.delay = audioCtx.createDelay();
+            this.delay.delayTime.value = 0.1;
+            this.delayGain = audioCtx.createGain();
+            this.delayGain.gain.value = 0.2;
+
+            this.masterGain.connect(this.delay);
+            this.delay.connect(this.delayGain);
+            this.delayGain.connect(audioCtx.destination);
+            this.masterGain.connect(audioCtx.destination);
+
+            // Create 4 voice oscillators
+            for (let i = 0; i < 4; i++) {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+
+                filter.type = 'lowpass';
+                filter.frequency.value = 2000;
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+
+                osc.start();
+                gain.gain.value = 0;
+
+                this.oscillators.push(osc);
+                this.gains.push(gain);
+                this.filters.push(filter);
+            }
+        }
+
+        transitionTo(newVoicing, duration, articulation) {
+            const now = this.ctx.currentTime;
+            const glideTime = Math.min(duration * 0.3, 0.1);
+
+            newVoicing.forEach((targetNote, i) => {
+                const freq = this.midiToFreq(targetNote);
+                const gain = this.gains[i];
+                const osc = this.oscillators[i];
+
+                osc.frequency.linearRampToValueAtTime(freq, now + glideTime);
+
+                gain.gain.cancelScheduledValues(now);
+                gain.gain.setValueAtTime(gain.gain.value, now);
+                gain.gain.linearRampToValueAtTime(articulation.velocity, now + articulation.attackTime);
+                gain.gain.linearRampToValueAtTime(articulation.sustainLevel, now + articulation.attackTime + articulation.decayTime);
+                gain.gain.setValueAtTime(articulation.sustainLevel, now + duration - articulation.releaseTime);
+                gain.gain.linearRampToValueAtTime(0.05, now + duration);
+            });
+        }
+
+        midiToFreq(midi) {
+            return 440 * Math.pow(2, (midi - 69) / 12);
+        }
+
+        setWaveform(type) {
+            this.oscillators.forEach(osc => osc.type = type);
+        }
+
+        stop() {
+            const now = this.ctx.currentTime;
+            this.gains.forEach(g => {
+                g.gain.cancelScheduledValues(now);
+                g.gain.linearRampToValueAtTime(0, now + 0.1);
+            });
+        }
+    }
+
+    // ============================================================
+    // D3 VISUALIZATION
+    // ============================================================
+
+    class TonalForceField {
+        constructor(svg, width, height) {
+            this.svg = svg;
+            this.width = width;
+            this.height = height;
+            this.cx = width / 2;
+            this.cy = height / 2;
+            this.tension = 0;
+            this.activeChord = 'I';
+            this.trail = [];
+            this.onChordClick = null;
+
+            this.functionRadii = {
+                'T': Math.min(width, height) * 0.08,  // Anillo interior para vi, iii
+                'D': Math.min(width, height) * 0.20,
+                'S': Math.min(width, height) * 0.32
+            };
+
+            this.chordAngles = {
+                'I':    0,
+                'V':    Math.PI * 0.5,
+                'V7':   Math.PI * 0.4,
+                'viio': Math.PI * 0.7,
+                'IV':   Math.PI * 1.5,
+                'ii':   Math.PI * 1.2,
+                'vi':   Math.PI * 1.15,   // Separado de iii
+                'iii':  Math.PI * 0.85    // Separado de vi
+            };
+
+            this.nodes = [
+                { id: 'I', function: 'T' },
+                { id: 'ii', function: 'S' },
+                { id: 'iii', function: 'T' },
+                { id: 'IV', function: 'S' },
+                { id: 'V', function: 'D' },
+                { id: 'vi', function: 'T' },
+                { id: 'viio', function: 'D' }
+            ];
+
+            this.initPositions();
+            this.setupVisualization();
+        }
+
+        initPositions() {
+            this.nodes.forEach(node => {
+                if (node.id === 'I') {
+                    node.x = this.cx;
+                    node.y = this.cy;
+                    node.fx = this.cx;
+                    node.fy = this.cy;
+                } else {
+                    const angle = this.chordAngles[node.id];
+                    const radius = this.functionRadii[CHORDS[node.id].function];
+                    node.x = this.cx + radius * Math.cos(angle);
+                    node.y = this.cy + radius * Math.sin(angle);
+                }
+            });
+        }
+
+        setupVisualization() {
+            const svg = d3.select(this.svg);
+            svg.selectAll('*').remove();
+
+            // Background gradient
+            const defs = svg.append('defs');
+            const radialGradient = defs.append('radialGradient')
+                .attr('id', 'bgGradient')
+                .attr('cx', '50%').attr('cy', '50%')
+                .attr('r', '50%');
+            radialGradient.append('stop').attr('offset', '0%').attr('stop-color', '#1a1a2e');
+            radialGradient.append('stop').attr('offset', '100%').attr('stop-color', '#0a0a0f');
+
+            svg.append('rect')
+                .attr('width', '100%')
+                .attr('height', '100%')
+                .attr('fill', 'url(#bgGradient)');
+
+            // Function zone rings
+            this.drawFunctionZones(svg);
+
+            // Trail layer
+            this.trailGroup = svg.append('g').attr('class', 'trail-layer');
+
+            // Transition arcs (probability lines)
+            this.arcGroup = svg.append('g').attr('class', 'arc-layer');
+
+            // Nodes
+            this.nodeGroup = svg.append('g').attr('class', 'node-layer');
+
+            // Create nodes
+            const self = this;
+            this.nodeElements = this.nodeGroup.selectAll('.chord-node')
+                .data(this.nodes)
+                .enter()
+                .append('g')
+                .attr('class', 'chord-node')
+                .attr('transform', d => `translate(${d.x}, ${d.y})`)
+                .on('click', function(event, d) {
+                    if (self.onChordClick) {
+                        self.onChordClick(d.id);
+                    }
+                })
+                ;
+
+            // Node circles
+            this.nodeElements.append('circle')
+                .attr('r', d => d.id === 'I' ? 32 : 24)
+                .attr('fill', d => {
+                    const func = CHORDS[d.id].function;
+                    return FUNCTION_COLORS[func];
+                })
+                .attr('fill-opacity', 0.2)
+                .attr('stroke', d => FUNCTION_COLORS[CHORDS[d.id].function])
+                .attr('stroke-width', 2);
+
+            // Node labels
+            this.nodeElements.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('dy', '0.35em')
+                .attr('fill', '#fff')
+                .attr('font-size', d => d.id === 'I' ? '16px' : '14px')
+                .attr('font-weight', '500')
+                .text(d => d.id);
+
+            // Glow filter
+            const filter = defs.append('filter')
+                .attr('id', 'glow')
+                .attr('x', '-50%').attr('y', '-50%')
+                .attr('width', '200%').attr('height', '200%');
+            filter.append('feGaussianBlur')
+                .attr('stdDeviation', '4')
+                .attr('result', 'coloredBlur');
+            const feMerge = filter.append('feMerge');
+            feMerge.append('feMergeNode').attr('in', 'coloredBlur');
+            feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+            // Initial state
+            this.setActiveChord('I', 0);
+        }
+
+        drawFunctionZones(svg) {
+            const zones = svg.append('g').attr('class', 'function-zones');
+
+            // Subdominante ring (outer)
+            zones.append('circle')
+                .attr('cx', this.cx)
+                .attr('cy', this.cy)
+                .attr('r', this.functionRadii['S'] + 30)
+                .attr('fill', 'none')
+                .attr('stroke', FUNCTION_COLORS['S'])
+                .attr('stroke-width', 50)
+                .attr('stroke-opacity', 0.08);
+
+            // Dominante ring (middle)
+            zones.append('circle')
+                .attr('cx', this.cx)
+                .attr('cy', this.cy)
+                .attr('r', this.functionRadii['D'] + 20)
+                .attr('fill', 'none')
+                .attr('stroke', FUNCTION_COLORS['D'])
+                .attr('stroke-width', 35)
+                .attr('stroke-opacity', 0.08);
+
+            // Tonica zone (covers I at center plus vi/iii ring)
+            zones.append('circle')
+                .attr('cx', this.cx)
+                .attr('cy', this.cy)
+                .attr('r', this.functionRadii['T'] + 25)
+                .attr('fill', FUNCTION_COLORS['T'])
+                .attr('fill-opacity', 0.08);
+
+            // Labels
+            zones.append('text')
+                .attr('x', this.cx)
+                .attr('y', this.cy + this.functionRadii['T'] + 45)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#64748b')
+                .attr('font-size', '10px')
+                .text('TONICA');
+
+            zones.append('text')
+                .attr('x', this.cx + this.functionRadii['D'] + 40)
+                .attr('y', this.cy)
+                .attr('text-anchor', 'start')
+                .attr('fill', '#64748b')
+                .attr('font-size', '10px')
+                .text('DOMINANTE');
+
+            zones.append('text')
+                .attr('x', this.cx)
+                .attr('y', this.cy - this.functionRadii['S'] - 40)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#64748b')
+                .attr('font-size', '10px')
+                .text('SUBDOMINANTE');
+        }
+
+        setActiveChord(chord, tension) {
+            this.activeChord = chord;
+            this.tension = tension;
+
+            // Update trail
+            const node = this.nodes.find(n => n.id === chord);
+            if (node) {
+                this.trail.push({ x: node.x, y: node.y, chord });
+                if (this.trail.length > 8) this.trail.shift();
+            }
+
+            // Update visuals
+            this.nodeElements.select('circle')
+                .attr('fill-opacity', d => d.id === chord ? 0.6 : 0.2)
+                .attr('stroke-width', d => d.id === chord ? 4 : 2)
+                .attr('filter', d => d.id === chord ? 'url(#glow)' : null);
+
+            // Draw trail
+            this.drawTrail();
+        }
+
+        drawTrail() {
+            this.trailGroup.selectAll('*').remove();
+
+            if (this.trail.length < 2) return;
+
+            const lineGenerator = d3.line()
+                .x(d => d.x)
+                .y(d => d.y)
+                .curve(d3.curveCatmullRom);
+
+            // Trail gradient
+            const gradient = d3.select(this.svg).select('defs')
+                .selectAll('#trailGradient').data([1]).enter()
+                .append('linearGradient')
+                .attr('id', 'trailGradient');
+
+            gradient.selectAll('stop').remove();
+            this.trail.forEach((point, i) => {
+                const color = FUNCTION_COLORS[CHORDS[point.chord].function];
+                gradient.append('stop')
+                    .attr('offset', `${(i / (this.trail.length - 1)) * 100}%`)
+                    .attr('stop-color', color)
+                    .attr('stop-opacity', 0.1 + (i / this.trail.length) * 0.5);
+            });
+
+            this.trailGroup.append('path')
+                .attr('d', lineGenerator(this.trail))
+                .attr('class', 'trail-line')
+                .attr('stroke', 'url(#trailGradient)')
+                .attr('stroke-width', 3);
+        }
+
+        showProbabilities(fromChord) {
+            const probs = DETAILED_TRANSITIONS[fromChord];
+
+            this.arcGroup.selectAll('*').remove();
+
+            const fromNode = this.nodes.find(n => n.id === fromChord);
+
+            for (const [toChord, prob] of Object.entries(probs)) {
+                if (prob < 0.05) continue;
+                const toNode = this.nodes.find(n => n.id === toChord);
+                if (!toNode || toChord === fromChord) continue;
+
+                this.arcGroup.append('line')
+                    .attr('x1', fromNode.x)
+                    .attr('y1', fromNode.y)
+                    .attr('x2', toNode.x)
+                    .attr('y2', toNode.y)
+                    .attr('stroke', FUNCTION_COLORS[CHORDS[toChord].function])
+                    .attr('stroke-width', 1 + prob * 4)
+                    .attr('stroke-opacity', 0.2 + prob * 0.6)
+                    .attr('stroke-dasharray', '4,4');
+            }
+        }
+
+        hideProbabilities() {
+            this.arcGroup.selectAll('*').remove();
+        }
+
+        shakeNode(nodeSelection) {
+            const shake = () => {
+                nodeSelection
+                    .transition()
+                    .duration(50)
+                    .attr('transform', d => {
+                        const dx = (Math.random() - 0.5) * this.tension * 6;
+                        const dy = (Math.random() - 0.5) * this.tension * 6;
+                        return `translate(${d.x + dx}, ${d.y + dy})`;
+                    });
+            };
+
+            for (let i = 0; i < 5; i++) {
+                setTimeout(shake, i * 60);
+            }
+
+            setTimeout(() => {
+                nodeSelection
+                    .transition()
+                    .duration(100)
+                    .attr('transform', d => `translate(${d.x}, ${d.y})`);
+            }, 350);
+        }
+
+        triggerResolution() {
+            // Burst effect at center
+            const particles = d3.select('#particles');
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2;
+                const particle = particles.append('div')
+                    .attr('class', 'resolution-particle')
+                    .style('left', `${this.cx}px`)
+                    .style('top', `${this.cy}px`)
+                    .style('transform', `translate(-50%, -50%) rotate(${angle}rad)`);
+
+                setTimeout(() => particle.remove(), 600);
+            }
+        }
+
+        resize(width, height) {
+            this.width = width;
+            this.height = height;
+            this.cx = width / 2;
+            this.cy = height / 2;
+
+            this.functionRadii = {
+                'T': 0,
+                'D': Math.min(width, height) * 0.18,
+                'S': Math.min(width, height) * 0.32
+            };
+
+            this.initPositions();
+            this.setupVisualization();
+        }
+    }
+
+    // ============================================================
+    // MAIN APPLICATION
+    // ============================================================
+
+    class RameauMachine {
+        constructor() {
+            this.audioCtx = null;
+            this.synth = null;
+            this.voiceLeader = new VoiceLeader();
+            this.tonalGravity = new TonalGravity();
+            this.rhythm = new RhythmicHarmony(80);
+            this.viz = null;
+
+            this.isPlaying = false;
+            this.isGuided = false;
+            this.style = 'clasico';
+            this.tempo = 80;
+            this.key = 'C';
+
+            this.nextStepTimeout = null;
+
+            // Recording
+            this.isRecording = false;
+            this.mediaRecorder = null;
+            this.recordedChunks = [];
+            this.recordingDestination = null;
+
+            this.init();
+        }
+
+        init() {
+            // Setup visualization
+            const container = document.getElementById('vizContainer');
+            const svg = document.getElementById('mainSvg');
+            this.viz = new TonalForceField(svg, container.clientWidth, container.clientHeight);
+
+            // Click handler for guided mode
+            this.viz.onChordClick = (chord) => {
+                if (this.isGuided) {
+                    this.playChord(chord, true);
+                }
+            };
+
+            // Bind controls
+            this.bindControls();
+
+            // Resize handler
+            window.addEventListener('resize', () => {
+                const container = document.getElementById('vizContainer');
+                this.viz.resize(container.clientWidth, container.clientHeight);
+            });
+
+            // Initial display
+            this.updateDisplay();
+            this.updateBassViz();
+            this.updateProbabilities();
+        }
+
+        initAudio() {
+            if (!this.audioCtx) {
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                this.synth = new VoiceLeadingSynth(this.audioCtx);
+                this.synth.setWaveform(STYLES[this.style].waveform);
+            }
+            if (this.audioCtx.state === 'suspended') {
+                this.audioCtx.resume();
+            }
+        }
+
+        bindControls() {
+            // Play/Pause
+            document.getElementById('playBtn').addEventListener('click', () => {
+                this.togglePlay();
+            });
+
+            // Reset
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                this.reset();
+            });
+
+            // Tempo
+            const tempoSlider = document.getElementById('tempoSlider');
+            tempoSlider.addEventListener('input', (e) => {
+                this.tempo = parseInt(e.target.value);
+                this.rhythm.setTempo(this.tempo);
+                document.getElementById('tempoValue').textContent = `${this.tempo} BPM`;
+                document.getElementById('tempoFill').style.width = `${((this.tempo - 40) / 100) * 100}%`;
+            });
+
+            // Key selector
+            document.querySelectorAll('#keySelector button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#keySelector button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    this.key = btn.dataset.key;
+                    this.tonalGravity.setKey(this.key);
+                });
+            });
+
+            // Style
+            document.querySelectorAll('input[name="style"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    this.style = e.target.value;
+                    this.rhythm.setStyle(this.style);
+                    this.voiceLeader.setStyle(this.style);
+                    if (this.synth) {
+                        this.synth.setWaveform(STYLES[this.style].waveform);
+                    }
+                });
+            });
+
+            // Mode buttons
+            document.getElementById('modeAuto').addEventListener('click', () => {
+                this.isGuided = false;
+                document.getElementById('modeAuto').classList.replace('bg-slate-700', 'bg-blue-600');
+                document.getElementById('modeGuided').classList.replace('bg-blue-600', 'bg-slate-700');
+            });
+
+            document.getElementById('modeGuided').addEventListener('click', () => {
+                this.isGuided = true;
+                document.getElementById('modeGuided').classList.replace('bg-slate-700', 'bg-blue-600');
+                document.getElementById('modeAuto').classList.replace('bg-blue-600', 'bg-slate-700');
+            });
+
+            // Help modal
+            document.getElementById('helpBtn').addEventListener('click', () => {
+                document.getElementById('helpModal').classList.remove('hidden');
+            });
+
+            document.getElementById('closeHelp').addEventListener('click', () => {
+                document.getElementById('helpModal').classList.add('hidden');
+            });
+
+            document.getElementById('helpModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('helpModal')) {
+                    document.getElementById('helpModal').classList.add('hidden');
+                }
+            });
+
+            // Record button
+            document.getElementById('recordBtn').addEventListener('click', () => {
+                this.toggleRecording();
+            });
+
+            // Export button
+            document.getElementById('exportBtn').addEventListener('click', () => {
+                this.exportProgression();
+            });
+        }
+
+        togglePlay() {
+            if (this.isPlaying) {
+                this.stop();
+            } else {
+                this.play();
+            }
+        }
+
+        play() {
+            this.initAudio();
+            this.isPlaying = true;
+
+            const playBtn = document.getElementById('playBtn');
+            playBtn.classList.replace('play', 'pause');
+            document.getElementById('playIcon').innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+
+            if (!this.isGuided) {
+                this.scheduleNextStep();
+            } else {
+                // Play current chord once
+                this.playChord(this.tonalGravity.position, false);
+            }
+        }
+
+        stop() {
+            this.isPlaying = false;
+
+            const playBtn = document.getElementById('playBtn');
+            playBtn.classList.replace('pause', 'play');
+            document.getElementById('playIcon').innerHTML = '<path d="M8 5v14l11-7z"/>';
+
+            if (this.nextStepTimeout) {
+                clearTimeout(this.nextStepTimeout);
+                this.nextStepTimeout = null;
+            }
+
+            if (this.synth) {
+                this.synth.stop();
+            }
+        }
+
+        reset() {
+            this.stop();
+            this.tonalGravity.reset();
+            this.voiceLeader.voices = [48, 52, 55, 60];
+            this.viz.trail = [];
+            this.viz.setActiveChord('I', 0);
+            this.updateDisplay();
+            this.updateBassViz();
+            this.updateProbabilities();
+        }
+
+        scheduleNextStep() {
+            if (!this.isPlaying || this.isGuided) return;
+
+            const result = this.tonalGravity.step();
+            this.playChord(result.chord, false);
+
+            const context = {
+                tensionLevel: result.tension,
+                isResolution: CHORDS[result.chord].function === 'T' && result.tension < 0.3
+            };
+
+            const duration = this.rhythm.computeDuration(result.chord, context);
+
+            this.nextStepTimeout = setTimeout(() => {
+                this.scheduleNextStep();
+            }, duration * 1000);
+        }
+
+        playChord(chord, isManual) {
+            this.initAudio();
+
+            let result;
+            if (isManual) {
+                result = this.tonalGravity.goTo(chord);
+            } else {
+                result = {
+                    chord,
+                    inversion: this.tonalGravity.inversion,
+                    tension: this.tonalGravity.tension,
+                    bass: this.tonalGravity.bassHistory[this.tonalGravity.bassHistory.length - 1]
+                };
+            }
+
+            // Voice leading
+            const voiceResult = this.voiceLeader.transition(chord, result.inversion, this.tonalGravity.keyPitch);
+
+            // Compute articulation and duration
+            const context = {
+                tensionLevel: result.tension,
+                isResolution: CHORDS[chord].function === 'T' && result.tension < 0.3
+            };
+
+            const articulation = this.rhythm.computeArticulation(chord, context);
+            const duration = this.rhythm.computeDuration(chord, context);
+
+            // Play audio
+            if (voiceResult) {
+                this.synth.transitionTo(voiceResult.to, duration, articulation);
+            }
+
+            // Update visualization
+            this.viz.setActiveChord(chord, result.tension);
+
+            if (CHORDS[chord].function === 'T' && result.tension < 0.3) {
+                this.viz.triggerResolution();
+            }
+
+            // Update UI
+            this.updateDisplay();
+            this.updateTension(result.tension);
+            this.updateVoiceDisplay(voiceResult?.to || this.voiceLeader.getVoices());
+            this.updateBassViz();
+            this.updateProbabilities();
+
+            // Check cadence
+            const cadence = this.tonalGravity.detectCadence();
+            this.updateCadenceDisplay(cadence);
+        }
+
+        updateDisplay() {
+            // Progression
+            const history = this.tonalGravity.history.slice(-8);
+            document.getElementById('progressionDisplay').textContent = history.join(' - ');
+
+            // Bass note
+            const bassPC = this.tonalGravity.bassHistory[this.tonalGravity.bassHistory.length - 1];
+            const bassNote = NOTE_NAMES[(bassPC + this.tonalGravity.keyPitch) % 12];
+            document.getElementById('bassDisplay').textContent = bassNote;
+        }
+
+        updateTension(tension) {
+            const fill = document.getElementById('tensionFill');
+            fill.style.width = `${tension * 100}%`;
+
+            // Color based on tension
+            if (tension < 0.3) {
+                fill.style.background = '#22c55e';
+            } else if (tension < 0.6) {
+                fill.style.background = '#eab308';
+            } else {
+                fill.style.background = '#ef4444';
+            }
+
+            document.getElementById('tensionValue').textContent = tension.toFixed(2);
+        }
+
+        updateVoiceDisplay(voices) {
+            const display = document.getElementById('voiceDisplay');
+            const notes = display.querySelectorAll('.voice-note');
+            const voiceNames = ['bass', 'tenor', 'alto', 'soprano'];
+
+            voices.forEach((note, i) => {
+                const noteEl = notes[i];
+                const range = this.voiceLeader.voiceRanges[voiceNames[i]];
+                const normalized = (note - range.min) / (range.max - range.min);
+                noteEl.style.bottom = `${10 + normalized * 80}%`;
+                noteEl.style.width = '60px';
+                noteEl.style.left = `${i * 25}%`;
+            });
+        }
+
+        updateCadenceDisplay(cadence) {
+            const display = document.getElementById('cadenceDisplay');
+            if (cadence) {
+                display.innerHTML = `<span class="cadence-badge ${cadence.class}">${cadence.label}</span>`;
+            } else {
+                display.textContent = '-';
+            }
+        }
+
+        updateBassViz() {
+            const viz = document.getElementById('bassViz');
+            viz.innerHTML = '';
+
+            const bassHistory = this.tonalGravity.bassHistory.slice(-12);
+            bassHistory.forEach((bass, i) => {
+                const bar = document.createElement('div');
+                bar.className = 'bass-bar';
+                const height = 20 + (((bass % 12) + 12) % 12) * 1.5;
+                bar.style.height = `${height}px`;
+                bar.style.opacity = 0.3 + (i / bassHistory.length) * 0.7;
+                viz.appendChild(bar);
+            });
+        }
+
+        updateProbabilities() {
+            const currentChord = this.tonalGravity.position;
+            const probs = this.tonalGravity.getTransitionProbabilities();
+
+            // Update label
+            document.getElementById('currentChordLabel').textContent = currentChord;
+
+            // Sort by probability descending
+            const sorted = Object.entries(probs).sort((a, b) => b[1] - a[1]);
+
+            const container = document.getElementById('probDisplay');
+            container.innerHTML = '';
+
+            sorted.forEach(([chord, prob]) => {
+                const func = CHORDS[chord].function;
+                const percent = (prob * 100).toFixed(0);
+
+                const row = document.createElement('div');
+                row.className = 'prob-row';
+                row.innerHTML = `
+                    <span class="prob-label">${chord}</span>
+                    <div class="prob-bar-container">
+                        <div class="prob-bar func-${func}" style="width: ${percent}%"></div>
+                    </div>
+                    <span class="prob-value">${percent}%</span>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        // ========== RECORDING ==========
+        toggleRecording() {
+            if (this.isRecording) {
+                this.stopRecording();
+            } else {
+                this.startRecording();
+            }
+        }
+
+        startRecording() {
+            this.initAudio();
+
+            // Create a destination for recording
+            this.recordingDestination = this.audioCtx.createMediaStreamDestination();
+            this.synth.masterGain.connect(this.recordingDestination);
+
+            this.recordedChunks = [];
+            this.mediaRecorder = new MediaRecorder(this.recordingDestination.stream, {
+                mimeType: 'audio/webm'
+            });
+
+            this.mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    this.recordedChunks.push(e.data);
+                }
+            };
+
+            this.mediaRecorder.onstop = () => {
+                const blob = new Blob(this.recordedChunks, { type: 'audio/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `rameau-${this.key}-${Date.now()}.webm`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                // Disconnect recording destination
+                this.synth.masterGain.disconnect(this.recordingDestination);
+            };
+
+            this.mediaRecorder.start();
+            this.isRecording = true;
+
+            // Update UI
+            const btn = document.getElementById('recordBtn');
+            btn.classList.replace('bg-slate-700', 'bg-red-600');
+            btn.classList.add('animate-pulse');
+        }
+
+        stopRecording() {
+            if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                this.mediaRecorder.stop();
+            }
+            this.isRecording = false;
+
+            // Update UI
+            const btn = document.getElementById('recordBtn');
+            btn.classList.replace('bg-red-600', 'bg-slate-700');
+            btn.classList.remove('animate-pulse');
+        }
+
+        // ========== EXPORT ==========
+        exportProgression() {
+            const history = this.tonalGravity.history;
+            const key = this.key;
+            const style = this.style;
+            const tempo = this.tempo;
+
+            // Build text output
+            let output = `# Rameau Machine - Progresion Exportada\n\n`;
+            output += `Tonalidad: ${key} Mayor\n`;
+            output += `Estilo: ${style.charAt(0).toUpperCase() + style.slice(1)}\n`;
+            output += `Tempo: ${tempo} BPM\n\n`;
+            output += `## Progresion\n\n`;
+            output += history.join(' - ') + '\n\n';
+
+            // Analisis funcional
+            output += `## Analisis Funcional\n\n`;
+            history.forEach((chord, i) => {
+                const func = CHORDS[chord].function;
+                const funcName = func === 'T' ? 'Tonica' : func === 'S' ? 'Subdominante' : 'Dominante';
+                output += `${i + 1}. ${chord} (${funcName})\n`;
+            });
+
+            // Cadencias detectadas
+            output += `\n## Cadencias\n\n`;
+            for (let i = 1; i < history.length; i++) {
+                const pair = [history[i-1], history[i]];
+                for (const [name, cadence] of Object.entries(CADENCES)) {
+                    const [p1, p2] = cadence.pattern;
+                    if ((p1 === '*' || p1 === pair[0]) && p2 === pair[1]) {
+                        output += `- Compas ${i}: ${cadence.label} (${pair[0]} -> ${pair[1]})\n`;
+                    }
+                }
+            }
+
+            output += `\n---\nGenerado por Rameau Machine\n`;
+
+            // Download
+            const blob = new Blob([output], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rameau-progresion-${key}-${Date.now()}.md`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+        window.rameauMachine = new RameauMachine();
+    });
+    </script>
+</body>
+</html>
