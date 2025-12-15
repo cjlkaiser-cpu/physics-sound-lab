@@ -1551,6 +1551,21 @@
             feMerge.append('feMergeNode').attr('in', 'coloredBlur');
             feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
+            // Narrador - texto explicativo en el centro
+            this.narratorText = svg.append('text')
+                .attr('class', 'narrator')
+                .attr('x', this.cx)
+                .attr('y', this.cy + 55)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#94a3b8')
+                .attr('font-size', '11px')
+                .attr('font-style', 'italic')
+                .attr('opacity', 0.9)
+                .text('');
+
+            // Guardar historial para detectar transiciones
+            this.lastChord = null;
+
             // Initial state
             this.setActiveChord('I', 0);
         }
@@ -1622,9 +1637,11 @@
                 .text('SUBDOMINANTE');
         }
 
-        setActiveChord(chord, tension) {
+        setActiveChord(chord, tension, gravity = 0.5) {
+            const previousChord = this.lastChord;
             this.activeChord = chord;
             this.tension = tension;
+            this.lastChord = chord;
 
             // Update trail
             const node = this.nodes.find(n => n.id === chord);
@@ -1639,8 +1656,70 @@
                 .attr('stroke-width', d => d.id === chord ? 4 : 2)
                 .attr('filter', d => d.id === chord ? 'url(#glow)' : null);
 
+            // Update narrator
+            this.updateNarrator(previousChord, chord, tension, gravity);
+
             // Draw trail
             this.drawTrail();
+        }
+
+        updateNarrator(from, to, tension, gravity) {
+            let narrative = '';
+            const toFunc = CHORDS[to]?.function;
+            const fromFunc = from ? CHORDS[from]?.function : null;
+
+            // Cadencias específicas
+            if (from === 'V' && to === 'I') {
+                narrative = '✓ Cadencia Auténtica (Reposo total)';
+            } else if (from === 'V' && to === 'vi') {
+                narrative = '↺ Cadencia Deceptiva (¡Sorpresa!)';
+            } else if (from === 'IV' && to === 'I') {
+                narrative = '✓ Cadencia Plagal (Amén)';
+            } else if (from === 'viio' && to === 'I') {
+                narrative = '✓ Resolución de sensible';
+            }
+            // Por tensión
+            else if (tension > 0.8) {
+                narrative = '⚡ Tensión máxima, buscando resolver...';
+            } else if (tension > 0.6 && toFunc === 'D') {
+                narrative = '↗ Acumulando tensión...';
+            }
+            // Por función
+            else if (fromFunc === 'T' && toFunc === 'S') {
+                narrative = '→ Alejándose del centro...';
+            } else if (fromFunc === 'S' && toFunc === 'D') {
+                narrative = '↗ Preparando la cadencia...';
+            } else if (fromFunc === 'D' && toFunc === 'T') {
+                narrative = '↓ Resolución (llegando a casa)';
+            } else if (toFunc === 'T' && tension < 0.2) {
+                narrative = '● Estabilidad tonal';
+            }
+            // Por gravedad
+            else if (gravity < 0.2) {
+                narrative = '~ Deriva libre (sin rumbo)';
+            } else if (gravity > 0.8 && toFunc === 'D') {
+                narrative = '! Dominante bajo alta gravedad';
+            }
+            // Default según función
+            else if (toFunc === 'T') {
+                narrative = '● Zona de reposo';
+            } else if (toFunc === 'S') {
+                narrative = '◐ Zona de alejamiento';
+            } else if (toFunc === 'D') {
+                narrative = '◉ Zona de tensión';
+            }
+
+            // Animar el cambio de texto
+            if (this.narratorText) {
+                this.narratorText
+                    .transition()
+                    .duration(150)
+                    .attr('opacity', 0)
+                    .transition()
+                    .duration(150)
+                    .attr('opacity', 0.9)
+                    .text(narrative);
+            }
         }
 
         drawTrail() {
@@ -2003,7 +2082,7 @@
             this.tonalGravity.reset();
             this.voiceLeader.voices = [48, 52, 55, 60];
             this.viz.trail = [];
-            this.viz.setActiveChord('I', 0);
+            this.viz.setActiveChord('I', 0, this.tonalGravity.gravity);
             this.updateDisplay();
             this.updateBassViz();
             this.updateProbabilities();
@@ -2093,7 +2172,7 @@
             }
 
             // Update visualization
-            this.viz.setActiveChord(chord, result.tension);
+            this.viz.setActiveChord(chord, result.tension, this.tonalGravity.gravity);
 
             if (CHORDS[chord].function === 'T' && result.tension < 0.3) {
                 this.viz.triggerResolution();
