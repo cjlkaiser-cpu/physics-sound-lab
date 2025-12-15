@@ -1,32 +1,32 @@
 # Rameau Machine
 
-Sistema generativo de armonia funcional basado en las teorias de Jean-Philippe Rameau (1722).
+Sistema generativo de armonía funcional basado en las teorías de Jean-Philippe Rameau (1722).
 
 ## Concepto
 
-Mientras que el [Tonnetz Walker](../tonnetz-walker/) explora la geometria simetrica de las transformaciones Neo-Riemannianas, **Rameau Machine** implementa el paradigma opuesto: la armonia funcional jerarquica donde la tonica actua como centro gravitacional.
+Mientras que el [Tonnetz Walker](../tonnetz-walker/) explora la geometría simétrica de las transformaciones Neo-Riemannianas, **Rameau Machine** implementa el paradigma opuesto: la armonía funcional jerárquica donde la tónica actúa como centro gravitacional.
 
-### Dos Paradigmas Armonicos
+### Dos Paradigmas Armónicos
 
 | Aspecto | Rameau (Funcional) | Neo-Riemannian |
 |---------|-------------------|----------------|
-| Centro | Tonica como "sol" gravitacional | Sin centro, espacio homogeneo |
-| Movimiento | Hacia resolucion (D->T) | Parsimonia de voces |
-| Estructura | Jerarquica (T > D > S) | Simetrica (P = L = R) |
-| Tension | Acumulativa, se resuelve | Uniforme, sin resolucion |
-| Epoca | Barroco/Clasico | Romantico tardio/Contemporaneo |
+| Centro | Tónica como "sol" gravitacional | Sin centro, espacio homogéneo |
+| Movimiento | Hacia resolución (D->T) | Parsimonia de voces |
+| Estructura | Jerárquica (T > D > S) | Simétrica (P = L = R) |
+| Tensión | Acumulativa, se resuelve | Uniforme, sin resolución |
+| Época | Barroco/Clásico | Romántico tardío/Contemporáneo |
 
-## Funciones Armonicas
+## Funciones Armónicas
 
 El sistema organiza los acordes en tres familias funcionales:
 
-- **Tonica (T)** - Verde: Centro, estabilidad, resolucion (I, vi, iii)
-- **Subdominante (S)** - Azul: Alejarse del centro, preparacion (IV, ii)
-- **Dominante (D)** - Rojo: Tension maxima, necesidad de retorno (V, viio)
+- **Tónica (T)** - Verde: Centro, estabilidad, resolución (I, vi, iii)
+- **Subdominante (S)** - Azul: Alejarse del centro, preparación (IV, ii)
+- **Dominante (D)** - Rojo: Tensión máxima, necesidad de retorno (V, viiº)
 
 ```
         ┌─────────────────────────────────┐
-        │           TONICA (T)            │
+        │           TÓNICA (T)            │
         │         I    vi    iii          │
         │           estabilidad           │
         └─────────────┬───────────────────┘
@@ -35,36 +35,36 @@ El sistema organiza los acordes en tres familias funcionales:
           ▼                       ▼
 ┌─────────────────┐     ┌─────────────────┐
 │ SUBDOMINANTE(S) │     │  DOMINANTE (D)  │
-│    IV    ii     │────▶│    V    viio    │
-│   preparacion   │     │    tension      │
+│    IV    ii     │────▶│    V    viiº    │
+│   preparación   │     │    tensión      │
 └────────┬────────┘     └────────┬────────┘
          │                       │
          └───────────┬───────────┘
                      ▼
-              (resolucion a T)
+              (resolución a T)
 ```
 
-## Caracteristicas
+## Características
 
 ### Gravedad Tonal
-La tension se acumula al alejarse de la tonica y se libera al resolver. El sistema modifica dinamicamente las probabilidades de transicion: a mayor tension, mayor atraccion hacia la tonica.
+La tensión se acumula al alejarse de la tónica y se libera al resolver. El sistema modifica dinámicamente las probabilidades de transición: a mayor tensión, mayor atracción hacia la tónica.
 
 ### Voice Leading SATB
-Conduccion de voces a cuatro partes (Soprano, Alto, Tenor, Bajo) con:
-- Evitacion de quintas y octavas paralelas
-- Resolucion de sensible a tonica
-- Prevencion de cruce de voces
+Conducción de voces a cuatro partes (Soprano, Alto, Tenor, Bajo) con:
+- Evitación de quintas y octavas paralelas
+- Resolución de sensible a tónica
+- Prevención de cruce de voces
 - Preferencia por movimiento conjunto
 
-### Ritmo Armonico
-Duraciones variables segun funcion y tension:
-- Acordes de tonica: duracion extendida (respiracion)
-- Acordes de dominante en tension alta: duracion comprimida (urgencia)
-- Rubato automatico en estilo romantico
+### Ritmo Armónico
+Duraciones variables según función y tensión:
+- Acordes de tónica: duración extendida (respiración)
+- Acordes de dominante en tensión alta: duración comprimida (urgencia)
+- Rubato automático en estilo romántico
 
-### Deteccion de Cadencias
+### Detección de Cadencias
 El sistema reconoce y anuncia:
-- Cadencia Autentica Perfecta (V -> I)
+- Cadencia Auténtica Perfecta (V -> I)
 - Cadencia Plagal (IV -> I)
 - Cadencia Rota/Deceptiva (V -> vi)
 - Semicadencia (* -> V)
@@ -73,69 +73,69 @@ El sistema reconoce y anuncia:
 
 ### Controles
 
-- **Tonalidad**: Selecciona la tonica (C, G, D, etc.)
+- **Tonalidad**: Selecciona la tónica (C, G, D, etc.)
 - **Tempo**: Ajusta la velocidad (40-140 BPM)
-- **Estilo**: Barroco, Clasico, Romantico o Jazz
-- **Modo Autonomo**: El sistema genera progresiones automaticamente
-- **Modo Guiado**: Haz clic en los acordes para dirigir la progresion
+- **Estilo**: Barroco, Clásico, Romántico o Jazz
+- **Modo Autónomo**: El sistema genera progresiones automáticamente
+- **Modo Guiado**: Haz clic en los acordes para dirigir la progresión
 
 ### Transporte
 
-- **Play/Pause**: Inicia o detiene la generacion
+- **Play/Pause**: Inicia o detiene la generación
 - **Reset**: Vuelve al estado inicial (I)
 - **Record**: Graba el audio generado (WebM)
-- **Export**: Descarga la progresion como texto Markdown
+- **Export**: Descarga la progresión como texto Markdown
 
-### Visualizacion
+### Visualización
 
-- **Anillos concentricos**: Representan las zonas funcionales
-- **Centro verde**: Zona de tonica (estabilidad)
-- **Anillo rojo**: Zona de dominante (tension)
+- **Anillos concéntricos**: Representan las zonas funcionales
+- **Centro verde**: Zona de tónica (estabilidad)
+- **Anillo rojo**: Zona de dominante (tensión)
 - **Anillo azul**: Zona de subdominante (alejamiento)
-- **Trail**: Muestra el camino armonico recorrido
-- **Hover**: Revela probabilidades de transicion
+- **Trail**: Muestra el camino armónico recorrido
+- **Hover**: Revela probabilidades de transición
 
 ## Estilos
 
-| Estilo | Tempo | Waveform | Voice Leading | Caracteristica |
+| Estilo | Tempo | Waveform | Voice Leading | Característica |
 |--------|-------|----------|---------------|----------------|
 | Barroco | 60 | Triangle | Estricto | Ornamentos |
-| Clasico | 80 | Sine | Estricto | Alberti bass |
-| Romantico | 70 | Sawtooth | Relajado | Rubato |
+| Clásico | 80 | Sine | Estricto | Alberti bass |
+| Romántico | 70 | Sawtooth | Relajado | Rubato |
 | Jazz | 120 | Sine | Libre | Extensiones |
 
-## Fundamento Teorico
+## Fundamento Teórico
 
 ### Jean-Philippe Rameau (1683-1764)
 
-El "Traite de l'harmonie" (1722) establecio los principios de la armonia funcional occidental:
+El "Traité de l'harmonie" (1722) estableció los principios de la armonía funcional occidental:
 
-1. **Bajo fundamental**: Cada acorde tiene una raiz que determina su funcion
-2. **Funciones armonicas**: T-S-D como fuerzas gravitacionales
-3. **Progresion natural**: T -> S -> D -> T (ciclo funcional)
+1. **Bajo fundamental**: Cada acorde tiene una raíz que determina su función
+2. **Funciones armónicas**: T-S-D como fuerzas gravitacionales
+3. **Progresión natural**: T -> S -> D -> T (ciclo funcional)
 
 ### Referencias
 
-- Rameau, J.P. (1722). *Traite de l'harmonie*
+- Rameau, J.P. (1722). *Traité de l'harmonie*
 - Kostka & Payne. *Tonal Harmony*
 - Temperley, D. *Music and Probability*
 - Tymoczko, D. *A Geometry of Music*
 
-## Comparativa: Cuando Usar Cada Sistema
+## Comparativa: Cuándo Usar Cada Sistema
 
 | Para entender... | Rameau Machine | Tonnetz Walker |
 |------------------|----------------|----------------|
-| Bach, Mozart, Beethoven | X | |
-| Brahms, Wagner, Liszt | | X |
-| Jazz standards | X | |
-| Musica de cine/videojuegos | | X |
-| Por que V->I suena "bien" | X | |
-| Por que C->E->Ab suena "magico" | | X |
+| Bach, Mozart, Beethoven | ✓ | |
+| Brahms, Wagner, Liszt | | ✓ |
+| Jazz standards | ✓ | |
+| Música de cine/videojuegos | | ✓ |
+| Por qué V->I suena "bien" | ✓ | |
+| Por qué C->E->Ab suena "mágico" | | ✓ |
 
-## Tecnologias
+## Tecnologías
 
-- D3.js (visualizacion)
-- Web Audio API (sintesis)
+- D3.js (visualización)
+- Web Audio API (síntesis)
 - Tailwind CSS (estilos)
 
 ## Licencia
