@@ -176,6 +176,45 @@
             </div>
         </section>
 
+        <!-- Cadencia Orbital -->
+        <section class="card bg-gradient-to-r from-cyan-900/20 to-green-900/20 border border-cyan-500/30 rounded-2xl p-8 mb-8">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <div class="flex-1">
+                    <span class="text-cyan-400 text-sm font-medium tracking-wide">CADENCIA ORBITAL</span>
+                    <h2 class="text-3xl font-light mt-2 mb-4">
+                        <span class="text-cyan-400 font-medium">Progresiones Orbitales</span>
+                    </h2>
+                    <p class="text-gray-400 mb-6">
+                        Multi-atractores gravitacionales + progresiones armonicas. Particulas orbitan
+                        entre 3-8 atractores que representan grados tonales (I, ii, iii, IV, V, vi, vii°),
+                        disparando acordes al cruzar sectores. Zonas de modulacion automatica al centro
+                        (relativo) y exterior (dominante).
+                    </p>
+
+                    <div class="flex flex-wrap gap-3 mb-6">
+                        <span class="px-3 py-1 bg-cyan-500/10 text-cyan-400/80 rounded-full text-sm">RK4 Physics</span>
+                        <span class="px-3 py-1 bg-cyan-500/10 text-cyan-400/80 rounded-full text-sm">Circulo de quintas</span>
+                        <span class="px-3 py-1 bg-cyan-500/10 text-cyan-400/80 rounded-full text-sm">Mayor/Menor</span>
+                        <span class="px-3 py-1 bg-cyan-500/10 text-cyan-400/80 rounded-full text-sm">Grabacion</span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3">
+                        <a href="cadencia-orbital/cadencia-orbital.html"
+                           class="variant-btn px-5 py-2.5 bg-cyan-500 text-gray-900 rounded-lg font-medium hover:bg-cyan-400">
+                            ▶ Demo
+                        </a>
+                        <a href="cadencia-orbital/README.md" target="_blank"
+                           class="variant-btn px-5 py-2.5 bg-gray-800 text-gray-200 rounded-lg font-medium hover:bg-gray-700">
+                            README
+                        </a>
+                    </div>
+                </div>
+                <div class="lg:w-72">
+                    <canvas id="preview-cadencia" class="w-full h-48 bg-gray-950 rounded-xl"></canvas>
+                </div>
+            </div>
+        </section>
+
         <!-- Tech Stack -->
         <section class="text-center mt-12">
             <h3 class="text-lg font-medium mb-4 text-gray-500">Tecnologias</h3>
@@ -186,6 +225,8 @@
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Ecuaciones de Kepler</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Neo-Riemannian Theory</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Sistemas caoticos</span>
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">RK4 Integration</span>
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">MediaRecorder</span>
             </div>
         </section>
     </main>
@@ -220,6 +261,18 @@
                     w: tonnetz.width = tonnetz.offsetWidth * 2,
                     h: tonnetz.height = tonnetz.offsetHeight * 2,
                     trail: []
+                };
+            }
+
+            // Cadencia Orbital
+            const cadencia = document.getElementById('preview-cadencia');
+            if (cadencia) {
+                previews.cadencia = {
+                    ctx: cadencia.getContext('2d'),
+                    w: cadencia.width = cadencia.offsetWidth * 2,
+                    h: cadencia.height = cadencia.offsetHeight * 2,
+                    trail1: [],
+                    trail2: []
                 };
             }
         }
@@ -329,6 +382,97 @@
                 t.ctx.beginPath();
                 t.ctx.arc(px, py, 8, 0, Math.PI * 2);
                 t.ctx.fill();
+            }
+
+            // Cadencia Orbital preview
+            if (previews.cadencia) {
+                const c = previews.cadencia;
+                c.ctx.fillStyle = '#030712';
+                c.ctx.fillRect(0, 0, c.w, c.h);
+
+                const cx = c.w / 2, cy = c.h / 2;
+                const radius = 55;
+                const numAttractors = 5;
+
+                // Draw attractor circle
+                c.ctx.strokeStyle = '#22c55e15';
+                c.ctx.lineWidth = 1;
+                c.ctx.beginPath();
+                c.ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                c.ctx.stroke();
+
+                // Draw sector lines and attractors
+                const colors = ['#ef4444', '#f97316', '#fbbf24', '#22c55e', '#06b6d4'];
+                const degrees = ['I', 'ii', 'iii', 'IV', 'V'];
+                for (let i = 0; i < numAttractors; i++) {
+                    const angle = (i / numAttractors) * Math.PI * 2 - Math.PI / 2;
+                    const ax = cx + Math.cos(angle) * radius;
+                    const ay = cy + Math.sin(angle) * radius;
+
+                    // Sector line
+                    c.ctx.strokeStyle = '#ffffff10';
+                    c.ctx.beginPath();
+                    c.ctx.moveTo(cx, cy);
+                    c.ctx.lineTo(ax, ay);
+                    c.ctx.stroke();
+
+                    // Attractor
+                    c.ctx.fillStyle = colors[i];
+                    c.ctx.beginPath();
+                    c.ctx.arc(ax, ay, 10, 0, Math.PI * 2);
+                    c.ctx.fill();
+
+                    // Degree label
+                    c.ctx.fillStyle = '#fff';
+                    c.ctx.font = 'bold 10px Inter, sans-serif';
+                    c.ctx.textAlign = 'center';
+                    c.ctx.textBaseline = 'middle';
+                    c.ctx.fillText(degrees[i], ax, ay);
+                }
+
+                // Two orbiting particles
+                const orbitR = 40;
+                const p1x = cx + orbitR * Math.sin(time * 1.8) * Math.cos(time * 1.3);
+                const p1y = cy + orbitR * Math.cos(time * 1.5) * Math.sin(time * 1.7);
+                const p2x = cx + orbitR * Math.sin(time * 1.8 + 0.5) * Math.cos(time * 1.3 + 0.3);
+                const p2y = cy + orbitR * Math.cos(time * 1.5 + 0.4) * Math.sin(time * 1.7 + 0.2);
+
+                c.trail1.push({ x: p1x, y: p1y });
+                c.trail2.push({ x: p2x, y: p2y });
+                if (c.trail1.length > 50) c.trail1.shift();
+                if (c.trail2.length > 50) c.trail2.shift();
+
+                // Trail 1
+                c.ctx.beginPath();
+                c.trail1.forEach((p, i) => {
+                    if (i === 0) c.ctx.moveTo(p.x, p.y);
+                    else c.ctx.lineTo(p.x, p.y);
+                });
+                c.ctx.strokeStyle = '#22c55e50';
+                c.ctx.lineWidth = 2;
+                c.ctx.stroke();
+
+                // Trail 2
+                c.ctx.beginPath();
+                c.trail2.forEach((p, i) => {
+                    if (i === 0) c.ctx.moveTo(p.x, p.y);
+                    else c.ctx.lineTo(p.x, p.y);
+                });
+                c.ctx.strokeStyle = '#ef444450';
+                c.ctx.lineWidth = 2;
+                c.ctx.stroke();
+
+                // Particle 1
+                c.ctx.fillStyle = '#22c55e';
+                c.ctx.beginPath();
+                c.ctx.arc(p1x, p1y, 6, 0, Math.PI * 2);
+                c.ctx.fill();
+
+                // Particle 2
+                c.ctx.fillStyle = '#ef4444';
+                c.ctx.beginPath();
+                c.ctx.arc(p2x, p2y, 6, 0, Math.PI * 2);
+                c.ctx.fill();
             }
 
             requestAnimationFrame(animate);
