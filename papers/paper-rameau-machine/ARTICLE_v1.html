@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Rameau Machine: Gravedad Tonal y Armonia Funcional Generativa</title>
+  <title>Rameau Machine: Gravedad Tonal y Armonía Funcional Generativa</title>
   <link rel="stylesheet" href="paper-style.css" />
   <style>
     .epigraph {
@@ -115,8 +115,8 @@
 <body>
 
 <header id="title-block-header">
-  <h1 class="title">Rameau Machine: Gravedad Tonal y Armonia Funcional Generativa</h1>
-  <p style="font-style: italic; color: #666;">Un sistema donde la tonica actua como sol gravitacional y los acordes orbitan segun su funcion armonica</p>
+  <h1 class="title">Rameau Machine: Gravedad Tonal y Armonía Funcional Generativa</h1>
+  <p style="font-style: italic; color: #666;">Un sistema donde la tónica actúa como sol gravitacional y los acordes orbitan según su función armónica</p>
   <p style="font-size: 0.9rem; color: #666; margin-top: 1rem;">Diciembre 2025</p>
 </header>
 
@@ -124,14 +124,14 @@
   <strong>Contenidos</strong>
   <ul>
     <li><a href="#abstract">Resumen</a></li>
-    <li><a href="#introduccion">1. Introduccion: Dos Visiones de la Armonia</a></li>
+    <li><a href="#introduccion">1. Introducción: Dos Visiones de la Armonía</a></li>
     <li><a href="#rameau">2. Jean-Philippe Rameau y el Bajo Fundamental</a></li>
-    <li><a href="#funciones">3. Las Tres Funciones Armonicas</a></li>
-    <li><a href="#gravedad">4. Gravedad Tonal: Un Modelo Fisico</a></li>
+    <li><a href="#funciones">3. Las Tres Funciones Armónicas</a></li>
+    <li><a href="#gravedad">4. Gravedad Tonal: Un Modelo Físico</a></li>
     <li><a href="#markov">5. Cadenas de Markov con Memoria</a></li>
-    <li><a href="#voiceleading">6. Voice Leading: El Arte de la Conduccion</a></li>
-    <li><a href="#implementacion">7. Implementacion Tecnica</a></li>
-    <li><a href="#comparativa">8. Rameau vs. Riemann: Dos Geometrias</a></li>
+    <li><a href="#voiceleading">6. Voice Leading: El Arte de la Conducción</a></li>
+    <li><a href="#implementacion">7. Implementación Técnica</a></li>
+    <li><a href="#comparativa">8. Rameau vs. Riemann: Dos Geometrías</a></li>
     <li><a href="#conclusiones">9. Conclusiones</a></li>
     <li><a href="#referencias">Referencias</a></li>
   </ul>
@@ -140,56 +140,56 @@
 <section id="abstract">
   <h2>Resumen</h2>
   <p>
-    Mientras que la teoria Neo-Riemanniana trata los acordes como ciudadanos iguales en un espacio simetrico, la armonia funcional de <strong>Jean-Philippe Rameau</strong> (1722) los organiza en una jerarquia gravitacional. Este articulo presenta <em>Rameau Machine</em>, un sistema generativo donde la tonica actua como centro de masa, la tension se acumula al alejarse de ella, y las cadenas de Markov con pesos dinamicos producen progresiones que respetan tres siglos de practica musical.
+    Mientras que la teoría Neo-Riemanniana trata los acordes como ciudadanos iguales en un espacio simétrico, la armonía funcional de <strong>Jean-Philippe Rameau</strong> (1722) los organiza en una jerarquía gravitacional. Este artículo presenta <em>Rameau Machine</em>, un sistema generativo donde la tónica actúa como centro de masa, la tensión se acumula al alejarse de ella, y las cadenas de Markov con pesos dinámicos producen progresiones que respetan tres siglos de práctica musical.
   </p>
-  <p class="keywords"><strong>Palabras clave:</strong> armonia funcional, Rameau, gravedad tonal, Markov, voice leading, Web Audio API</p>
+  <p class="keywords"><strong>Palabras clave:</strong> armonía funcional, Rameau, gravedad tonal, Markov, voice leading, Web Audio API</p>
 </section>
 
 <section id="introduccion">
-  <h2>1. Introduccion: Dos Visiones de la Armonia</h2>
+  <h2>1. Introducción: Dos Visiones de la Armonía</h2>
 
   <div class="epigraph">
-    "La musica es una ciencia que debe tener reglas definidas; estas reglas deben derivarse de un principio evidente, y este principio no puede ser conocido sin la ayuda de las matematicas."
-    <div class="epigraph-source">— Jean-Philippe Rameau, <em>Traite de l'harmonie</em> (1722)</div>
+    "La música es una ciencia que debe tener reglas definidas; estas reglas deben derivarse de un principio evidente, y este principio no puede ser conocido sin la ayuda de las matemáticas."
+    <div class="epigraph-source">— Jean-Philippe Rameau, <em>Traité de l'harmonie</em> (1722)</div>
   </div>
 
   <p>
-    En el vasto territorio de la teoria musical occidental, dos paradigmas fundamentales compiten por explicar como se organizan los acordes y por que ciertas progresiones nos resultan satisfactorias mientras otras nos sorprenden o inquietan.
+    En el vasto territorio de la teoría musical occidental, dos paradigmas fundamentales compiten por explicar cómo se organizan los acordes y por qué ciertas progresiones nos resultan satisfactorias mientras otras nos sorprenden o inquietan.
   </p>
 
   <p>
-    El primero, codificado por <strong>Jean-Philippe Rameau</strong> en 1722, concibe la armonia como un <em>sistema solar</em>: la tonica es el sol, centro gravitacional alrededor del cual orbitan los demas acordes. Cada acorde tiene una <em>funcion</em> —estabilidad, tension, preparacion— y la musica es un viaje de alejamiento y retorno al hogar.
+    El primero, codificado por <strong>Jean-Philippe Rameau</strong> en 1722, concibe la armonía como un <em>sistema solar</em>: la tónica es el sol, centro gravitacional alrededor del cual orbitan los demás acordes. Cada acorde tiene una <em>función</em> —estabilidad, tensión, preparación— y la música es un viaje de alejamiento y retorno al hogar.
   </p>
 
   <p>
-    El segundo, desarrollado por los teoricos <strong>neo-riemannianos</strong> a finales del siglo XX, imagina la armonia como un <em>espacio homogeneo</em>: un toroide donde todos los acordes son ciudadanos iguales, conectados por transformaciones simetricas (P, L, R). No hay centro, no hay gravedad, solo movimiento parsimonioso entre vecinos cercanos.
+    El segundo, desarrollado por los teóricos <strong>neo-riemannianos</strong> a finales del siglo XX, imagina la armonía como un <em>espacio homogéneo</em>: un toroide donde todos los acordes son ciudadanos iguales, conectados por transformaciones simétricas (P, L, R). No hay centro, no hay gravedad, solo movimiento parsimonioso entre vecinos cercanos.
   </p>
 
   <div class="comparison-grid">
     <div class="comparison-card rameau">
       <h4>Paradigma Funcional (Rameau)</h4>
       <ul>
-        <li>Centro: Tonica como "sol" gravitacional</li>
-        <li>Movimiento hacia resolucion</li>
-        <li>Estructura jerarquica (T > D > S)</li>
-        <li>Tension acumulativa que se resuelve</li>
+        <li>Centro: Tónica como "sol" gravitacional</li>
+        <li>Movimiento hacia resolución</li>
+        <li>Estructura jerárquica (T > D > S)</li>
+        <li>Tensión acumulativa que se resuelve</li>
         <li>Ideal para: Bach, Mozart, Jazz</li>
       </ul>
     </div>
     <div class="comparison-card riemann">
       <h4>Paradigma Neo-Riemanniano</h4>
       <ul>
-        <li>Sin centro, espacio homogeneo</li>
+        <li>Sin centro, espacio homogéneo</li>
         <li>Parsimonia de voces</li>
-        <li>Estructura simetrica (P = L = R)</li>
-        <li>Tension uniforme, sin resolucion</li>
+        <li>Estructura simétrica (P = L = R)</li>
+        <li>Tensión uniforme, sin resolución</li>
         <li>Ideal para: Wagner, Liszt, Cine</li>
       </ul>
     </div>
   </div>
 
   <p>
-    <strong>Rameau Machine</strong> implementa el primer paradigma: un generador de armonia funcional donde las progresiones emergen de la <em>tension acumulada</em> y la <em>atraccion gravitacional</em> hacia la tonica.
+    <strong>Rameau Machine</strong> implementa el primer paradigma: un generador de armonía funcional donde las progresiones emergen de la <em>tensión acumulada</em> y la <em>atracción gravitacional</em> hacia la tónica.
   </p>
 </section>
 
@@ -197,7 +197,7 @@
   <h2>2. Jean-Philippe Rameau y el Bajo Fundamental</h2>
 
   <p>
-    Jean-Philippe Rameau (1683-1764) fue compositor, teorico y polemista. Su <em>Traite de l'harmonie reduite a ses principes naturels</em> (1722) revoluciono la teoria musical al proponer que la armonia —no la melodia ni el contrapunto— era el fundamento de la musica.
+    Jean-Philippe Rameau (1683-1764) fue compositor, teórico y polemista. Su <em>Traité de l'harmonie réduite à ses principes naturels</em> (1722) revolucionó la teoría musical al proponer que la armonía —no la melodía ni el contrapunto— era el fundamento de la música.
   </p>
 
   <div class="timeline">
@@ -205,39 +205,39 @@
       <span class="timeline-year">1683</span> — Nace en Dijon, hijo de organista
     </div>
     <div class="timeline-item">
-      <span class="timeline-year">1722</span> — Publica el <em>Traite de l'harmonie</em>
+      <span class="timeline-year">1722</span> — Publica el <em>Traité de l'harmonie</em>
     </div>
     <div class="timeline-item">
-      <span class="timeline-year">1726</span> — <em>Nouveau systeme de musique theorique</em>
+      <span class="timeline-year">1726</span> — <em>Nouveau système de musique théorique</em>
     </div>
     <div class="timeline-item">
-      <span class="timeline-year">1733</span> — Estreno de <em>Hippolyte et Aricie</em>, su primera opera
+      <span class="timeline-year">1733</span> — Estreno de <em>Hippolyte et Aricie</em>, su primera ópera
     </div>
     <div class="timeline-item">
-      <span class="timeline-year">1750</span> — <em>Demonstration du principe de l'harmonie</em>
+      <span class="timeline-year">1750</span> — <em>Démonstration du principe de l'harmonie</em>
     </div>
     <div class="timeline-item">
-      <span class="timeline-year">1764</span> — Muere en Paris, reconocido como el teorico mas importante de Francia
+      <span class="timeline-year">1764</span> — Muere en París, reconocido como el teórico más importante de Francia
     </div>
   </div>
 
   <h3>El Principio del Bajo Fundamental</h3>
 
   <p>
-    La innovacion clave de Rameau fue el concepto de <em>basse fondamentale</em> (bajo fundamental): cada acorde, independientemente de su inversion, tiene una <em>raiz</em> que determina su identidad y funcion. Un acorde de Do mayor en primera inversion (Mi-Sol-Do) sigue siendo "un acorde de Do", con Do como su bajo fundamental.
+    La innovación clave de Rameau fue el concepto de <em>basse fondamentale</em> (bajo fundamental): cada acorde, independientemente de su inversión, tiene una <em>raíz</em> que determina su identidad y función. Un acorde de Do mayor en primera inversión (Mi-Sol-Do) sigue siendo "un acorde de Do", con Do como su bajo fundamental.
   </p>
 
   <div class="note-box">
-    <strong>Insight Clave:</strong> Antes de Rameau, los teoricos catalogaban cada inversion como un acorde diferente. Rameau unifico todas las inversiones bajo un mismo principio: la raiz o bajo fundamental. Esta abstraccion permitio pensar en <em>funciones</em> armonicas.
+    <strong>Insight Clave:</strong> Antes de Rameau, los teóricos catalogaban cada inversión como un acorde diferente. Rameau unificó todas las inversiones bajo un mismo principio: la raíz o bajo fundamental. Esta abstracción permitió pensar en <em>funciones</em> armónicas.
   </div>
 
   <p>
-    De este principio emergen las <em>funciones armonicas</em>: no todos los acordes son iguales. Algunos proporcionan estabilidad (tonica), otros crean tension que demanda resolucion (dominante), y otros preparan esa tension (subdominante).
+    De este principio emergen las <em>funciones armónicas</em>: no todos los acordes son iguales. Algunos proporcionan estabilidad (tónica), otros crean tensión que demanda resolución (dominante), y otros preparan esa tensión (subdominante).
   </p>
 </section>
 
 <section id="funciones">
-  <h2>3. Las Tres Funciones Armonicas</h2>
+  <h2>3. Las Tres Funciones Armónicas</h2>
 
   <p>
     En la tonalidad mayor, los siete grados de la escala se agrupan en tres familias funcionales:
@@ -246,7 +246,7 @@
   <div class="diagram">
     <pre>
                 ┌─────────────────────────────────────┐
-                │        <span class="function-t">TONICA (T)</span>                  │
+                │        <span class="function-t">TÓNICA (T)</span>                  │
                 │         I    vi    iii              │
                 │           estabilidad               │
                 └─────────────────┬───────────────────┘
@@ -255,51 +255,51 @@
                       ▼                       ▼
         ┌─────────────────────┐     ┌─────────────────────┐
         │ <span class="function-s">SUBDOMINANTE (S)</span>    │     │   <span class="function-d">DOMINANTE (D)</span>      │
-        │      IV    ii       │────▶│     V    viio       │
-        │     preparacion     │     │      tension        │
+        │      IV    ii       │────▶│     V    viiº       │
+        │     preparación     │     │      tensión        │
         └──────────┬──────────┘     └──────────┬──────────┘
                    │                           │
                    └───────────┬───────────────┘
                                ▼
-                        (resolucion a T)
+                        (resolución a T)
     </pre>
   </div>
 
   <table>
     <thead>
       <tr>
-        <th>Funcion</th>
+        <th>Función</th>
         <th>Grados</th>
-        <th>Sensacion</th>
-        <th>Analogia Fisica</th>
+        <th>Sensación</th>
+        <th>Analogía Física</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><span class="function-t">Tonica (T)</span></td>
+        <td><span class="function-t">Tónica (T)</span></td>
         <td>I, vi, iii</td>
-        <td>Reposo, hogar, resolucion</td>
+        <td>Reposo, hogar, resolución</td>
         <td>Punto de equilibrio</td>
       </tr>
       <tr>
         <td><span class="function-s">Subdominante (S)</span></td>
         <td>IV, ii</td>
-        <td>Alejamiento, expansion</td>
-        <td>Energia potencial</td>
+        <td>Alejamiento, expansión</td>
+        <td>Energía potencial</td>
       </tr>
       <tr>
         <td><span class="function-d">Dominante (D)</span></td>
-        <td>V, viio</td>
-        <td>Tension, urgencia</td>
-        <td>Compresion del resorte</td>
+        <td>V, viiº</td>
+        <td>Tensión, urgencia</td>
+        <td>Compresión del resorte</td>
       </tr>
     </tbody>
   </table>
 
-  <h3>La Progresion Natural</h3>
+  <h3>La Progresión Natural</h3>
 
   <p>
-    Rameau identifico una progresion "natural" que recorre las tres funciones:
+    Rameau identificó una progresión "natural" que recorre las tres funciones:
   </p>
 
   <div class="highlight-quote">
@@ -307,39 +307,39 @@
   </div>
 
   <p>
-    Esta progresion (por ejemplo: <strong>I → IV → V → I</strong>) representa el viaje armonico arquetipico: partimos del hogar (T), nos alejamos (S), acumulamos tension (D), y resolvemos volviendo (T). Es el patron detras de incontables canciones populares, himnos religiosos y obras clasicas.
+    Esta progresión (por ejemplo: <strong>I → IV → V → I</strong>) representa el viaje armónico arquetípico: partimos del hogar (T), nos alejamos (S), acumulamos tensión (D), y resolvemos volviendo (T). Es el patrón detrás de incontables canciones populares, himnos religiosos y obras clásicas.
   </p>
 
   <div class="note-box info">
     <strong>Ejemplo: "Let It Be" (Beatles)</strong><br>
-    La progresion <strong>C - G - Am - F</strong> en Do mayor es: <span class="function-t">I</span> - <span class="function-d">V</span> - <span class="function-t">vi</span> - <span class="function-s">IV</span><br>
-    Aunque no sigue el orden T-S-D-T exacto, cada acorde cumple su rol funcional, creando el ciclo de tension-resolucion que hace la cancion memorable.
+    La progresión <strong>C - G - Am - F</strong> en Do mayor es: <span class="function-t">I</span> - <span class="function-d">V</span> - <span class="function-t">vi</span> - <span class="function-s">IV</span><br>
+    Aunque no sigue el orden T-S-D-T exacto, cada acorde cumple su rol funcional, creando el ciclo de tensión-resolución que hace la canción memorable.
   </div>
 </section>
 
 <section id="gravedad">
-  <h2>4. Gravedad Tonal: Un Modelo Fisico</h2>
+  <h2>4. Gravedad Tonal: Un Modelo Físico</h2>
 
   <p>
-    En <strong>Rameau Machine</strong>, implementamos las funciones armonicas como un <em>campo gravitacional</em>. La tonica es el centro de masa; cuanto mas nos alejamos, mayor es la "tension" acumulada y mayor la fuerza de atraccion hacia el centro.
+    En <strong>Rameau Machine</strong>, implementamos las funciones armónicas como un <em>campo gravitacional</em>. La tónica es el centro de masa; cuanto más nos alejamos, mayor es la "tensión" acumulada y mayor la fuerza de atracción hacia el centro.
   </p>
 
   <div class="diagram">
     <pre>
-       Visualizacion del Campo Gravitacional
-       =====================================
+       Visualización del Campo Gravitacional
+       ======================================
 
                      Zona T (centro)
                         ┌───┐
                       ╱  I  ╲
                     ╱   vi   ╲
                    │    iii   │
-                   │  ▪▪▪▪▪▪  │ ← menor tension
+                   │  ▪▪▪▪▪▪  │ ← menor tensión
                     ╲       ╱
                       ╲   ╱
                  ┌──────────────┐
                  │    Zona D    │
-                 │   V   viio   │ ← tension media
+                 │   V   viiº   │ ← tensión media
                  │   ▪▪▪▪▪▪▪▪   │
                  └──────────────┘
               ┌────────────────────┐
@@ -351,21 +351,21 @@
   </div>
 
   <p>
-    El modelo asigna a cada funcion un <em>peso de tension</em>:
+    El modelo asigna a cada función un <em>peso de tensión</em>:
   </p>
 
   <pre><code class="language-javascript">const TENSION_WEIGHTS = {
-    'T': 0,    // Sin tension - equilibrio
-    'S': 0.3,  // Tension moderada - alejamiento
-    'D': 0.7   // Alta tension - necesita resolver
+    'T': 0,    // Sin tensión - equilibrio
+    'S': 0.3,  // Tensión moderada - alejamiento
+    'D': 0.7   // Alta tensión - necesita resolver
 };</code></pre>
 
   <p>
-    A medida que la progresion avanza, acumulamos tension. Esta tension modifica las probabilidades de transicion: a mayor tension acumulada, mayor probabilidad de ir hacia la tonica.
+    A medida que la progresión avanza, acumulamos tensión. Esta tensión modifica las probabilidades de transición: a mayor tensión acumulada, mayor probabilidad de ir hacia la tónica.
   </p>
 
   <div class="highlight-quote">
-    P(T|tension) = P<sub>base</sub>(T) × (1 + tension × gravityStrength)
+    P(T|tensión) = P<sub>base</sub>(T) × (1 + tensión × gravityStrength)
   </div>
 </section>
 
@@ -373,32 +373,32 @@
   <h2>5. Cadenas de Markov con Memoria</h2>
 
   <p>
-    El corazon probabilistico de <strong>Rameau Machine</strong> es una cadena de Markov de primer orden, pero con una modificacion crucial: las probabilidades de transicion no son estaticas, sino que dependen del <em>estado interno</em> del sistema (la tension acumulada).
+    El corazón probabilístico de <strong>Rameau Machine</strong> es una cadena de Markov de primer orden, pero con una modificación crucial: las probabilidades de transición no son estáticas, sino que dependen del <em>estado interno</em> del sistema (la tensión acumulada).
   </p>
 
   <h3>Matriz Base de Transiciones</h3>
 
   <p>
-    Definimos una matriz de transicion basada en las convenciones de la armonia funcional:
+    Definimos una matriz de transición basada en las convenciones de la armonía funcional:
   </p>
 
-  <pre><code class="language-javascript">// Desde I (Tonica)
-'I': { 'I': 0.05, 'ii': 0.15, 'iii': 0.1, 'IV': 0.25, 'V': 0.35, 'vi': 0.08, 'viio': 0.02 }
+  <pre><code class="language-javascript">// Desde I (Tónica)
+'I': { 'I': 0.05, 'ii': 0.15, 'iii': 0.1, 'IV': 0.25, 'V': 0.35, 'vi': 0.08, 'viiº': 0.02 }
 
 // Desde V (Dominante)
-'V': { 'I': 0.65, 'ii': 0.02, 'iii': 0.03, 'IV': 0.05, 'V': 0.05, 'vi': 0.18, 'viio': 0.02 }
+'V': { 'I': 0.65, 'ii': 0.02, 'iii': 0.03, 'IV': 0.05, 'V': 0.05, 'vi': 0.18, 'viiº': 0.02 }
 
 // Desde IV (Subdominante)
-'IV': { 'I': 0.15, 'ii': 0.1, 'iii': 0.05, 'IV': 0.05, 'V': 0.5, 'vi': 0.1, 'viio': 0.05 }</code></pre>
+'IV': { 'I': 0.15, 'ii': 0.1, 'iii': 0.05, 'IV': 0.05, 'V': 0.5, 'vi': 0.1, 'viiº': 0.05 }</code></pre>
 
   <p>
-    Observa que desde V, hay un 65% de probabilidad de ir a I (cadencia autentica) y un 18% de ir a vi (cadencia rota/deceptiva).
+    Observa que desde V, hay un 65% de probabilidad de ir a I (cadencia auténtica) y un 18% de ir a vi (cadencia rota/deceptiva).
   </p>
 
-  <h3>Modificacion Dinamica por Gravedad</h3>
+  <h3>Modificación Dinámica por Gravedad</h3>
 
   <p>
-    Estas probabilidades base se modifican en tiempo real segun la tension acumulada:
+    Estas probabilidades base se modifican en tiempo real según la tensión acumulada:
   </p>
 
   <pre><code class="language-javascript">getTransitionProbabilities() {
@@ -411,10 +411,10 @@
         let newProb = prob;
 
         if (func === 'T') {
-            // Aumentar probabilidad hacia tonica segun tension
+            // Aumentar probabilidad hacia tónica según tensión
             newProb *= (1 + this.tension * this.gravityStrength);
         } else if (func === 'D' && this.tension > 0.5) {
-            // Reducir dominante si ya hay mucha tension
+            // Reducir dominante si ya hay mucha tensión
             newProb *= 0.7;
         }
 
@@ -431,19 +431,19 @@
 }</code></pre>
 
   <div class="note-box warning">
-    <strong>¿Por que no Markov puro?</strong><br>
-    Una cadena de Markov sin memoria no puede modelar la <em>acumulacion</em> de tension. En la musica real, tres acordes de dominante consecutivos crean mas urgencia de resolucion que uno solo. Nuestra modificacion captura este fenomeno psicoacustico.
+    <strong>¿Por qué no Markov puro?</strong><br>
+    Una cadena de Markov sin memoria no puede modelar la <em>acumulación</em> de tensión. En la música real, tres acordes de dominante consecutivos crean más urgencia de resolución que uno solo. Nuestra modificación captura este fenómeno psicoacústico.
   </div>
 </section>
 
 <section id="voiceleading">
-  <h2>6. Voice Leading: El Arte de la Conduccion</h2>
+  <h2>6. Voice Leading: El Arte de la Conducción</h2>
 
   <p>
-    Generar una secuencia de acordes es solo el primer paso. Para que suene como musica real —no como una sucesion de bloques sonoros— necesitamos <em>voice leading</em>: la conduccion suave de cada voz de un acorde al siguiente.
+    Generar una secuencia de acordes es solo el primer paso. Para que suene como música real —no como una sucesión de bloques sonoros— necesitamos <em>voice leading</em>: la conducción suave de cada voz de un acorde al siguiente.
   </p>
 
-  <h3>Disposicion SATB</h3>
+  <h3>Disposición SATB</h3>
 
   <p>
     Trabajamos con cuatro voces en el estilo coral tradicional:
@@ -454,22 +454,22 @@
 Soprano ──────────────────────────────────  (C4 - G5)  voz aguda
 Alto    ──────────────────────────────────  (G3 - D5)  voz media-alta
 Tenor   ──────────────────────────────────  (C3 - G4)  voz media-baja
-Bajo    ──────────────────────────────────  (E2 - C4)  voz grave, lleva la raiz
+Bajo    ──────────────────────────────────  (E2 - C4)  voz grave, lleva la raíz
     </pre>
   </div>
 
-  <h3>Reglas de Conduccion</h3>
+  <h3>Reglas de Conducción</h3>
 
   <p>
-    El <code>VoiceLeader</code> implementa las reglas clasicas del contrapunto:
+    El <code>VoiceLeader</code> implementa las reglas clásicas del contrapunto:
   </p>
 
   <table>
     <thead>
       <tr>
         <th>Regla</th>
-        <th>Descripcion</th>
-        <th>Penalizacion</th>
+        <th>Descripción</th>
+        <th>Penalización</th>
       </tr>
     </thead>
     <tbody>
@@ -499,8 +499,8 @@ Bajo    ────────────────────────
         <td>-5 puntos (bonus)</td>
       </tr>
       <tr>
-        <td>Resolucion de sensible</td>
-        <td>La sensible (7mo grado) debe resolver a tonica</td>
+        <td>Resolución de sensible</td>
+        <td>La sensible (7mo grado) debe resolver a tónica</td>
         <td>+20 puntos si no resuelve</td>
       </tr>
     </tbody>
@@ -537,12 +537,12 @@ Bajo    ────────────────────────
 }</code></pre>
 
   <div class="note-box">
-    <strong>Resultado Audible:</strong> Gracias al voice leading, las transiciones suenan fluidas y naturales. Las voces "cantan" lineas melodicas coherentes en lugar de saltar erraticamente entre notas.
+    <strong>Resultado Audible:</strong> Gracias al voice leading, las transiciones suenan fluidas y naturales. Las voces "cantan" líneas melódicas coherentes en lugar de saltar erráticamente entre notas.
   </div>
 </section>
 
 <section id="implementacion">
-  <h2>7. Implementacion Tecnica</h2>
+  <h2>7. Implementación Técnica</h2>
 
   <h3>Arquitectura General</h3>
 
@@ -555,7 +555,7 @@ Bajo    ────────────────────────
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────────────┐  │
 │  │ TonalGravity │───▶│ VoiceLeader  │───▶│ VoiceLeadingSynth    │  │
 │  │              │    │              │    │                      │  │
-│  │ - tension    │    │ - SATB       │    │ - 4 osciladores      │  │
+│  │ - tensión    │    │ - SATB       │    │ - 4 osciladores      │  │
 │  │ - position   │    │ - reglas     │    │ - ADSR envelopes     │  │
 │  │ - markov     │    │ - scoring    │    │ - bajo continuo      │  │
 │  └──────────────┘    └──────────────┘    └──────────────────────┘  │
@@ -573,10 +573,10 @@ Bajo    ────────────────────────
     </pre>
   </div>
 
-  <h3>Sistema de Transposicion</h3>
+  <h3>Sistema de Transposición</h3>
 
   <p>
-    Para permitir cualquier tonalidad, usamos un sistema de transposicion basado en semitonos:
+    Para permitir cualquier tonalidad, usamos un sistema de transposición basado en semitonos:
   </p>
 
   <pre><code class="language-javascript">const KEY_PITCH = {
@@ -591,13 +591,13 @@ function transposeNote(baseMidi, key) {
 }</code></pre>
 
   <p>
-    Los acordes se definen en Do mayor y se transponen en tiempo real segun la tonalidad seleccionada.
+    Los acordes se definen en Do mayor y se transponen en tiempo real según la tonalidad seleccionada.
   </p>
 
-  <h3>Ritmo Armonico</h3>
+  <h3>Ritmo Armónico</h3>
 
   <p>
-    La duracion de cada acorde varia segun su funcion y la tension acumulada:
+    La duración de cada acorde varía según su función y la tensión acumulada:
   </p>
 
   <pre><code class="language-javascript">getDuration(chord, tension) {
@@ -607,12 +607,12 @@ function transposeNote(baseMidi, key) {
     let multiplier = 1.0;
 
     if (func === 'T') {
-        multiplier = 1.5; // Tonica respira mas
+        multiplier = 1.5; // Tónica respira más
     } else if (func === 'D' && tension > 0.6) {
         multiplier = 0.7; // Dominante urgente
     }
 
-    // Rubato en estilo romantico
+    // Rubato en estilo romántico
     if (this.style === 'romantic') {
         multiplier *= 0.9 + Math.random() * 0.2;
     }
@@ -620,13 +620,13 @@ function transposeNote(baseMidi, key) {
     return baseDuration * multiplier;
 }</code></pre>
 
-  <h3>Visualizacion con D3.js</h3>
+  <h3>Visualización con D3.js</h3>
 
   <p>
-    Los acordes se disponen en anillos concentricos usando una simulacion de fuerzas:
+    Los acordes se disponen en anillos concéntricos usando una simulación de fuerzas:
   </p>
 
-  <pre><code class="language-javascript">// Fuerza radial segun funcion
+  <pre><code class="language-javascript">// Fuerza radial según función
 const functionRadii = {
     'T': height * 0.08,  // Centro (con espacio para separar I, vi, iii)
     'D': height * 0.25,  // Anillo medio
@@ -643,7 +643,7 @@ simulation
 </section>
 
 <section id="comparativa">
-  <h2>8. Rameau vs. Riemann: Dos Geometrias</h2>
+  <h2>8. Rameau vs. Riemann: Dos Geometrías</h2>
 
   <p>
     Es instructivo comparar <strong>Rameau Machine</strong> con <strong>Tonnetz Atractor</strong>, que implementa el paradigma neo-riemanniano.
@@ -659,13 +659,13 @@ simulation
     </thead>
     <tbody>
       <tr>
-        <td>Geometria</td>
-        <td>Anillos concentricos (jerarquia)</td>
-        <td>Toroide (espacio homogeneo)</td>
+        <td>Geometría</td>
+        <td>Anillos concéntricos (jerarquía)</td>
+        <td>Toroide (espacio homogéneo)</td>
       </tr>
       <tr>
         <td>Centro</td>
-        <td>Tonica como atractor</td>
+        <td>Tónica como atractor</td>
         <td>Sin centro privilegiado</td>
       </tr>
       <tr>
@@ -674,17 +674,17 @@ simulation
         <td>Parsimoniosas (P, L, R)</td>
       </tr>
       <tr>
-        <td>Tension</td>
+        <td>Tensión</td>
         <td>Acumulativa, se resuelve</td>
         <td>Uniforme</td>
       </tr>
       <tr>
         <td>Repertorio ideal</td>
-        <td>Barroco, Clasico, Jazz standards</td>
-        <td>Romantico tardio, cine, ambient</td>
+        <td>Barroco, Clásico, Jazz standards</td>
+        <td>Romántico tardío, cine, ambient</td>
       </tr>
       <tr>
-        <td>Ejemplo canonico</td>
+        <td>Ejemplo canónico</td>
         <td>I - IV - V - I</td>
         <td>C - E - Ab (eje mayor-tercera)</td>
       </tr>
@@ -692,11 +692,11 @@ simulation
   </table>
 
   <div class="note-box info">
-    <strong>Complementarios, no Opuestos:</strong> Estos dos sistemas no son mutuamente excluyentes. Compositores como Brahms usaron ambos: estructura funcional a gran escala con transformaciones neo-riemannianas a nivel local. Explorar ambos te dara un vocabulario armonico mas rico.
+    <strong>Complementarios, no Opuestos:</strong> Estos dos sistemas no son mutuamente excluyentes. Compositores como Brahms usaron ambos: estructura funcional a gran escala con transformaciones neo-riemannianas a nivel local. Explorar ambos te dará un vocabulario armónico más rico.
   </div>
 
   <div class="epigraph">
-    "La armonia funcional es la gramatica de la musica tonal; las transformaciones neo-riemannianas son su retorica."
+    "La armonía funcional es la gramática de la música tonal; las transformaciones neo-riemannianas son su retórica."
     <div class="epigraph-source">— Richard Cohn, <em>Audacious Euphony</em></div>
   </div>
 </section>
@@ -705,27 +705,27 @@ simulation
   <h2>9. Conclusiones</h2>
 
   <p>
-    <strong>Rameau Machine</strong> demuestra que los principios de armonia funcional de hace 300 anos pueden implementarse como sistemas generativos contemporaneos. La combinacion de:
+    <strong>Rameau Machine</strong> demuestra que los principios de armonía funcional de hace 300 años pueden implementarse como sistemas generativos contemporáneos. La combinación de:
   </p>
 
   <ul>
-    <li><strong>Cadenas de Markov</strong> con probabilidades dinamicas</li>
-    <li><strong>Gravedad tonal</strong> como metafora fisica</li>
-    <li><strong>Voice leading</strong> algoritmico</li>
-    <li><strong>Visualizacion interactiva</strong> de funciones armonicas</li>
+    <li><strong>Cadenas de Markov</strong> con probabilidades dinámicas</li>
+    <li><strong>Gravedad tonal</strong> como metáfora física</li>
+    <li><strong>Voice leading</strong> algorítmico</li>
+    <li><strong>Visualización interactiva</strong> de funciones armónicas</li>
   </ul>
 
   <p>
-    ...produce progresiones que suenan coherentes y "musicales" porque respetan las expectativas que tres siglos de practica musical han inscrito en nuestros oidos.
+    ...produce progresiones que suenan coherentes y "musicales" porque respetan las expectativas que tres siglos de práctica musical han inscrito en nuestros oídos.
   </p>
 
   <p>
-    Mas alla del ejercicio tecnico, el proyecto invita a reflexionar sobre la naturaleza de la creatividad musical. ¿Es la armonia funcional un descubrimiento (leyes naturales de la acustica y la cognicion) o una invencion (convenciones culturales arbitrarias)? Rameau creia lo primero; la existencia de sistemas musicales no tonales sugiere lo segundo. Quiza la verdad, como siempre, yace en algun punto intermedio.
+    Más allá del ejercicio técnico, el proyecto invita a reflexionar sobre la naturaleza de la creatividad musical. ¿Es la armonía funcional un descubrimiento (leyes naturales de la acústica y la cognición) o una invención (convenciones culturales arbitrarias)? Rameau creía lo primero; la existencia de sistemas musicales no tonales sugiere lo segundo. Quizá la verdad, como siempre, yace en algún punto intermedio.
   </p>
 
   <p style="text-align: center; font-style: italic; margin-top: 2rem;">
-    La armonia no esta en los acordes individuales.<br>
-    Esta en la gravedad que los conecta.
+    La armonía no está en los acordes individuales.<br>
+    Está en la gravedad que los conecta.
   </p>
 </section>
 
@@ -733,7 +733,7 @@ simulation
   <h2>Referencias</h2>
 
   <div class="references">
-    <p>[1] Rameau, J.P. (1722). <em>Traite de l'harmonie reduite a ses principes naturels</em>. Paris: Ballard.</p>
+    <p>[1] Rameau, J.P. (1722). <em>Traité de l'harmonie réduite à ses principes naturels</em>. Paris: Ballard.</p>
     <p>[2] Christensen, T. (1993). <em>Rameau and Musical Thought in the Enlightenment</em>. Cambridge University Press.</p>
     <p>[3] Kostka, S. & Payne, D. (2012). <em>Tonal Harmony</em> (7th ed.). McGraw-Hill.</p>
     <p>[4] Temperley, D. (2007). <em>Music and Probability</em>. MIT Press.</p>
