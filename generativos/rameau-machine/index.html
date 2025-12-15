@@ -426,6 +426,15 @@
                         <button class="key-btn" data-key="Db">Db</button>
                         <button class="key-btn" data-key="Gb">Gb</button>
                     </div>
+                    <!-- Toggle Mayor/Menor -->
+                    <div class="flex items-center gap-3 mt-3">
+                        <span class="text-xs text-slate-400" id="modeLabel">Mayor</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="modeToggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-green-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                        <span class="text-xs text-slate-500">Menor</span>
+                    </div>
                 </section>
 
                 <!-- Tempo -->
@@ -659,6 +668,17 @@
         'viio': { function: 'D', tension: 0.85, root: 11, third: 2, fifth: 5, quality: 'dim' }
     };
 
+    // Modo Menor (armónico): V siempre mayor para sensible
+    const CHORDS_MINOR = {
+        'i':    { function: 'T', tension: 0.0, root: 0, third: 3, fifth: 7, quality: 'minor' },
+        'VI':   { function: 'T', tension: 0.25, root: 8, third: 0, fifth: 3, quality: 'major' },
+        'III':  { function: 'T', tension: 0.3, root: 3, third: 7, fifth: 10, quality: 'major' },
+        'iv':   { function: 'S', tension: 0.45, root: 5, third: 8, fifth: 0, quality: 'minor' },
+        'iio':  { function: 'S', tension: 0.55, root: 2, third: 5, fifth: 8, quality: 'dim' },
+        'V':    { function: 'D', tension: 0.8, root: 7, third: 11, fifth: 2, quality: 'major' },
+        'viio': { function: 'D', tension: 0.85, root: 11, third: 2, fifth: 5, quality: 'dim' }
+    };
+
     const FUNCTION_COLORS = {
         'T': '#22c55e',
         'S': '#3b82f6',
@@ -673,6 +693,17 @@
         'V':    { 'I': 0.70, 'ii': 0.02, 'iii': 0.02, 'IV': 0.05, 'V': 0.05, 'vi': 0.14, 'viio': 0.02 },
         'vi':   { 'I': 0.10, 'ii': 0.25, 'iii': 0.05, 'IV': 0.30, 'V': 0.20, 'vi': 0.05, 'viio': 0.05 },
         'viio': { 'I': 0.80, 'ii': 0.02, 'iii': 0.05, 'IV': 0.02, 'V': 0.03, 'vi': 0.05, 'viio': 0.03 }
+    };
+
+    // Transiciones para modo menor armónico
+    const TRANSITIONS_MINOR = {
+        'i':    { 'i': 0.05, 'iio': 0.12, 'III': 0.08, 'iv': 0.25, 'V': 0.30, 'VI': 0.15, 'viio': 0.05 },
+        'iio':  { 'i': 0.05, 'iio': 0.03, 'III': 0.02, 'iv': 0.10, 'V': 0.60, 'VI': 0.05, 'viio': 0.15 },
+        'III':  { 'i': 0.12, 'iio': 0.05, 'III': 0.03, 'iv': 0.25, 'V': 0.10, 'VI': 0.40, 'viio': 0.05 },
+        'iv':   { 'i': 0.10, 'iio': 0.08, 'III': 0.02, 'iv': 0.05, 'V': 0.55, 'VI': 0.05, 'viio': 0.15 },
+        'V':    { 'i': 0.70, 'iio': 0.02, 'III': 0.02, 'iv': 0.03, 'V': 0.05, 'VI': 0.15, 'viio': 0.03 },
+        'VI':   { 'i': 0.10, 'iio': 0.20, 'III': 0.10, 'iv': 0.30, 'V': 0.20, 'VI': 0.05, 'viio': 0.05 },
+        'viio': { 'i': 0.80, 'iio': 0.02, 'III': 0.03, 'iv': 0.02, 'V': 0.05, 'VI': 0.05, 'viio': 0.03 }
     };
 
     const CADENCES = {
@@ -730,7 +761,8 @@
         }
 
         transition(targetChord, inversion = 0, keyPitch = 0) {
-            const chordData = CHORDS[targetChord];
+            const chordData = CHORDS[targetChord] || CHORDS_MINOR[targetChord];
+            if (!chordData) return null;
             let pitchClasses = [chordData.root, chordData.third, chordData.fifth];
             if (chordData.seventh !== undefined) pitchClasses.push(chordData.seventh);
 
@@ -881,11 +913,33 @@
             this.bassDirection = 0;
             this.key = 'C';
             this.keyPitch = 0;
+            this.mode = 'major';
 
             // Bias sliders
             this.gravity = 0.5;        // 0 = caos, 1 = estricto
             this.chaosNoise = 0;       // Ruido temporal inyectado
             this.chaosDecayRate = 0.7; // Decae 30% por acorde
+        }
+
+        setMode(mode) {
+            this.mode = mode;
+            // Resetear a la tónica del nuevo modo
+            const tonic = mode === 'minor' ? 'i' : 'I';
+            this.position = tonic;
+            this.history = [tonic];
+            this.tension = 0;
+        }
+
+        getChords() {
+            return this.mode === 'minor' ? CHORDS_MINOR : CHORDS;
+        }
+
+        getTransitions() {
+            return this.mode === 'minor' ? TRANSITIONS_MINOR : DETAILED_TRANSITIONS;
+        }
+
+        getTonic() {
+            return this.mode === 'minor' ? 'i' : 'I';
         }
 
         setKey(keyName) {
@@ -907,15 +961,18 @@
         }
 
         getTransitionProbabilities() {
-            const base = DETAILED_TRANSITIONS[this.position];
-            const strict = STRICT_TRANSITIONS[this.position];
+            const transitions = this.getTransitions();
+            const chordsDict = this.getChords();
+            const base = transitions[this.position];
+            // Para modo menor usamos base como strict también (simplificación)
+            const strict = this.mode === 'minor' ? base : STRICT_TRANSITIONS[this.position];
             const modified = {};
             let total = 0;
 
             const chords = Object.keys(base);
 
             for (const target of chords) {
-                const targetData = CHORDS[target];
+                const targetData = chordsDict[target];
 
                 // Interpolar entre uniforme, base y estricta según gravedad
                 // gravedad 0 → uniforme
@@ -1019,7 +1076,7 @@
             if (this.bassHistory.length > 16) this.bassHistory.shift();
 
             // Update tension (afectada por gravedad)
-            this.updateTensionForChord(CHORDS[nextChord]);
+            this.updateTensionForChord(this.getChords()[nextChord]);
 
             // Decay del caos
             this.decayChaos();
@@ -1050,7 +1107,7 @@
             if (this.bassHistory.length > 16) this.bassHistory.shift();
 
             // Update tension (afectada por gravedad)
-            this.updateTensionForChord(CHORDS[chord]);
+            this.updateTensionForChord(this.getChords()[chord]);
 
             // Decay del caos
             this.decayChaos();
@@ -1069,7 +1126,8 @@
         }
 
         chooseBassNote(nextChord, currentBass) {
-            const chord = CHORDS[nextChord];
+            const chord = this.getChords()[nextChord];
+            if (!chord) return { bass: 0, inversion: 0 };
             const candidates = [
                 { bass: chord.root, inversion: 0 },
                 { bass: chord.third, inversion: 1 },
@@ -1167,7 +1225,8 @@
                 'D': context.tensionLevel > 0.7 ? 0.8 : 0.95
             };
 
-            const chordFunction = CHORDS[chord].function;
+            const chordData = CHORDS[chord] || CHORDS_MINOR[chord] || { function: 'T' };
+            const chordFunction = chordData.function;
             baseDuration *= functionMultipliers[chordFunction] || 1.0;
 
             if (this.style === 'romantico') {
@@ -1178,8 +1237,9 @@
         }
 
         computeArticulation(chord, context) {
-            const tension = CHORDS[chord].tension;
-            const func = CHORDS[chord].function;
+            const chordData = CHORDS[chord] || CHORDS_MINOR[chord] || { tension: 0.5, function: 'T' };
+            const tension = chordData.tension;
+            const func = chordData.function;
 
             return {
                 attackTime: tension > 0.7 ? 0.02 : 0.05,
@@ -1415,6 +1475,7 @@
             this.activeChord = 'I';
             this.trail = [];
             this.onChordClick = null;
+            this.mode = 'major';
 
             // Radios de los anillos funcionales
             const minDim = Math.min(width, height);
@@ -1424,8 +1485,8 @@
                 'S': minDim * 0.34    // Anillo subdominante (exterior)
             };
 
-            // Ángulos de los acordes (vi y iii en lados opuestos para máxima separación)
-            this.chordAngles = {
+            // Ángulos de los acordes MAYOR
+            this.chordAnglesMajor = {
                 'I':    0,              // Centro (ignorado, va a cx,cy)
                 'vi':   Math.PI,        // Izquierda (9 o'clock)
                 'iii':  0,              // Derecha (3 o'clock)
@@ -1435,7 +1496,20 @@
                 'IV':   Math.PI * 1.5   // Arriba
             };
 
-            this.nodes = [
+            // Ángulos de los acordes MENOR
+            this.chordAnglesMinor = {
+                'i':    0,              // Centro (ignorado, va a cx,cy)
+                'VI':   Math.PI,        // Izquierda
+                'III':  0,              // Derecha
+                'V':    Math.PI * 0.5,  // Abajo-derecha
+                'viio': Math.PI * 0.75, // Abajo
+                'iio':  Math.PI * 1.25, // Arriba-izquierda
+                'iv':   Math.PI * 1.5   // Arriba
+            };
+
+            this.chordAngles = this.chordAnglesMajor;
+
+            this.nodesMajor = [
                 { id: 'I', function: 'T' },
                 { id: 'ii', function: 'S' },
                 { id: 'iii', function: 'T' },
@@ -1445,20 +1519,61 @@
                 { id: 'viio', function: 'D' }
             ];
 
+            this.nodesMinor = [
+                { id: 'i', function: 'T' },
+                { id: 'iio', function: 'S' },
+                { id: 'III', function: 'T' },
+                { id: 'iv', function: 'S' },
+                { id: 'V', function: 'D' },
+                { id: 'VI', function: 'T' },
+                { id: 'viio', function: 'D' }
+            ];
+
+            this.nodes = this.nodesMajor;
+
             this.initPositions();
             this.setupVisualization();
         }
 
+        setMode(mode) {
+            this.mode = mode;
+            this.nodes = mode === 'minor' ? this.nodesMinor : this.nodesMajor;
+            this.chordAngles = mode === 'minor' ? this.chordAnglesMinor : this.chordAnglesMajor;
+            this.trail = []; // Limpiar trail al cambiar modo
+
+            // Reinicializar posiciones y redibujar
+            this.initPositions();
+            d3.select(this.svg).selectAll('*').remove();
+            this.setupVisualization();
+        }
+
+        getChordData(chordId) {
+            const dict = this.mode === 'minor' ? CHORDS_MINOR : CHORDS;
+            return dict[chordId];
+        }
+
+        getTransitions() {
+            return this.mode === 'minor' ? TRANSITIONS_MINOR : DETAILED_TRANSITIONS;
+        }
+
+        getTonic() {
+            return this.mode === 'minor' ? 'i' : 'I';
+        }
+
         initPositions() {
+            const chordsDict = this.mode === 'minor' ? CHORDS_MINOR : CHORDS;
+            const tonic = this.mode === 'minor' ? 'i' : 'I';
+
             this.nodes.forEach(node => {
-                if (node.id === 'I') {
+                if (node.id === tonic) {
                     node.x = this.cx;
                     node.y = this.cy;
                     node.fx = this.cx;
                     node.fy = this.cy;
                 } else {
                     const angle = this.chordAngles[node.id];
-                    const radius = this.functionRadii[CHORDS[node.id].function];
+                    const chordData = chordsDict[node.id];
+                    const radius = this.functionRadii[chordData ? chordData.function : node.function];
                     node.x = this.cx + radius * Math.cos(angle);
                     node.y = this.cy + radius * Math.sin(angle);
                 }
@@ -1518,15 +1633,16 @@
                 .style('cursor', 'pointer');
 
             // Node circles visibles (pueden animar sin afectar hit area)
+            const tonic = this.getTonic();
             this.nodeElements.append('circle')
                 .attr('class', 'node-visual')
-                .attr('r', d => d.id === 'I' ? 32 : 24)
+                .attr('r', d => d.id === tonic ? 32 : 24)
                 .attr('fill', d => {
-                    const func = CHORDS[d.id].function;
+                    const func = this.getChordData(d.id)?.function || d.function;
                     return FUNCTION_COLORS[func];
                 })
                 .attr('fill-opacity', 0.2)
-                .attr('stroke', d => FUNCTION_COLORS[CHORDS[d.id].function])
+                .attr('stroke', d => FUNCTION_COLORS[this.getChordData(d.id)?.function || d.function])
                 .attr('stroke-width', 2)
                 .style('pointer-events', 'none');  // El visual no captura eventos
 
@@ -1535,7 +1651,7 @@
                 .attr('text-anchor', 'middle')
                 .attr('dy', '0.35em')
                 .attr('fill', '#fff')
-                .attr('font-size', d => d.id === 'I' ? '16px' : '14px')
+                .attr('font-size', d => d.id === tonic ? '16px' : '14px')
                 .attr('font-weight', '500')
                 .text(d => d.id);
 
@@ -1665,17 +1781,18 @@
 
         updateNarrator(from, to, tension, gravity) {
             let narrative = '';
-            const toFunc = CHORDS[to]?.function;
-            const fromFunc = from ? CHORDS[from]?.function : null;
+            const toFunc = this.getChordData(to)?.function;
+            const fromFunc = from ? this.getChordData(from)?.function : null;
+            const tonic = this.getTonic();
 
-            // Cadencias específicas
-            if (from === 'V' && to === 'I') {
+            // Cadencias específicas (mayor y menor)
+            if (from === 'V' && (to === 'I' || to === 'i')) {
                 narrative = '✓ Cadencia Auténtica (Reposo total)';
-            } else if (from === 'V' && to === 'vi') {
+            } else if (from === 'V' && (to === 'vi' || to === 'VI')) {
                 narrative = '↺ Cadencia Deceptiva (¡Sorpresa!)';
-            } else if (from === 'IV' && to === 'I') {
+            } else if ((from === 'IV' || from === 'iv') && (to === 'I' || to === 'i')) {
                 narrative = '✓ Cadencia Plagal (Amén)';
-            } else if (from === 'viio' && to === 'I') {
+            } else if (from === 'viio' && (to === 'I' || to === 'i')) {
                 narrative = '✓ Resolución de sensible';
             }
             // Por tensión
@@ -1740,7 +1857,8 @@
 
             gradient.selectAll('stop').remove();
             this.trail.forEach((point, i) => {
-                const color = FUNCTION_COLORS[CHORDS[point.chord].function];
+                const chordData = this.getChordData(point.chord);
+                const color = FUNCTION_COLORS[chordData?.function || 'T'];
                 gradient.append('stop')
                     .attr('offset', `${(i / (this.trail.length - 1)) * 100}%`)
                     .attr('stop-color', color)
@@ -1756,7 +1874,8 @@
 
         showProbabilities(fromChord, modifiedProbs = null) {
             // Usa probabilidades modificadas por gravedad si se pasan, si no las base
-            const probs = modifiedProbs || DETAILED_TRANSITIONS[fromChord];
+            const transitions = this.getTransitions();
+            const probs = modifiedProbs || transitions[fromChord];
 
             this.arcGroup.selectAll('*').remove();
 
@@ -1780,7 +1899,8 @@
                 const strokeOpacity = 0.15 + normalizedProb * 0.7;
 
                 // Color más saturado para alta probabilidad
-                const baseColor = FUNCTION_COLORS[CHORDS[toChord].function];
+                const chordData = this.getChordData(toChord);
+                const baseColor = FUNCTION_COLORS[chordData?.function || 'T'];
 
                 this.arcGroup.append('line')
                     .attr('x1', fromNode.x)
@@ -1875,6 +1995,7 @@
             this.style = 'clasico';
             this.tempo = 80;
             this.key = 'C';
+            this.mode = 'major'; // 'major' o 'minor'
 
             this.nextStepTimeout = null;
 
@@ -1957,6 +2078,29 @@
                     this.key = btn.dataset.key;
                     this.tonalGravity.setKey(this.key);
                 });
+            });
+
+            // Mode toggle (Mayor/Menor)
+            document.getElementById('modeToggle').addEventListener('change', (e) => {
+                this.mode = e.target.checked ? 'minor' : 'major';
+                document.getElementById('modeLabel').textContent = e.target.checked ? 'Menor' : 'Mayor';
+                document.getElementById('modeLabel').className = e.target.checked
+                    ? 'text-xs text-blue-400'
+                    : 'text-xs text-green-400';
+
+                // Actualizar TonalGravity
+                this.tonalGravity.setMode(this.mode);
+
+                // Redibujar visualización con nuevos acordes
+                this.viz.setMode(this.mode);
+
+                // Resetear al acorde tónica del nuevo modo
+                const tonic = this.mode === 'minor' ? 'i' : 'I';
+                this.viz.setActiveChord(tonic, 0, this.tonalGravity.getGravity());
+
+                // Actualizar matriz y displays
+                this.updateMatrix();
+                this.updateProbabilities();
             });
 
             // Style
@@ -2097,9 +2241,10 @@
             const result = this.tonalGravity.step();
             this.playChord(result.chord, false);
 
+            const chordsDict = this.tonalGravity.getChords();
             const context = {
                 tensionLevel: result.tension,
-                isResolution: CHORDS[result.chord].function === 'T' && result.tension < 0.3
+                isResolution: chordsDict[result.chord]?.function === 'T' && result.tension < 0.3
             };
 
             const duration = this.rhythm.computeDuration(result.chord, context);
@@ -2127,10 +2272,13 @@
             // Voice leading
             const voiceResult = this.voiceLeader.transition(chord, result.inversion, this.tonalGravity.keyPitch);
 
+            // Get correct chord dictionary for current mode
+            const currentChords = this.tonalGravity.getChords();
+
             // Compute articulation and duration
             const context = {
                 tensionLevel: result.tension,
-                isResolution: CHORDS[chord].function === 'T' && result.tension < 0.3
+                isResolution: currentChords[chord]?.function === 'T' && result.tension < 0.3
             };
 
             const articulation = this.rhythm.computeArticulation(chord, context);
@@ -2139,7 +2287,7 @@
             // Generar patrón de bajo según estilo
             let bassPattern = null;
             if (voiceResult) {
-                const chordData = CHORDS[chord];
+                const chordData = currentChords[chord];
                 const keyPitch = this.tonalGravity.keyPitch;
 
                 // Obtener las notas del acorde transpuestas
@@ -2174,7 +2322,8 @@
             // Update visualization
             this.viz.setActiveChord(chord, result.tension, this.tonalGravity.gravity);
 
-            if (CHORDS[chord].function === 'T' && result.tension < 0.3) {
+            const chordsDict = this.tonalGravity.getChords();
+            if (chordsDict[chord]?.function === 'T' && result.tension < 0.3) {
                 this.viz.triggerResolution();
             }
 
@@ -2275,8 +2424,9 @@
             const container = document.getElementById('probDisplay');
             container.innerHTML = '';
 
+            const chordsDict = this.tonalGravity.getChords();
             sorted.forEach(([chord, prob]) => {
-                const func = CHORDS[chord].function;
+                const func = chordsDict[chord]?.function || 'T';
                 const percent = (prob * 100).toFixed(0);
 
                 const row = document.createElement('div');
@@ -2295,7 +2445,10 @@
         updateMatrix() {
             const container = document.getElementById('matrixDisplay');
             const currentChord = this.tonalGravity.position;
-            const chordOrder = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'viio'];
+            const chordsDict = this.tonalGravity.getChords();
+            const chordOrder = this.mode === 'minor'
+                ? ['i', 'iio', 'III', 'iv', 'V', 'VI', 'viio']
+                : ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'viio'];
 
             // Crear grid
             let html = '<div class="matrix-grid">';
@@ -2303,13 +2456,13 @@
             // Header row
             html += '<div class="matrix-header"></div>'; // Esquina vacía
             for (const chord of chordOrder) {
-                const func = CHORDS[chord].function;
+                const func = chordsDict[chord]?.function || 'T';
                 html += `<div class="matrix-header" style="color: ${FUNCTION_COLORS[func]}">${chord}</div>`;
             }
 
             // Data rows
             for (const fromChord of chordOrder) {
-                const fromFunc = CHORDS[fromChord].function;
+                const fromFunc = chordsDict[fromChord]?.function || 'T';
                 const isCurrentRow = fromChord === currentChord;
 
                 // Row label
@@ -2323,7 +2476,7 @@
 
                 for (const toChord of chordOrder) {
                     const prob = probs[toChord] || 0;
-                    const toFunc = CHORDS[toChord].function;
+                    const toFunc = chordsDict[toChord]?.function || 'T';
 
                     // Color intensity based on probability
                     const intensity = Math.min(1, prob * 2);
@@ -2433,16 +2586,18 @@
 
             // Build text output
             let output = `# Rameau Machine - Progresion Exportada\n\n`;
-            output += `Tonalidad: ${key} Mayor\n`;
+            const modeName = this.mode === 'minor' ? 'menor' : 'Mayor';
+            output += `Tonalidad: ${key} ${modeName}\n`;
             output += `Estilo: ${style.charAt(0).toUpperCase() + style.slice(1)}\n`;
             output += `Tempo: ${tempo} BPM\n\n`;
             output += `## Progresion\n\n`;
             output += history.join(' - ') + '\n\n';
 
             // Analisis funcional
+            const chordsDict = this.tonalGravity.getChords();
             output += `## Analisis Funcional\n\n`;
             history.forEach((chord, i) => {
-                const func = CHORDS[chord].function;
+                const func = chordsDict[chord]?.function || 'T';
                 const funcName = func === 'T' ? 'Tonica' : func === 'S' ? 'Subdominante' : 'Dominante';
                 output += `${i + 1}. ${chord} (${funcName})\n`;
             });
