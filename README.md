@@ -30,6 +30,7 @@ Sistemas donde física y matemáticas crean composiciones emergentes:
 |----------|-------------|------|----------|
 | **Harmonices Mundi** | Sistema Solar sonificado según Kepler (1619). 8 planetas cantando con física orbital real. | [▶](https://cjlkaiser-cpu.github.io/harmonices-mundi/) | [📄](https://cjlkaiser-cpu.github.io/physics-sound-lab/papers/harmonices-mundi/ARTICLE_v1.html) |
 | **Tonnetz Atractor** | Física del caos + teoría Neo-Riemanniana. Partícula magnética genera acordes. | [▶](https://cjlkaiser-cpu.github.io/tonnetz-atractor/) | [📄](https://cjlkaiser-cpu.github.io/physics-sound-lab/papers/paper-tonnetz-atractor/ARTICLE_v1.html) |
+| **Cadencia Orbital** | Multi-atractores gravitacionales + progresiones armónicas. Partículas orbitan activando grados tonales con modulación automática. | [▶](https://cjlkaiser-cpu.github.io/physics-sound-lab/generativos/cadencia-orbital/cadencia-orbital.html) | — |
 
 ---
 
@@ -60,7 +61,8 @@ Física de sistemas caóticos + teoría musical del siglo XIX = música generati
 physics-sound-lab/
 ├── index.html              # Hub principal
 ├── metronomos/             # 7 simulaciones físicas → sonido
-├── generativos/            # Música emergente
+├── generativos/
+│   └── cadencia-orbital/   # Atractores + progresiones armónicas
 └── papers/                 # Artículos divulgativos
 ```
 
