@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadencia Orbital - Instrumento Generativo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            display: flex;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 240px;
+            background: rgba(20, 20, 35, 0.95);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+        .sidebar:first-of-type {
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-right {
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+        h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 12px;
+        }
+        .control-group {
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 10px;
+        }
+        .control-group h3 {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+        .slider-container {
+            margin-bottom: 10px;
+        }
+        .slider-container:last-child {
+            margin-bottom: 0;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+        .slider-value {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(59,130,246,0.4);
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            flex: 1;
+            min-width: 70px;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #e0e0e0;
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        .btn-sync {
+            background: #22c55e;
+            color: white;
+        }
+        .btn-sync:hover {
+            background: #16a34a;
+        }
+        .particles-toggle {
+            display: flex;
+            gap: 8px;
+        }
+        .particles-toggle .btn {
+            flex: 1;
+        }
+        .particles-toggle .btn.active {
+            background: #8b5cf6;
+            color: white;
+        }
+        .chord-display {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        .chord-display .chord-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            min-height: 36px;
+        }
+        .chord-display .chord-label {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .canvas-container {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        canvas {
+            display: block;
+            background: #0d0d14;
+        }
+        .legend {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            color: #888;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .checkbox-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
+        }
+        .modulation-btns {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .btn-mod {
+            flex: 1;
+            padding: 6px 4px;
+            font-size: 0.7rem;
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: #c4b5fd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-mod:hover {
+            background: rgba(139, 92, 246, 0.4);
+            border-color: rgba(139, 92, 246, 0.6);
+        }
+        .wave-buttons, .octave-buttons {
+            display: flex;
+            gap: 4px;
+        }
+        .btn-wave, .btn-oct {
+            flex: 1;
+            padding: 8px 4px;
+            font-size: 1rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #888;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-wave:hover, .btn-oct:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .btn-wave.active {
+            background: rgba(34, 197, 94, 0.3);
+            border-color: rgba(34, 197, 94, 0.5);
+            color: #22c55e;
+        }
+        .btn-oct.active {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: rgba(59, 130, 246, 0.5);
+            color: #3b82f6;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .btn-record {
+            width: 100%;
+            padding: 12px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-record:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+        .btn-record.recording {
+            background: rgba(239, 68, 68, 0.5);
+            border-color: #ef4444;
+            color: #fff;
+            animation: pulse-record 1.5s infinite;
+        }
+        .record-icon {
+            font-size: 1.2rem;
+            color: #ef4444;
+        }
+        .btn-record.recording .record-icon {
+            color: #fff;
+        }
+        @keyframes pulse-record {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+        }
+        .record-time {
+            text-align: center;
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: #888;
+            margin-top: 8px;
+        }
+        .record-time.active {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div>
+            <h1>Cadencia Orbital</h1>
+            <p class="subtitle">Instrumento Generativo</p>
+        </div>
+
+        <div class="control-group">
+            <h3>Tonalidad</h3>
+            <select id="keySelect">
+                <optgroup label="Mayores">
+                    <option value="C">C Mayor</option>
+                    <option value="G">G Mayor</option>
+                    <option value="D">D Mayor</option>
+                    <option value="A">A Mayor</option>
+                    <option value="E">E Mayor</option>
+                    <option value="F">F Mayor</option>
+                    <option value="Bb">Bb Mayor</option>
+                </optgroup>
+                <optgroup label="Menores">
+                    <option value="Am">A menor</option>
+                    <option value="Em">E menor</option>
+                    <option value="Dm">D menor</option>
+                    <option value="Bm">B menor</option>
+                    <option value="F#m">F# menor</option>
+                    <option value="Cm">C menor</option>
+                    <option value="Gm">G menor</option>
+                </optgroup>
+            </select>
+            <div class="modulation-btns">
+                <button class="btn btn-mod" onclick="modulateFifthUp()" title="Dominante">V ↑</button>
+                <button class="btn btn-mod" onclick="modulateFifthDown()" title="Subdominante">IV ↓</button>
+                <button class="btn btn-mod" onclick="modulateRelative()" title="Relativo">Rel</button>
+                <button class="btn btn-mod" onclick="modulateParallel()" title="Paralelo">Par</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Atractores</h3>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="setAttractors(3)">3</button>
+                <button class="btn btn-secondary" onclick="setAttractors(4)">4</button>
+                <button class="btn btn-secondary active" onclick="setAttractors(5)">5</button>
+                <button class="btn btn-secondary" onclick="setAttractors(6)">6</button>
+                <button class="btn btn-secondary" onclick="setAttractors(7)">7</button>
+                <button class="btn btn-secondary" onclick="setAttractors(8)">8</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Física</h3>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Exponente (n)</span>
+                    <span class="slider-value" id="expValue">3.0</span>
+                </div>
+                <input type="range" id="expSlider" min="2" max="4" step="0.5" value="3">
+            </div>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Intensidad</span>
+                    <span class="slider-value" id="strengthValue">1.0</span>
+                </div>
+                <input type="range" id="strengthSlider" min="0.2" max="3" step="0.1" value="1">
+            </div>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Fricción</span>
+                    <span class="slider-value" id="frictionValue">0.003</span>
+                </div>
+                <input type="range" id="frictionSlider" min="0" max="0.02" step="0.001" value="0.003">
+            </div>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Velocidad inicial</span>
+                    <span class="slider-value" id="velocityValue">6</span>
+                </div>
+                <input type="range" id="velocitySlider" min="2" max="15" step="1" value="6">
+            </div>
+            <label class="checkbox-label">
+                <input type="checkbox" id="showVectors"> Mostrar vectores
+            </label>
+        </div>
+
+        <div class="control-group">
+            <h3>Partículas</h3>
+            <div class="particles-toggle">
+                <button class="btn btn-secondary" id="btn1p" onclick="setParticles(1)">1</button>
+                <button class="btn btn-secondary active" id="btn2p" onclick="setParticles(2)">2</button>
+            </div>
+            <div style="margin-top: 12px;">
+                <button class="btn btn-sync" onclick="syncParticles()" style="width: 100%;">Sync</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Audio</h3>
+            <button class="btn btn-primary" id="audioBtn" onclick="toggleAudio()" style="width: 100%;">
+                Activar Audio
+            </button>
+            <div class="slider-container" style="margin-top: 8px;">
+                <div class="slider-label">
+                    <span>Volumen</span>
+                    <span class="slider-value" id="volumeValue">0.5</span>
+                </div>
+                <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.5">
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="resetParticles()">Reset</button>
+            <button class="btn btn-secondary" onclick="togglePause()">Pausa</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="canvas-container">
+            <canvas id="canvas" width="800" height="580"></canvas>
+            <div class="legend">Cadencia Orbital · Progresiones armónicas generativas</div>
+        </div>
+    </div>
+
+    <div class="sidebar sidebar-right">
+        <div class="control-group">
+            <h3>Arpegio</h3>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Modo</span>
+                </div>
+                <select id="arpMode">
+                    <option value="up">↑ Arriba</option>
+                    <option value="down">↓ Abajo</option>
+                    <option value="updown">↕ Alternado</option>
+                    <option value="random">⟳ Aleatorio</option>
+                </select>
+            </div>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Velocidad</span>
+                    <span class="slider-value" id="arpSpeedValue">25ms</span>
+                </div>
+                <input type="range" id="arpSpeed" min="10" max="150" step="5" value="25">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Delay</h3>
+            <label class="checkbox-label">
+                <input type="checkbox" id="delayEnabled"> Activar delay
+            </label>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Tiempo</span>
+                    <span class="slider-value" id="delayTimeValue">300ms</span>
+                </div>
+                <input type="range" id="delayTime" min="100" max="800" step="50" value="300">
+            </div>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Feedback</span>
+                    <span class="slider-value" id="delayFeedbackValue">0.4</span>
+                </div>
+                <input type="range" id="delayFeedback" min="0" max="0.8" step="0.05" value="0.4">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Síntesis</h3>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Forma de onda</span>
+                </div>
+                <div class="wave-buttons">
+                    <button class="btn btn-wave active" data-wave="sine" title="Sine">∿</button>
+                    <button class="btn btn-wave" data-wave="triangle" title="Triangle">△</button>
+                    <button class="btn btn-wave" data-wave="sawtooth" title="Sawtooth">⩘</button>
+                    <button class="btn btn-wave" data-wave="square" title="Square">⊓</button>
+                </div>
+            </div>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Attack</span>
+                    <span class="slider-value" id="attackValue">0.06s</span>
+                </div>
+                <input type="range" id="attackSlider" min="0.01" max="0.5" step="0.01" value="0.06">
+            </div>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Release</span>
+                    <span class="slider-value" id="releaseValue">1.0s</span>
+                </div>
+                <input type="range" id="releaseSlider" min="0.1" max="3" step="0.1" value="1.0">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Octava</h3>
+            <div class="octave-buttons">
+                <button class="btn btn-oct" onclick="setOctave(-2)">-2</button>
+                <button class="btn btn-oct" onclick="setOctave(-1)">-1</button>
+                <button class="btn btn-oct active" onclick="setOctave(0)">0</button>
+                <button class="btn btn-oct" onclick="setOctave(1)">+1</button>
+                <button class="btn btn-oct" onclick="setOctave(2)">+2</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Grabar</h3>
+            <button class="btn btn-record" id="recordBtn" onclick="toggleRecording()">
+                <span class="record-icon">●</span> Grabar
+            </button>
+            <div class="record-time" id="recordTime">00:00</div>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const W = 800, H = 580;
+        const centerX = W / 2, centerY = H / 2;
+        const radius = 200;
+
+        // Colores para atractores
+        const ATTRACTOR_COLORS = [
+            '#ef4444', '#f97316', '#fbbf24', '#22c55e',
+            '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'
+        ];
+
+        // Estado
+        let numAttractors = 5;
+        let attractors = [];
+        let exponent = 3.0;
+        let strength = 1.0;
+        let friction = 0.003;
+        let initialSpeed = 6;
+        let showVectors = false;
+        let numParticles = 2;
+        let paused = false;
+        let audioEnabled = false;
+        let currentKey = 'C';
+
+        // Partículas
+        let particle1 = { x: centerX, y: centerY - 50, vx: 2, vy: 0, trail: [], color: '#22c55e' };
+        let particle2 = { x: centerX, y: centerY - 50.1, vx: 2, vy: 0, trail: [], color: '#ef4444' };
+
+        // Audio
+        let audioCtx = null;
+        let masterGain = null;
+        let panNode1 = null;
+        let panNode2 = null;
+        let volume = 0.5;
+
+        // Controles de sonido
+        let arpMode = 'up';
+        let arpSpeed = 25;
+        let delayEnabled = false;
+        let delayTime = 0.3;
+        let delayFeedback = 0.4;
+        let delayNode = null;
+        let delayFeedbackGain = null;
+        let waveform = 'sine';
+        let attackTime = 0.06;
+        let releaseTime = 1.0;
+        let octaveShift = 0;
+
+        // Grabación
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let isRecording = false;
+        let recordingStartTime = 0;
+        let recordingTimerInterval = null;
+        let mediaStreamDestination = null;
+
+        // Estado de sectores para cada partícula
+        let currentSector1 = -1;
+        let currentSector2 = -1;
+        let lastChordTime1 = 0;
+        let lastChordTime2 = 0;
+        const CHORD_COOLDOWN = 300;
+
+        // Zonas de modulación
+        const CENTER_RADIUS = 40;           // Radio zona central
+        const OUTER_RADIUS = radius * 1.4;  // Radio zona exterior
+        let lastModulationTime = 0;
+        const MODULATION_COOLDOWN = 1500;   // Cooldown entre modulaciones
+        let inCenterZone = false;
+        let inOuterZone = false;
+        let centerGlow = 0;
+        let outerGlow = 0;
+
+        // Definición de acordes por grados - Mayor
+        const CHORD_DEGREES_MAJOR = {
+            3: ['I', 'IV', 'V'],
+            4: ['I', 'ii', 'IV', 'V'],
+            5: ['I', 'ii', 'iii', 'IV', 'V'],
+            6: ['I', 'ii', 'iii', 'IV', 'V', 'vi'],
+            7: ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
+            8: ['I', 'bII', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°']
+        };
+
+        // Definición de acordes por grados - Menor (armónico)
+        const CHORD_DEGREES_MINOR = {
+            3: ['i', 'iv', 'V'],
+            4: ['i', 'iv', 'V', 'VI'],
+            5: ['i', 'ii°', 'iv', 'V', 'VI'],
+            6: ['i', 'ii°', 'III', 'iv', 'V', 'VI'],
+            7: ['i', 'ii°', 'III', 'iv', 'V', 'VI', 'vii°'],
+            8: ['i', 'ii°', 'III', 'iv', 'v', 'V', 'VI', 'vii°']
+        };
+
+        // Notas base para cada tonalidad (en Hz, octava 4)
+        const KEY_FREQUENCIES = {
+            // Mayores (círculo de quintas completo)
+            'C': 261.63, 'G': 392.00, 'D': 293.66, 'A': 440.00,
+            'E': 329.63, 'B': 493.88, 'F#': 369.99, 'Db': 277.18,
+            'Ab': 415.30, 'Eb': 311.13, 'Bb': 466.16, 'F': 349.23,
+            // Menores (círculo de quintas completo)
+            'Am': 440.00, 'Em': 329.63, 'Bm': 493.88, 'F#m': 369.99,
+            'C#m': 277.18, 'G#m': 415.30, 'D#m': 311.13, 'Bbm': 466.16,
+            'Fm': 349.23, 'Cm': 261.63, 'Gm': 392.00, 'Dm': 293.66
+        };
+
+        // Helper: detectar si tonalidad es menor
+        function isMinorKey(key) {
+            return key.endsWith('m');
+        }
+
+        // Círculo de quintas
+        const CIRCLE_MAJOR = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
+        const CIRCLE_MINOR = ['Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'D#m', 'Bbm', 'Fm', 'Cm', 'Gm', 'Dm'];
+
+        // Relativos (mayor ↔ menor)
+        const RELATIVES = {
+            'C': 'Am', 'G': 'Em', 'D': 'Bm', 'A': 'F#m', 'E': 'C#m', 'B': 'G#m',
+            'F': 'Dm', 'Bb': 'Gm', 'Eb': 'Cm', 'Ab': 'Fm',
+            'Am': 'C', 'Em': 'G', 'Bm': 'D', 'F#m': 'A', 'C#m': 'E', 'G#m': 'B',
+            'Dm': 'F', 'Gm': 'Bb', 'Cm': 'Eb', 'Fm': 'Ab'
+        };
+
+        // Paralelos (misma tónica, distinto modo)
+        const PARALLELS = {
+            'C': 'Cm', 'G': 'Gm', 'D': 'Dm', 'A': 'Am', 'E': 'Em', 'B': 'Bm',
+            'F': 'Fm', 'Bb': 'Bbm', 'Eb': 'Ebm',
+            'Cm': 'C', 'Gm': 'G', 'Dm': 'D', 'Am': 'A', 'Em': 'E', 'Bm': 'B',
+            'Fm': 'F', 'F#m': 'F#'
+        };
+
+        function setKey(newKey) {
+            if (KEY_FREQUENCIES[newKey]) {
+                currentKey = newKey;
+                document.getElementById('keySelect').value = newKey;
+                createAttractors();
+            }
+        }
+
+        function modulateFifthUp() {
+            const circle = isMinorKey(currentKey) ? CIRCLE_MINOR : CIRCLE_MAJOR;
+            const idx = circle.indexOf(currentKey);
+            if (idx !== -1) {
+                const newIdx = (idx + 1) % circle.length;
+                setKey(circle[newIdx]);
+            }
+        }
+
+        function modulateFifthDown() {
+            const circle = isMinorKey(currentKey) ? CIRCLE_MINOR : CIRCLE_MAJOR;
+            const idx = circle.indexOf(currentKey);
+            if (idx !== -1) {
+                const newIdx = (idx - 1 + circle.length) % circle.length;
+                setKey(circle[newIdx]);
+            }
+        }
+
+        function modulateRelative() {
+            if (RELATIVES[currentKey]) {
+                setKey(RELATIVES[currentKey]);
+            }
+        }
+
+        function modulateParallel() {
+            if (PARALLELS[currentKey]) {
+                setKey(PARALLELS[currentKey]);
+            }
+        }
+
+        // Intervalos desde la tónica (en semitonos)
+        const DEGREE_INTERVALS = {
+            // Mayor
+            'I': 0, 'bII': 1, 'ii': 2, 'iii': 4, 'IV': 5,
+            'V': 7, 'vi': 9, 'vii°': 11,
+            // Menor
+            'i': 0, 'ii°': 2, 'III': 3, 'iv': 5, 'v': 7,
+            'VI': 8, 'VII': 10
+        };
+
+        // Tipo de acorde por grado
+        const CHORD_TYPES = {
+            // Mayor
+            'I': 'major', 'bII': 'major', 'ii': 'minor', 'iii': 'minor',
+            'IV': 'major', 'V': 'major', 'vi': 'minor', 'vii°': 'dim',
+            // Menor
+            'i': 'minor', 'ii°': 'dim', 'III': 'major', 'iv': 'minor',
+            'v': 'minor', 'VI': 'major', 'VII': 'major'
+        };
+
+        // Intervalos de acordes (en semitonos desde la raíz)
+        const CHORD_INTERVALS = {
+            'major': [0, 4, 7],
+            'minor': [0, 3, 7],
+            'dim': [0, 3, 6]
+        };
+
+        // Nombres de acordes por tonalidad
+        const CHORD_NAMES = {
+            // Mayores
+            'C': { 'I': 'C', 'bII': 'Db', 'ii': 'Dm', 'iii': 'Em', 'IV': 'F', 'V': 'G', 'vi': 'Am', 'vii°': 'B°' },
+            'G': { 'I': 'G', 'bII': 'Ab', 'ii': 'Am', 'iii': 'Bm', 'IV': 'C', 'V': 'D', 'vi': 'Em', 'vii°': 'F#°' },
+            'D': { 'I': 'D', 'bII': 'Eb', 'ii': 'Em', 'iii': 'F#m', 'IV': 'G', 'V': 'A', 'vi': 'Bm', 'vii°': 'C#°' },
+            'A': { 'I': 'A', 'bII': 'Bb', 'ii': 'Bm', 'iii': 'C#m', 'IV': 'D', 'V': 'E', 'vi': 'F#m', 'vii°': 'G#°' },
+            'E': { 'I': 'E', 'bII': 'F', 'ii': 'F#m', 'iii': 'G#m', 'IV': 'A', 'V': 'B', 'vi': 'C#m', 'vii°': 'D#°' },
+            'B': { 'I': 'B', 'bII': 'C', 'ii': 'C#m', 'iii': 'D#m', 'IV': 'E', 'V': 'F#', 'vi': 'G#m', 'vii°': 'A#°' },
+            'F#': { 'I': 'F#', 'bII': 'G', 'ii': 'G#m', 'iii': 'A#m', 'IV': 'B', 'V': 'C#', 'vi': 'D#m', 'vii°': 'E#°' },
+            'F': { 'I': 'F', 'bII': 'Gb', 'ii': 'Gm', 'iii': 'Am', 'IV': 'Bb', 'V': 'C', 'vi': 'Dm', 'vii°': 'E°' },
+            'Bb': { 'I': 'Bb', 'bII': 'B', 'ii': 'Cm', 'iii': 'Dm', 'IV': 'Eb', 'V': 'F', 'vi': 'Gm', 'vii°': 'A°' },
+            'Eb': { 'I': 'Eb', 'bII': 'E', 'ii': 'Fm', 'iii': 'Gm', 'IV': 'Ab', 'V': 'Bb', 'vi': 'Cm', 'vii°': 'D°' },
+            'Ab': { 'I': 'Ab', 'bII': 'A', 'ii': 'Bbm', 'iii': 'Cm', 'IV': 'Db', 'V': 'Eb', 'vi': 'Fm', 'vii°': 'G°' },
+            'Db': { 'I': 'Db', 'bII': 'D', 'ii': 'Ebm', 'iii': 'Fm', 'IV': 'Gb', 'V': 'Ab', 'vi': 'Bbm', 'vii°': 'C°' },
+            // Menores (armónico)
+            'Am': { 'i': 'Am', 'ii°': 'B°', 'III': 'C', 'iv': 'Dm', 'v': 'Em', 'V': 'E', 'VI': 'F', 'vii°': 'G#°' },
+            'Em': { 'i': 'Em', 'ii°': 'F#°', 'III': 'G', 'iv': 'Am', 'v': 'Bm', 'V': 'B', 'VI': 'C', 'vii°': 'D#°' },
+            'Bm': { 'i': 'Bm', 'ii°': 'C#°', 'III': 'D', 'iv': 'Em', 'v': 'F#m', 'V': 'F#', 'VI': 'G', 'vii°': 'A#°' },
+            'F#m': { 'i': 'F#m', 'ii°': 'G#°', 'III': 'A', 'iv': 'Bm', 'v': 'C#m', 'V': 'C#', 'VI': 'D', 'vii°': 'E#°' },
+            'C#m': { 'i': 'C#m', 'ii°': 'D#°', 'III': 'E', 'iv': 'F#m', 'v': 'G#m', 'V': 'G#', 'VI': 'A', 'vii°': 'B#°' },
+            'G#m': { 'i': 'G#m', 'ii°': 'A#°', 'III': 'B', 'iv': 'C#m', 'v': 'D#m', 'V': 'D#', 'VI': 'E', 'vii°': 'F##°' },
+            'Dm': { 'i': 'Dm', 'ii°': 'E°', 'III': 'F', 'iv': 'Gm', 'v': 'Am', 'V': 'A', 'VI': 'Bb', 'vii°': 'C#°' },
+            'Gm': { 'i': 'Gm', 'ii°': 'A°', 'III': 'Bb', 'iv': 'Cm', 'v': 'Dm', 'V': 'D', 'VI': 'Eb', 'vii°': 'F#°' },
+            'Cm': { 'i': 'Cm', 'ii°': 'D°', 'III': 'Eb', 'iv': 'Fm', 'v': 'Gm', 'V': 'G', 'VI': 'Ab', 'vii°': 'B°' },
+            'Fm': { 'i': 'Fm', 'ii°': 'G°', 'III': 'Ab', 'iv': 'Bbm', 'v': 'Cm', 'V': 'C', 'VI': 'Db', 'vii°': 'E°' },
+            'Bbm': { 'i': 'Bbm', 'ii°': 'C°', 'III': 'Db', 'iv': 'Ebm', 'v': 'Fm', 'V': 'F', 'VI': 'Gb', 'vii°': 'A°' },
+            'D#m': { 'i': 'D#m', 'ii°': 'E#°', 'III': 'F#', 'iv': 'G#m', 'v': 'A#m', 'V': 'A#', 'VI': 'B', 'vii°': 'C##°' }
+        };
+
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Delay effect chain
+            delayNode = audioCtx.createDelay(2.0);
+            delayNode.delayTime.value = delayTime;
+
+            delayFeedbackGain = audioCtx.createGain();
+            delayFeedbackGain.gain.value = delayFeedback;
+
+            // Delay feedback loop
+            delayNode.connect(delayFeedbackGain);
+            delayFeedbackGain.connect(delayNode);
+
+            // Master gain
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = volume;
+            masterGain.connect(audioCtx.destination);
+
+            // MediaStreamDestination para grabación
+            mediaStreamDestination = audioCtx.createMediaStreamDestination();
+            masterGain.connect(mediaStreamDestination);
+
+            // Delay wet signal
+            delayNode.connect(masterGain);
+
+            panNode1 = audioCtx.createStereoPanner();
+            panNode1.pan.value = -0.6;
+            panNode1.connect(masterGain);
+            if (delayEnabled) panNode1.connect(delayNode);
+
+            panNode2 = audioCtx.createStereoPanner();
+            panNode2.pan.value = 0.6;
+            panNode2.connect(masterGain);
+            if (delayEnabled) panNode2.connect(delayNode);
+        }
+
+        function updateDelayConnection() {
+            if (!audioCtx || !delayNode) return;
+
+            // Reconectar pan nodes
+            panNode1.disconnect();
+            panNode2.disconnect();
+
+            panNode1.connect(masterGain);
+            panNode2.connect(masterGain);
+
+            if (delayEnabled) {
+                panNode1.connect(delayNode);
+                panNode2.connect(delayNode);
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            if (audioEnabled) {
+                initAudio();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }
+            document.getElementById('audioBtn').textContent = audioEnabled ? 'Audio ON' : 'Activar Audio';
+            document.getElementById('audioBtn').classList.toggle('btn-secondary', !audioEnabled);
+            document.getElementById('audioBtn').classList.toggle('btn-primary', audioEnabled);
+        }
+
+        function semitoneToFreq(baseFreq, semitones) {
+            return baseFreq * Math.pow(2, semitones / 12);
+        }
+
+        // Reproducir una nota individual
+        function playNote(freq, velocity, panNode) {
+            if (!audioCtx || !audioEnabled) return;
+
+            // Aplicar octava shift
+            const shiftedFreq = freq * Math.pow(2, octaveShift);
+
+            const now = audioCtx.currentTime;
+            const decay = 0.15, sustain = 0.4;
+
+            // Oscilador 1: forma de onda seleccionada
+            const osc1 = audioCtx.createOscillator();
+            osc1.type = waveform;
+            osc1.frequency.value = shiftedFreq;
+
+            // Oscilador 2: complementario con detune
+            const osc2 = audioCtx.createOscillator();
+            osc2.type = waveform === 'sine' ? 'triangle' : 'sine';
+            osc2.frequency.value = shiftedFreq;
+            osc2.detune.value = 5;
+
+            // Mezcla de osciladores
+            const gain1 = audioCtx.createGain();
+            gain1.gain.value = 0.6;
+            const gain2 = audioCtx.createGain();
+            gain2.gain.value = 0.3;
+
+            const oscMix = audioCtx.createGain();
+            osc1.connect(gain1);
+            osc2.connect(gain2);
+            gain1.connect(oscMix);
+            gain2.connect(oscMix);
+
+            // Filtro para calidez
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 2000 + velocity * 2000;
+            filter.Q.value = 1;
+
+            // Envelope con attack y release configurables
+            const envelope = audioCtx.createGain();
+            envelope.gain.setValueAtTime(0, now);
+            envelope.gain.linearRampToValueAtTime(velocity * 0.5, now + attackTime);
+            envelope.gain.linearRampToValueAtTime(velocity * sustain * 0.5, now + attackTime + decay);
+            envelope.gain.linearRampToValueAtTime(0, now + attackTime + decay + releaseTime);
+
+            oscMix.connect(filter);
+            filter.connect(envelope);
+            envelope.connect(panNode);
+
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + attackTime + decay + releaseTime + 0.1);
+            osc2.stop(now + attackTime + decay + releaseTime + 0.1);
+        }
+
+        // Reproducir acorde arpegiado
+        function playChord(degree, panNode, velocity) {
+            if (!audioEnabled || !audioCtx) return;
+
+            const baseFreq = KEY_FREQUENCIES[currentKey];
+            const interval = DEGREE_INTERVALS[degree];
+            const rootFreq = semitoneToFreq(baseFreq, interval);
+            const chordType = CHORD_TYPES[degree];
+            let intervals = [...CHORD_INTERVALS[chordType]];
+
+            // Aplicar modo de arpegio
+            switch (arpMode) {
+                case 'down':
+                    intervals = intervals.reverse();
+                    break;
+                case 'updown':
+                    intervals = [...intervals, ...intervals.slice(1, -1).reverse()];
+                    break;
+                case 'random':
+                    intervals = intervals.sort(() => Math.random() - 0.5);
+                    break;
+                // 'up' es el default, no hace falta cambiar
+            }
+
+            // Arpegio con velocidad configurable
+            intervals.forEach((semitone, i) => {
+                setTimeout(() => {
+                    const freq = semitoneToFreq(rootFreq, semitone);
+                    playNote(freq, 0.3 + velocity * 0.4, panNode);
+                }, i * arpSpeed);
+            });
+        }
+
+        // Detectar en qué sector está la partícula
+        function findSector(x, y) {
+            const dx = x - centerX;
+            const dy = y - centerY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // Solo activar si está dentro del área de atractores
+            if (dist > radius * 1.3 || dist < 20) return -1;
+
+            let angle = Math.atan2(dy, dx) + Math.PI / 2; // Ajustar para que 0 esté arriba
+            if (angle < 0) angle += Math.PI * 2;
+
+            const sectorAngle = (Math.PI * 2) / numAttractors;
+            const sector = Math.floor(angle / sectorAngle);
+
+            return sector % numAttractors;
+        }
+
+        // Detectar zonas de modulación
+        function checkModulationZones(p) {
+            const dx = p.x - centerX;
+            const dy = p.y - centerY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const now = performance.now();
+
+            // Zona central → Relativo
+            if (dist < CENTER_RADIUS) {
+                if (!inCenterZone && (now - lastModulationTime) > MODULATION_COOLDOWN) {
+                    inCenterZone = true;
+                    lastModulationTime = now;
+                    centerGlow = 1;
+                    modulateRelative();
+                    playModulationSound('center');
+                }
+            } else {
+                inCenterZone = false;
+            }
+
+            // Zona exterior → Dominante
+            if (dist > OUTER_RADIUS) {
+                if (!inOuterZone && (now - lastModulationTime) > MODULATION_COOLDOWN) {
+                    inOuterZone = true;
+                    lastModulationTime = now;
+                    outerGlow = 1;
+                    modulateFifthUp();
+                    playModulationSound('outer');
+                }
+            } else {
+                inOuterZone = false;
+            }
+        }
+
+        // Sonido especial para modulación
+        function playModulationSound(type) {
+            if (!audioEnabled || !audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const baseFreq = KEY_FREQUENCIES[currentKey];
+
+            // Arpegio ascendente o descendente según tipo
+            const intervals = type === 'center' ? [0, 3, 7, 12] : [12, 7, 4, 0];
+
+            intervals.forEach((semitone, i) => {
+                setTimeout(() => {
+                    const freq = semitoneToFreq(baseFreq, semitone);
+                    playNote(freq, 0.5, masterGain);
+                }, i * 80);
+            });
+        }
+
+        function createAttractors() {
+            attractors = [];
+            // Seleccionar grados según modo (mayor/menor)
+            const degreesTable = isMinorKey(currentKey) ? CHORD_DEGREES_MINOR : CHORD_DEGREES_MAJOR;
+            const degrees = degreesTable[numAttractors];
+
+            for (let i = 0; i < numAttractors; i++) {
+                const angle = (i / numAttractors) * Math.PI * 2 - Math.PI / 2;
+                attractors.push({
+                    x: centerX + Math.cos(angle) * radius,
+                    y: centerY + Math.sin(angle) * radius,
+                    color: ATTRACTOR_COLORS[i % ATTRACTOR_COLORS.length],
+                    degree: degrees[i],
+                    glow: 0,
+                    glow2: 0
+                });
+            }
+            // Reset sector states
+            currentSector1 = -1;
+            currentSector2 = -1;
+        }
+
+        function computeAcceleration(x, y, vx, vy) {
+            let ax = 0, ay = 0;
+
+            for (const attr of attractors) {
+                const dx = attr.x - x;
+                const dy = attr.y - y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const safeDist = Math.max(dist, 20);
+
+                // Fuerza igual que atractor-multicuerpo
+                const forceMag = strength * 100 * 10000 / Math.pow(safeDist, exponent);
+                ax += forceMag * dx / dist;
+                ay += forceMag * dy / dist;
+            }
+
+            // Fricción lineal (como el original)
+            ax -= friction * vx;
+            ay -= friction * vy;
+
+            return { ax, ay };
+        }
+
+        function rk4Step(p, dt) {
+            const a1 = computeAcceleration(p.x, p.y, p.vx, p.vy);
+            const k1_vx = a1.ax, k1_vy = a1.ay;
+            const k1_x = p.vx, k1_y = p.vy;
+
+            const a2 = computeAcceleration(
+                p.x + k1_x * dt/2, p.y + k1_y * dt/2,
+                p.vx + k1_vx * dt/2, p.vy + k1_vy * dt/2
+            );
+            const k2_vx = a2.ax, k2_vy = a2.ay;
+            const k2_x = p.vx + k1_vx * dt/2, k2_y = p.vy + k1_vy * dt/2;
+
+            const a3 = computeAcceleration(
+                p.x + k2_x * dt/2, p.y + k2_y * dt/2,
+                p.vx + k2_vx * dt/2, p.vy + k2_vy * dt/2
+            );
+            const k3_vx = a3.ax, k3_vy = a3.ay;
+            const k3_x = p.vx + k2_vx * dt/2, k3_y = p.vy + k2_vy * dt/2;
+
+            const a4 = computeAcceleration(
+                p.x + k3_x * dt, p.y + k3_y * dt,
+                p.vx + k3_vx * dt, p.vy + k3_vy * dt
+            );
+            const k4_vx = a4.ax, k4_vy = a4.ay;
+            const k4_x = p.vx + k3_vx * dt, k4_y = p.vy + k3_vy * dt;
+
+            p.x += (k1_x + 2*k2_x + 2*k3_x + k4_x) * dt / 6;
+            p.y += (k1_y + 2*k2_y + 2*k3_y + k4_y) * dt / 6;
+            p.vx += (k1_vx + 2*k2_vx + 2*k3_vx + k4_vx) * dt / 6;
+            p.vy += (k1_vy + 2*k2_vy + 2*k3_vy + k4_vy) * dt / 6;
+        }
+
+        function checkSectorTrigger(p, particleNum) {
+            const sector = findSector(p.x, p.y);
+            const now = performance.now();
+
+            if (particleNum === 1) {
+                if (sector !== -1 && sector !== currentSector1 && (now - lastChordTime1) > CHORD_COOLDOWN) {
+                    currentSector1 = sector;
+                    lastChordTime1 = now;
+
+                    // Calcular velocidad para expresividad
+                    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                    const velocity = Math.min(1, speed / 8);
+
+                    // Activar glow del atractor
+                    if (attractors[sector]) {
+                        attractors[sector].glow = 1;
+                        playChord(attractors[sector].degree, panNode1, velocity);
+                    }
+                } else if (sector === -1) {
+                    currentSector1 = -1;
+                }
+            } else {
+                if (sector !== -1 && sector !== currentSector2 && (now - lastChordTime2) > CHORD_COOLDOWN) {
+                    currentSector2 = sector;
+                    lastChordTime2 = now;
+
+                    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                    const velocity = Math.min(1, speed / 8);
+
+                    if (attractors[sector]) {
+                        attractors[sector].glow2 = 1;
+                        playChord(attractors[sector].degree, panNode2, velocity);
+                    }
+                } else if (sector === -1) {
+                    currentSector2 = -1;
+                }
+            }
+        }
+
+        function updateParticle(p, particleNum) {
+            const dt = 0.016;
+            const steps = 3;
+            for (let i = 0; i < steps; i++) {
+                rk4Step(p, dt / steps);
+            }
+
+            // Límites
+            if (p.x < 30) { p.x = 30; p.vx *= -0.5; }
+            if (p.x > W - 30) { p.x = W - 30; p.vx *= -0.5; }
+            if (p.y < 30) { p.y = 30; p.vy *= -0.5; }
+            if (p.y > H - 30) { p.y = H - 30; p.vy *= -0.5; }
+
+            // Trail
+            p.trail.push({ x: p.x, y: p.y });
+            if (p.trail.length > 150) p.trail.shift();
+
+            // Check sector triggers
+            checkSectorTrigger(p, particleNum);
+
+            // Check modulation zones (solo partícula 1 para evitar doble modulación)
+            if (particleNum === 1) {
+                checkModulationZones(p);
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#0d0d14';
+            ctx.fillRect(0, 0, W, H);
+
+            // Zona exterior (modulación a dominante) - anillo violeta
+            ctx.strokeStyle = `rgba(139, 92, 246, ${0.15 + outerGlow * 0.5})`;
+            ctx.lineWidth = 2 + outerGlow * 4;
+            ctx.setLineDash([10, 5]);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, OUTER_RADIUS, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Glow exterior si activo
+            if (outerGlow > 0) {
+                const gradient = ctx.createRadialGradient(centerX, centerY, OUTER_RADIUS - 20, centerX, centerY, OUTER_RADIUS + 30);
+                gradient.addColorStop(0, 'transparent');
+                gradient.addColorStop(0.5, `rgba(139, 92, 246, ${outerGlow * 0.3})`);
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, OUTER_RADIUS + 30, 0, Math.PI * 2);
+                ctx.fill();
+                outerGlow *= 0.95;
+            }
+
+            // Zona central (modulación a relativo) - círculo cyan
+            ctx.strokeStyle = `rgba(6, 182, 212, ${0.3 + centerGlow * 0.7})`;
+            ctx.lineWidth = 2 + centerGlow * 3;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, CENTER_RADIUS, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Glow central si activo
+            if (centerGlow > 0) {
+                const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, CENTER_RADIUS + 20);
+                gradient.addColorStop(0, `rgba(6, 182, 212, ${centerGlow * 0.5})`);
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, CENTER_RADIUS + 20, 0, Math.PI * 2);
+                ctx.fill();
+                centerGlow *= 0.95;
+            }
+
+            // Etiquetas de zonas
+            ctx.fillStyle = 'rgba(6, 182, 212, 0.5)';
+            ctx.font = '10px SF Pro Display, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('REL', centerX, centerY + 4);
+
+            ctx.fillStyle = 'rgba(139, 92, 246, 0.4)';
+            ctx.fillText('DOM ↑', centerX, centerY - OUTER_RADIUS - 8);
+
+            // Dibujar líneas de sectores (desde centro a cada atractor)
+            ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+            ctx.lineWidth = 1;
+            for (const attr of attractors) {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(attr.x, attr.y);
+                ctx.stroke();
+            }
+
+            // Círculo exterior de activación
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 1.3, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Dibujar atractores
+            for (const attr of attractors) {
+                // Glow partícula 1 (verde)
+                if (attr.glow > 0) {
+                    const gradient = ctx.createRadialGradient(attr.x, attr.y, 0, attr.x, attr.y, 70);
+                    gradient.addColorStop(0, `rgba(34, 197, 94, ${attr.glow * 0.5})`);
+                    gradient.addColorStop(1, 'transparent');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(attr.x, attr.y, 70, 0, Math.PI * 2);
+                    ctx.fill();
+                    attr.glow *= 0.93;
+                }
+
+                // Glow partícula 2 (rojo)
+                if (attr.glow2 > 0) {
+                    const gradient = ctx.createRadialGradient(attr.x, attr.y, 0, attr.x, attr.y, 70);
+                    gradient.addColorStop(0, `rgba(239, 68, 68, ${attr.glow2 * 0.5})`);
+                    gradient.addColorStop(1, 'transparent');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(attr.x, attr.y, 70, 0, Math.PI * 2);
+                    ctx.fill();
+                    attr.glow2 *= 0.93;
+                }
+
+                // Círculo del atractor
+                ctx.beginPath();
+                ctx.arc(attr.x, attr.y, 20, 0, Math.PI * 2);
+                ctx.fillStyle = attr.color;
+                ctx.fill();
+
+                // Etiqueta del grado
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 12px SF Pro Display, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(attr.degree, attr.x, attr.y);
+
+                // Nombre del acorde debajo
+                const chordName = CHORD_NAMES[currentKey][attr.degree];
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.font = '10px SF Pro Display, sans-serif';
+                ctx.fillText(chordName, attr.x, attr.y + 32);
+            }
+
+            // Dibujar trails
+            drawTrail(particle1);
+            if (numParticles === 2) {
+                drawTrail(particle2);
+            }
+
+            // Dibujar partículas
+            drawParticle(particle1);
+            if (numParticles === 2) {
+                drawParticle(particle2);
+            }
+        }
+
+        function drawTrail(p) {
+            if (p.trail.length < 2) return;
+            ctx.beginPath();
+            ctx.moveTo(p.trail[0].x, p.trail[0].y);
+            for (let i = 1; i < p.trail.length; i++) {
+                ctx.lineTo(p.trail[i].x, p.trail[i].y);
+            }
+            ctx.strokeStyle = p.color + '60';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function drawParticle(p) {
+            // Glow
+            const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 20);
+            gradient.addColorStop(0, p.color);
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Core
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+
+            // Vectores si están activados
+            if (showVectors) {
+                const velScale = 3;
+                const accScale = 0.3;
+
+                // Vector velocidad (amarillo)
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x + p.vx * velScale, p.y + p.vy * velScale);
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Flecha velocidad
+                const velAngle = Math.atan2(p.vy, p.vx);
+                const velEnd = { x: p.x + p.vx * velScale, y: p.y + p.vy * velScale };
+                ctx.beginPath();
+                ctx.moveTo(velEnd.x, velEnd.y);
+                ctx.lineTo(velEnd.x - 8 * Math.cos(velAngle - 0.4), velEnd.y - 8 * Math.sin(velAngle - 0.4));
+                ctx.moveTo(velEnd.x, velEnd.y);
+                ctx.lineTo(velEnd.x - 8 * Math.cos(velAngle + 0.4), velEnd.y - 8 * Math.sin(velAngle + 0.4));
+                ctx.stroke();
+
+                // Vector aceleración (cyan)
+                const acc = computeAcceleration(p.x, p.y, p.vx, p.vy);
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x + acc.ax * accScale, p.y + acc.ay * accScale);
+                ctx.strokeStyle = '#06b6d4';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        function animate() {
+            if (!paused) {
+                updateParticle(particle1, 1);
+                if (numParticles === 2) {
+                    updateParticle(particle2, 2);
+                }
+            }
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        // Event handlers
+        function setAttractors(n) {
+            numAttractors = n;
+            createAttractors();
+            document.querySelectorAll('.control-group:nth-child(3) .btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i + 3 === n);
+            });
+        }
+
+        function setParticles(n) {
+            numParticles = n;
+            document.getElementById('btn1p').classList.toggle('active', n === 1);
+            document.getElementById('btn2p').classList.toggle('active', n === 2);
+        }
+
+        function syncParticles() {
+            particle2.x = particle1.x + 5;
+            particle2.y = particle1.y + 5;
+            particle2.vx = particle1.vx;
+            particle2.vy = particle1.vy;
+            particle2.trail = [];
+            currentSector2 = currentSector1;
+        }
+
+        function resetParticles() {
+            // Posición inicial con más separación angular
+            const startAngle = Math.random() * Math.PI * 2;
+            const startR = radius * 0.5;
+
+            particle1 = {
+                x: centerX + Math.cos(startAngle) * startR,
+                y: centerY + Math.sin(startAngle) * startR,
+                vx: Math.cos(startAngle + Math.PI/2) * initialSpeed,
+                vy: Math.sin(startAngle + Math.PI/2) * initialSpeed,
+                trail: [],
+                color: '#22c55e'
+            };
+
+            // Partícula 2 con separación mayor para divergencia
+            particle2 = {
+                x: particle1.x + 5,
+                y: particle1.y + 5,
+                vx: particle1.vx,
+                vy: particle1.vy,
+                trail: [],
+                color: '#ef4444'
+            };
+
+            currentSector1 = -1;
+            currentSector2 = -1;
+        }
+
+        function togglePause() {
+            paused = !paused;
+        }
+
+        // Sliders
+        document.getElementById('expSlider').addEventListener('input', (e) => {
+            exponent = parseFloat(e.target.value);
+            document.getElementById('expValue').textContent = exponent.toFixed(1);
+        });
+
+        document.getElementById('strengthSlider').addEventListener('input', (e) => {
+            strength = parseFloat(e.target.value);
+            document.getElementById('strengthValue').textContent = strength.toFixed(1);
+        });
+
+        document.getElementById('frictionSlider').addEventListener('input', (e) => {
+            friction = parseFloat(e.target.value);
+            document.getElementById('frictionValue').textContent = friction.toFixed(3);
+        });
+
+        document.getElementById('velocitySlider').addEventListener('input', (e) => {
+            initialSpeed = parseFloat(e.target.value);
+            document.getElementById('velocityValue').textContent = initialSpeed;
+        });
+
+        document.getElementById('showVectors').addEventListener('change', (e) => {
+            showVectors = e.target.checked;
+        });
+
+        document.getElementById('volumeSlider').addEventListener('input', (e) => {
+            volume = parseFloat(e.target.value);
+            document.getElementById('volumeValue').textContent = volume.toFixed(2);
+            if (masterGain) masterGain.gain.value = volume;
+        });
+
+        document.getElementById('keySelect').addEventListener('change', (e) => {
+            currentKey = e.target.value;
+            createAttractors(); // Actualizar nombres de acordes
+        });
+
+        // Mouse interaction
+        let isDragging = false;
+        let dragStart = { x: 0, y: 0 };
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            dragStart = {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+            isDragging = true;
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            const rect = canvas.getBoundingClientRect();
+            const endX = e.clientX - rect.left;
+            const endY = e.clientY - rect.top;
+
+            const vx = (endX - dragStart.x) * 0.3;
+            const vy = (endY - dragStart.y) * 0.3;
+
+            particle1.x = dragStart.x;
+            particle1.y = dragStart.y;
+            particle1.vx = vx;
+            particle1.vy = vy;
+            particle1.trail = [];
+            currentSector1 = -1;
+
+            if (numParticles === 2) {
+                particle2.x = dragStart.x + 5;
+                particle2.y = dragStart.y + 5;
+                particle2.vx = vx;
+                particle2.vy = vy;
+                particle2.trail = [];
+                currentSector2 = -1;
+            }
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+
+        // === Controles de sonido (panel derecho) ===
+
+        // Arpegio
+        document.getElementById('arpMode').addEventListener('change', (e) => {
+            arpMode = e.target.value;
+        });
+
+        document.getElementById('arpSpeed').addEventListener('input', (e) => {
+            arpSpeed = parseInt(e.target.value);
+            document.getElementById('arpSpeedValue').textContent = arpSpeed + 'ms';
+        });
+
+        // Delay
+        document.getElementById('delayEnabled').addEventListener('change', (e) => {
+            delayEnabled = e.target.checked;
+            updateDelayConnection();
+        });
+
+        document.getElementById('delayTime').addEventListener('input', (e) => {
+            delayTime = parseInt(e.target.value) / 1000;
+            document.getElementById('delayTimeValue').textContent = e.target.value + 'ms';
+            if (delayNode) delayNode.delayTime.value = delayTime;
+        });
+
+        document.getElementById('delayFeedback').addEventListener('input', (e) => {
+            delayFeedback = parseFloat(e.target.value);
+            document.getElementById('delayFeedbackValue').textContent = delayFeedback.toFixed(2);
+            if (delayFeedbackGain) delayFeedbackGain.gain.value = delayFeedback;
+        });
+
+        // Forma de onda
+        document.querySelectorAll('.btn-wave').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.btn-wave').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                waveform = btn.dataset.wave;
+            });
+        });
+
+        // Attack / Release
+        document.getElementById('attackSlider').addEventListener('input', (e) => {
+            attackTime = parseFloat(e.target.value);
+            document.getElementById('attackValue').textContent = attackTime.toFixed(2) + 's';
+        });
+
+        document.getElementById('releaseSlider').addEventListener('input', (e) => {
+            releaseTime = parseFloat(e.target.value);
+            document.getElementById('releaseValue').textContent = releaseTime.toFixed(1) + 's';
+        });
+
+        // Octava
+        function setOctave(oct) {
+            octaveShift = oct;
+            document.querySelectorAll('.btn-oct').forEach((btn, i) => {
+                btn.classList.toggle('active', (i - 2) === oct);
+            });
+        }
+
+        // === Grabación ===
+        function toggleRecording() {
+            if (!audioEnabled) {
+                // Activar audio primero
+                toggleAudio();
+            }
+
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        function startRecording() {
+            if (!mediaStreamDestination) {
+                initAudio();
+            }
+
+            recordedChunks = [];
+
+            // Preferir webm con opus, fallback a otros formatos
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                ? 'audio/webm;codecs=opus'
+                : MediaRecorder.isTypeSupported('audio/webm')
+                    ? 'audio/webm'
+                    : 'audio/mp4';
+
+            mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, { mimeType });
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    recordedChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                exportRecording();
+            };
+
+            mediaRecorder.start(100); // Capturar cada 100ms
+            isRecording = true;
+            recordingStartTime = Date.now();
+
+            // Actualizar UI
+            const btn = document.getElementById('recordBtn');
+            btn.classList.add('recording');
+            btn.innerHTML = '<span class="record-icon">■</span> Detener';
+            document.getElementById('recordTime').classList.add('active');
+
+            // Iniciar timer
+            recordingTimerInterval = setInterval(updateRecordingTime, 100);
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+
+            isRecording = false;
+
+            // Actualizar UI
+            const btn = document.getElementById('recordBtn');
+            btn.classList.remove('recording');
+            btn.innerHTML = '<span class="record-icon">●</span> Grabar';
+            document.getElementById('recordTime').classList.remove('active');
+
+            // Detener timer
+            clearInterval(recordingTimerInterval);
+        }
+
+        function updateRecordingTime() {
+            const elapsed = Date.now() - recordingStartTime;
+            const seconds = Math.floor(elapsed / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            document.getElementById('recordTime').textContent =
+                String(minutes).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+        }
+
+        function exportRecording() {
+            if (recordedChunks.length === 0) return;
+
+            const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
+
+            // Generar nombre de archivo con timestamp
+            const now = new Date();
+            const timestamp = now.toISOString().slice(0, 19).replace(/[:-]/g, '').replace('T', '_');
+            const extension = mediaRecorder.mimeType.includes('webm') ? 'webm' : 'm4a';
+            const filename = `cadencia_${currentKey}_${timestamp}.${extension}`;
+
+            // Crear enlace de descarga
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // Reset timer display
+            document.getElementById('recordTime').textContent = '00:00';
+        }
+
+        // Init
+        createAttractors();
+        resetParticles();
+        animate();
+    </script>
+</body>
+</html>
