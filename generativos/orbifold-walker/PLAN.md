@@ -253,67 +253,62 @@ orbifold-walker/
 
 ## Pasos de Implementación
 
-### Paso 1: Estructura Base (~200 líneas) ✅ COMPLETADO
-- [x] HTML con estructura: header, canvas 3D, panel de controles
-- [x] Importar Three.js y OrbitControls desde CDN
+### Paso 1: Estructura Base (~200 líneas)
+- [ x] HTML con estructura: header, canvas 3D, panel de controles
+- [ x] Importar Three.js y OrbitControls desde CDN
 - [x] CSS inline (patrón Physics Sound Lab)
 
-### Paso 2: Escena Three.js (~150 líneas) ✅ COMPLETADO
-- [x] Crear scene, camera, renderer
-- [x] Construir geometría del prisma (espacio fundamental del orbifold)
-- [x] Añadir grid y ejes con labels
-- [x] Configurar OrbitControls para rotación con mouse
+### Paso 2: Escena Three.js (~150 líneas)
+- [ x] Crear scene, camera, renderer
+- [x ] Construir geometría del prisma (espacio fundamental del orbifold)
+- [x ] Añadir iluminación ambiental
+- [x ] Configurar OrbitControls para rotación con mouse
 
-### Paso 3: Matemáticas del Orbifold (~100 líneas) ✅ COMPLETADO
-- [x] `triadToOrbifold(p1, p2, p3)` → coordenadas 3D
-- [x] `orbifoldToTriad(x, y, z)` → pitch classes
-- [x] `wrapOrbifold(x, y, z)` → manejo de bordes con twist
-- [x] Posicionar attractores en acordes consonantes
+### Paso 3: Matemáticas del Orbifold (~100 líneas)
+- [x ] `triadToOrbifold(p1, p2, p3)` → coordenadas 3D
+- [x ] `orbifoldToTriad(x, y, z)` → pitch classes
+- [x ] `wrapOrbifold(x, y, z)` → manejo de bordes con twist
+- [x ] Posicionar attractores en acordes consonantes
 
-### Paso 4: Sistema Físico RK4 (~120 líneas) ✅ COMPLETADO
-- [x] Adaptar `computeAcceleration()` a 3D
-- [x] Adaptar `rk4Step()` para 3 dimensiones (x, y, z, vx, vy, vz)
-- [x] Integrar `wrapOrbifold()` después de cada step
-- [x] Collision con attractores para trigger mode
+### Paso 4: Sistema Físico RK4 (~120 líneas)
+- [x ] Adaptar `computeAcceleration()` a 3D
+- [x ] Adaptar `rk4Step()` para 3 dimensiones (x, y, z, vx, vy, vz)
+- [x ] Integrar `wrapOrbifold()` después de cada step
+- [x ] Collision con attractores para trigger mode
 
-### Paso 5: Visualización Dinámica (~100 líneas) ⚠️ PARCIAL
-- [x] Actualizar posición del walker mesh
-- [x] Trail como BufferGeometry actualizada cada frame
-- [x] Info overlay con nombre del acorde actual
-- [ ] **PENDIENTE:** Glow en attractores cuando el walker se acerca
-- [ ] **PENDIENTE:** Regiones coloreadas del prisma según tipo de acorde
+### Paso 5: Visualización Dinámica (~100 líneas)
+- [ ] Actualizar posición del walker mesh
+- [ ] Trail como BufferGeometry actualizada cada frame
+- [ ] Glow en attractores cuando el walker se acerca
+- [ ] Labels flotantes con nombre del acorde actual
 
-### Paso 6: Audio - Modo Drone (~150 líneas) ✅ COMPLETADO
-- [x] 3 osciladores persistentes (uno por voz de la tríada)
-- [x] Crossfade suave al cambiar voicing (`linearRampToValueAtTime`)
-- [x] Filter lowpass
-- [x] Master gain + delay effect
+### Paso 6: Audio - Modo Drone (~150 líneas)
+- [ ] 3 osciladores persistentes (uno por voz de la tríada)
+- [ ] Crossfade suave al cambiar voicing (`linearRampToValueAtTime`)
+- [ ] Filter lowpass controlable
+- [ ] Master gain + delay effect
 
-### Paso 7: Audio - Modo Trigger (~80 líneas) ⚠️ PARCIAL
-- [x] Detectar entrada en región de attractor
-- [x] Disparar tríada con ADSR envelope
-- [x] Cooldown para evitar re-triggers rápidos
-- [ ] **PENDIENTE:** Arpegio opcional (up/down/random)
+### Paso 7: Audio - Modo Trigger (~80 líneas)
+- [ ] Detectar entrada en región de attractor
+- [ ] Disparar tríada con ADSR envelope
+- [ ] Cooldown para evitar re-triggers rápidos
+- [ ] Arpegio opcional (up/down/random)
 
-### Paso 8: Controles UI (~100 líneas) ⚠️ PARCIAL
-- [x] Sliders para física (friction, force, speed)
-- [x] Toggle drone/trigger
-- [x] Selector de waveform
-- [x] Botones: Start/Stop, Reset, Record
-- [x] Toggle: Show Prism, Show Trail, Auto-rotate
-- [ ] **PENDIENTE:** Control Spread (voicing cerrado ↔ abierto)
+### Paso 8: Controles UI (~100 líneas)
+- [ ] Sliders para física (friction, force, speed)
+- [ ] Toggle drone/trigger
+- [ ] Selector de waveform
+- [ ] Botones: Start/Stop, Reset, Record
 
-### Paso 9: Grabación Audio (~50 líneas) ✅ COMPLETADO
-- [x] MediaStreamDestination conectado al master
-- [x] MediaRecorder con detección de formato
-- [x] Export con timestamp en filename
+### Paso 9: Grabación Audio (~50 líneas)
+- [ ] MediaStreamDestination conectado al master
+- [ ] MediaRecorder con detección de formato
+- [ ] Export con timestamp en filename
 
-### Paso 10: Pulido Final ✅ COMPLETADO
-- [x] README.md con explicación del concepto
-- [x] Actualizar hub de generativos (`/generativos/index.html`)
-- [x] Añadir preview animado al hub
-- [x] Artículo divulgativo (`papers/paper-orbifold-walker/`)
-- [x] Subir a GitHub con Pages habilitado
+### Paso 10: Pulido Final
+- [ ] README.md con explicación del concepto
+- [ ] Actualizar hub de generativos (`/generativos/index.html`)
+- [ ] Añadir preview animado al hub
 
 ---
 

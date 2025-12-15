@@ -133,7 +133,7 @@
     <li><a href="#voiceleading">7. Voice Leading: El Arte de la Conducción</a></li>
     <li><a href="#implementacion">8. Implementación Técnica</a></li>
     <li><a href="#comparativa">9. Rameau vs. Riemann: Dos Geometrías</a></li>
-    <li><a href="#futuro">10. Futuro: Modo Menor</a></li>
+    <li><a href="#modo-menor">10. Modo Menor: La Otra Mitad de la Armonía</a></li>
     <li><a href="#conclusiones">11. Conclusiones</a></li>
     <li><a href="#referencias">Referencias</a></li>
   </ul>
@@ -914,29 +914,29 @@ simulation
   </div>
 </section>
 
-<section id="futuro">
-  <h2>10. Futuro: Modo Menor</h2>
+<section id="modo-menor">
+  <h2>10. Modo Menor: La Otra Mitad de la Armonía</h2>
 
   <p>
-    La versión actual de <strong>Rameau Machine</strong> opera exclusivamente en modo mayor. Sin embargo, la armonía funcional brilla especialmente en el <strong>modo menor</strong>, donde las tensiones son más complejas y la sensible del acorde V juega un rol crucial.
+    La armonía funcional brilla especialmente en el <strong>modo menor</strong>, donde las tensiones son más complejas y la sensible del acorde V juega un rol crucial. Rameau Machine implementa el <strong>modo menor armónico</strong>, que mantiene el V como acorde mayor para preservar la fuerza de la cadencia auténtica.
   </p>
 
-  <h3>Próximamente</h3>
+  <h3>Toggle Mayor/Menor</h3>
 
   <p>
-    La siguiente iteración incluirá:
+    Un simple switch en la interfaz permite cambiar entre modos. Al activar el modo menor:
   </p>
 
   <ul>
-    <li><strong>Set de acordes menor:</strong> i, iiº, III, iv, V, VI, viiº</li>
-    <li><strong>Escala armónica vs. natural:</strong> El V necesita la sensible elevada</li>
-    <li><strong>Selector de modo:</strong> Toggle Mayor/Menor en la UI</li>
-    <li><strong>Matriz de transiciones específica:</strong> Las probabilidades en menor son diferentes (V→i es aún más fuerte)</li>
+    <li>La visualización se redibuja con los nuevos acordes</li>
+    <li>La matriz de Markov cambia a <code>TRANSITIONS_MINOR</code></li>
+    <li>El sistema se resetea a la tónica <strong>i</strong></li>
+    <li>El narrador adapta sus mensajes ("V→i" en lugar de "V→I")</li>
   </ul>
 
   <div class="diagram">
     <pre>
-    MODO MENOR (próximamente)
+    MODO MENOR ARMÓNICO
     ═══════════════════════════
 
     Grados:   i    iiº   III   iv    V    VI   viiº
@@ -945,16 +945,104 @@ simulation
     ┌───────────────────────────────────────────────┐
     │  <span class="function-t">T</span>: i, III, VI  (más ambiguo que en mayor)    │
     │  <span class="function-s">S</span>: iv, iiº     (iv más oscuro que IV)        │
-    │  <span class="function-d">D</span>: V, viiº     (sensible DEBE resolver)       │
+    │  <span class="function-d">D</span>: V, viiº     (V SIEMPRE mayor: sensible→tónica) │
     └───────────────────────────────────────────────┘
 
-    Cadencia típica: i → iv → V → i
+    Cadencias típicas:
+    • Auténtica: V → i (70%)
+    • Plagal:    iv → i
+    • Deceptiva: V → VI (15%)
     </pre>
   </div>
 
+  <h3>Diferencias Clave vs. Modo Mayor</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Aspecto</th>
+        <th>Modo Mayor</th>
+        <th>Modo Menor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Tónica</td>
+        <td>I (mayor)</td>
+        <td>i (menor)</td>
+      </tr>
+      <tr>
+        <td>Subdominante</td>
+        <td>IV (mayor)</td>
+        <td>iv (menor, más oscuro)</td>
+      </tr>
+      <tr>
+        <td>Dominante</td>
+        <td>V (mayor)</td>
+        <td>V (mayor, sensible elevada)</td>
+      </tr>
+      <tr>
+        <td>Relativa</td>
+        <td>vi (menor)</td>
+        <td>VI (mayor, "puerto seguro")</td>
+      </tr>
+      <tr>
+        <td>Mediante</td>
+        <td>iii (menor)</td>
+        <td>III (mayor, relativo mayor)</td>
+      </tr>
+      <tr>
+        <td>Cadencia deceptiva</td>
+        <td>V → vi</td>
+        <td>V → VI (más luminoso)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>La Sensible en Modo Menor</h3>
+
+  <p>
+    El elemento crucial del modo menor armónico es la <strong>sensible elevada</strong>. En Do menor natural, el VII grado sería Si♭. Pero para crear la atracción dominante→tónica característica de la armonía funcional, elevamos este grado a Si♮:
+  </p>
+
+  <div class="diagram">
+    <pre>
+    Do menor NATURAL:   C  D  E♭  F  G  A♭  <strong>B♭</strong>  C
+                        ↑                      ↑
+                        tónica              VII sin atracción
+
+    Do menor ARMÓNICO:  C  D  E♭  F  G  A♭  <strong>B♮</strong>  C
+                        ↑                      ↑
+                        tónica              sensible (→ C)
+    </pre>
+  </div>
+
+  <p>
+    Esta elevación convierte el acorde v (menor) en <strong>V (mayor)</strong>, creando el mismo "tirón gravitacional" que en modo mayor. Es lo que hace que la cadencia V→i suene tan conclusiva.
+  </p>
+
+  <div class="note-box">
+    <strong>Implementación técnica:</strong><br>
+    En <code>CHORDS_MINOR</code>, el acorde V tiene <code>third: 11</code> (Si♮ en Do menor), no <code>third: 10</code> (Si♭). Esto garantiza que el acorde V siempre contenga la sensible, independientemente de la tonalidad seleccionada.
+  </div>
+
+  <h3>Matriz de Transiciones en Menor</h3>
+
+  <p>
+    Las probabilidades en modo menor difieren significativamente del mayor:
+  </p>
+
+  <ul>
+    <li><strong>V→i (70%):</strong> Resolución aún más fuerte que V→I</li>
+    <li><strong>V→VI (15%):</strong> Cadencia deceptiva hacia el relativo mayor</li>
+    <li><strong>iv→V (55%):</strong> Preparación de dominante desde subdominante menor</li>
+    <li><strong>VI→iv (30%):</strong> Descenso desde el "refugio" del relativo mayor</li>
+    <li><strong>viio→i (80%):</strong> Resolución de sensible similar al mayor</li>
+  </ul>
+
   <div class="note-box info">
-    <strong>¿Por qué es importante?</strong><br>
-    El modo menor representa aproximadamente el 40% del repertorio tonal occidental. Sin él, Rameau Machine no puede generar progresiones al estilo de Bach (Tocata en Re menor), Beethoven (Moonlight Sonata), o jazz standards como "Autumn Leaves".
+    <strong>¿Por qué importa el modo menor?</strong><br>
+    El modo menor representa aproximadamente el 40% del repertorio tonal occidental. Desde Bach (Tocata en Re menor) hasta Beethoven (Moonlight Sonata) y jazz standards como "Autumn Leaves", el modo menor es esencial para capturar la expresividad completa de la armonía funcional.
   </div>
 </section>
 
@@ -972,6 +1060,9 @@ simulation
     <li><strong>Patrones de bajo</strong> estilísticos (Alberti, Walking, Octavas)</li>
     <li><strong>Visualización interactiva</strong> incluyendo matriz de transiciones</li>
     <li><strong>Inyección de caos</strong> temporal para explorar lo inesperado</li>
+    <li><strong>Modo mayor y menor</strong> con matrices de transición específicas</li>
+    <li><strong>Micro-detune</strong> humanizador para evitar la frialdad digital</li>
+    <li><strong>Narrador pedagógico</strong> que explica cada movimiento armónico</li>
   </ul>
 
   <p>
