@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Orbifold Walker: Explorando la Geometria del Espacio de Acordes</title>
+  <link rel="stylesheet" href="paper-style.css" />
+  <style>
+    .epigraph {
+      font-style: italic;
+      text-align: right;
+      margin: 2rem 0;
+      padding-right: 2rem;
+      color: #555;
+    }
+    .epigraph-source {
+      font-size: 0.9em;
+      margin-top: 0.5rem;
+    }
+    .note-box {
+      background: #e0f2fe;
+      border-left: 3px solid #0284c7;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .note-box.warning {
+      background: #fef3c7;
+      border-left-color: #f59e0b;
+    }
+    .note-box.insight {
+      background: #f0fdf4;
+      border-left-color: #22c55e;
+    }
+    .diagram {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.85em;
+      background: #f8fafc;
+      padding: 1.5rem;
+      overflow-x: auto;
+      border-radius: 8px;
+      line-height: 1.5;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+    }
+    .highlight-quote {
+      font-size: 1.15em;
+      text-align: center;
+      padding: 1.5rem 2rem;
+      margin: 2rem 0;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-radius: 8px;
+      line-height: 1.6;
+    }
+    .coord-table td:first-child {
+      font-weight: 600;
+      font-family: 'Source Code Pro', monospace;
+      color: #0369a1;
+    }
+    .chord-type {
+      display: inline-block;
+      padding: 0.2em 0.6em;
+      border-radius: 4px;
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.9em;
+      margin: 0.1em;
+    }
+    .chord-major { background: #dcfce7; color: #166534; }
+    .chord-minor { background: #dbeafe; color: #1e40af; }
+    .chord-dim { background: #fee2e2; color: #991b1b; }
+    .chord-aug { background: #fef3c7; color: #92400e; }
+    .figure-caption {
+      font-size: 0.85em;
+      color: #64748b;
+      text-align: center;
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+    .math-block {
+      background: #fafafa;
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 4px;
+      text-align: center;
+      font-family: 'Times New Roman', serif;
+      font-size: 1.1em;
+    }
+    .interactive-hint {
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+      color: #e2e8f0;
+      padding: 1.5rem 2rem;
+      border-radius: 8px;
+      margin: 2rem 0;
+      text-align: center;
+    }
+    .interactive-hint a {
+      color: #60a5fa;
+    }
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .comparison-item {
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    .comparison-item.old {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+    .comparison-item.new {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+    }
+    .comparison-item h4 {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<header id="title-block-header">
+  <h1 class="title">Orbifold Walker: Explorando la Geometria del Espacio de Acordes</h1>
+  <p style="font-style: italic; color: #666;">De Euler a Tymoczko: 250 anos de geometria musical condensados en un prisma 3D</p>
+  <p style="font-size: 0.9rem; color: #666; margin-top: 1rem;">Diciembre 2024</p>
+</header>
+
+<nav id="TOC" role="doc-toc">
+  <strong>Contenidos</strong>
+  <ul>
+    <li><a href="#abstract">Resumen</a></li>
+    <li><a href="#introduccion">1. Introduccion: El problema del voicing</a></li>
+    <li><a href="#historia">2. Historia: De Euler a Tymoczko</a></li>
+    <li><a href="#geometria">3. La geometria del espacio de acordes</a></li>
+    <li><a href="#orbifold">4. Orbifolds: Topologia torcida</a></li>
+    <li><a href="#voice-leading">5. Voice leading como distancia</a></li>
+    <li><a href="#implementacion">6. Implementacion: El Walker</a></li>
+    <li><a href="#sonificacion">7. Sonificacion: Del espacio al sonido</a></li>
+    <li><a href="#emergencia">8. Lo que emerge</a></li>
+    <li><a href="#conclusiones">9. Conclusiones</a></li>
+    <li><a href="#referencias">Referencias</a></li>
+  </ul>
+</nav>
+
+<section id="abstract">
+  <h2>Resumen</h2>
+  <p>
+    Cuando tocamos un acorde de Do Mayor, podemos ordenar sus notas de muchas formas: Do-Mi-Sol, Mi-Sol-Do, Sol-Do-Mi... Cada ordenacion es un <em>voicing</em> diferente, y suena distinto. El teorico musical Dmitri Tymoczko demostro que todos los voicings posibles forman un espacio geometrico fascinante llamado <strong>orbifold</strong>: un prisma torcido donde los acordes consonantes habitan el centro y los extremos contienen clusters y unisonos.
+  </p>
+  <p>
+    Este articulo presenta un sistema donde una particula fisica explora ese espacio tridimensional. Al moverse, la particula genera voicings que mutan continuamente, produciendo texturas armonicas que no son ni aleatorias ni predeterminadas. Es musica que emerge de la geometria.
+  </p>
+  <p class="keywords"><strong>Palabras clave:</strong> orbifold, Tymoczko, voice leading, geometria musical, espacio de acordes, Three.js, Web Audio API</p>
+</section>
+
+<section id="introduccion">
+  <h2>1. Introduccion: El problema del voicing</h2>
+
+  <div class="epigraph">
+    "La musica es arquitectura liquida; la arquitectura es musica congelada."
+    <div class="epigraph-source">-- Johann Wolfgang von Goethe</div>
+  </div>
+
+  <p>
+    Imagina que eres pianista y debes tocar un acorde de Do Mayor. Parece simple: Do, Mi, Sol. Pero espera... hay que tomar decisiones:
+  </p>
+
+  <ul>
+    <li>Que nota va en el bajo? Do? O quizas Mi (primera inversion)?</li>
+    <li>En que octava? Do3-Mi3-Sol3? O Do3-Sol3-Mi4 (voicing abierto)?</li>
+    <li>Duplicamos alguna nota? Do3-Mi3-Sol3-Do4?</li>
+  </ul>
+
+  <p>
+    Estas decisiones definen el <strong>voicing</strong>: la disposicion vertical concreta de las notas. Un mismo acorde puede tener decenas de voicings, cada uno con su color y caracter.
+  </p>
+
+  <div class="comparison-grid">
+    <div class="comparison-item old">
+      <h4>Voicing cerrado</h4>
+      <p style="font-family: monospace; font-size: 1.2em; margin: 0;">Do3 - Mi3 - Sol3</p>
+      <p style="font-size: 0.85em; color: #666; margin: 0.5rem 0 0 0;">Compacto, denso, coral</p>
+    </div>
+    <div class="comparison-item new">
+      <h4>Voicing abierto</h4>
+      <p style="font-family: monospace; font-size: 1.2em; margin: 0;">Do2 - Sol3 - Mi4</p>
+      <p style="font-size: 0.85em; color: #666; margin: 0.5rem 0 0 0;">Espacioso, aereo, orquestal</p>
+    </div>
+  </div>
+
+  <p>
+    El problema es que la teoria musical tradicional habla de <em>acordes</em> (Do Mayor, La menor...) pero ignora sistematicamente los voicings. Es como si la arquitectura hablara de "casa" sin especificar si tiene un piso o diez.
+  </p>
+
+  <div class="note-box">
+    <strong>La pregunta central:</strong> Existe un espacio matematico donde cada punto represente un voicing especifico, no solo una clase de acorde? Y si existe... que forma tiene?
+  </div>
+</section>
+
+<section id="historia">
+  <h2>2. Historia: De Euler a Tymoczko</h2>
+
+  <h3>2.1 Euler y el Tonnetz (1739)</h3>
+
+  <p>
+    El matematico Leonhard Euler fue el primero en visualizar las relaciones musicales geometricamente. Su <em>Tonnetz</em> (red de tonos) organiza las notas en una cuadricula donde:
+  </p>
+
+  <ul>
+    <li>Horizontal: quintas justas (Do - Sol - Re - La...)</li>
+    <li>Diagonal: terceras mayores y menores</li>
+  </ul>
+
+  <p>
+    El Tonnetz es brillante para visualizar <em>clases de acordes</em>: Do Mayor es un triangulo, La menor es otro. Pero tiene un problema fundamental: <strong>no distingue voicings</strong>. Do3-Mi3-Sol3 y Do5-Mi6-Sol7 son el mismo punto.
+  </p>
+
+  <h3>2.2 El siglo XX: Intuiciones sin formalizacion</h3>
+
+  <p>
+    Compositores como Debussy, Ravel y los minimalistas (Reich, Glass) desarrollaron intuiciones sofisticadas sobre voice leading. Sabian que mover las voces por pasos pequenos creaba transiciones suaves. Pero no habia una teoria matematica que explicara <em>por que</em>.
+  </p>
+
+  <h3>2.3 Tymoczko (2006): La revolucion geometrica</h3>
+
+  <p>
+    En 2006, el teorico musical Dmitri Tymoczko publico un articulo revolucionario en <em>Science</em>: "The Geometry of Musical Chords". Por primera vez, demostro que:
+  </p>
+
+  <ol>
+    <li>Todos los voicings posibles de N notas forman un espacio geometrico bien definido</li>
+    <li>Ese espacio es un <strong>orbifold</strong>: un objeto topologico con bordes identificados y torsiones</li>
+    <li>El <strong>voice leading suave equivale a distancia corta</strong> en ese espacio</li>
+    <li>Los acordes consonantes (mayores, menores) habitan el <strong>centro</strong> del espacio</li>
+  </ol>
+
+  <div class="highlight-quote">
+    "Resulta que los compositores, durante siglos, han estado navegando intuitivamente por un espacio geometrico complejo sin saber que existia."
+    <br><span style="font-size: 0.85em; color: #666;">-- Dmitri Tymoczko</span>
+  </div>
+</section>
+
+<section id="geometria">
+  <h2>3. La geometria del espacio de acordes</h2>
+
+  <h3>3.1 Coordenadas para triadas</h3>
+
+  <p>
+    Para una triada (3 notas), el espacio de Tymoczko es tridimensional. Pero en vez de usar las notas directamente (Do, Mi, Sol), usamos coordenadas mas reveladoras:
+  </p>
+
+  <table class="coord-table">
+    <thead>
+      <tr><th>Coordenada</th><th>Significado</th><th>Rango</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>x</td>
+        <td>Centro tonal (promedio de las notas)</td>
+        <td>0-12 (ciclico)</td>
+      </tr>
+      <tr>
+        <td>y</td>
+        <td>Intervalo inferior (de nota baja a media)</td>
+        <td>0-6 semitonos</td>
+      </tr>
+      <tr>
+        <td>z</td>
+        <td>Intervalo superior (de nota media a alta)</td>
+        <td>0-6 semitonos</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    Esta transformacion es clave: separa la <strong>transposicion</strong> (eje x) de la <strong>estructura intervalica</strong> (ejes y, z).
+  </p>
+
+  <div class="math-block">
+    Triada (p1, p2, p3) con p1 &le; p2 &le; p3<br><br>
+    x = (p1 + p2 + p3) / 3 &nbsp;&nbsp; <em>(centro)</em><br>
+    y = p2 - p1 &nbsp;&nbsp; <em>(intervalo inferior)</em><br>
+    z = p3 - p2 &nbsp;&nbsp; <em>(intervalo superior)</em>
+  </div>
+
+  <h3>3.2 El prisma fundamental</h3>
+
+  <p>
+    Cuando graficamos todos los voicings posibles, obtenemos un <strong>prisma</strong>:
+  </p>
+
+  <div class="diagram">
+    <pre>
+                    Clusters (y=0, z=0)
+                         ●
+                        /|\
+                       / | \
+                      /  |  \
+                     /   |   \
+            Aug ●───/────●────\───● Dim
+           (4,4)  /    Centro   \   (3,3)
+                 /   (equilibrio) \
+                /         |        \
+               /          |         \
+              ●───────────●──────────●
+           Major        Minor
+           (4,3)        (3,4)
+
+    Eje X (hacia adentro): transposicion 0-12
+    Eje Y (izquierda-derecha): intervalo inferior 0-6
+    Eje Z (arriba-abajo): intervalo superior 0-6
+    </pre>
+  </div>
+  <p class="figure-caption">Figura 1: El prisma del espacio de triadas. Cada punto es un voicing unico.</p>
+
+  <h3>3.3 Geografia del prisma</h3>
+
+  <p>
+    Las diferentes regiones del prisma corresponden a tipos de acordes:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Posicion</th><th>Intervalos (y, z)</th><th>Tipo de acorde</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Centro geometrico</td>
+        <td>(4, 4)</td>
+        <td><span class="chord-type chord-aug">Aumentado</span> - maxima simetria</td>
+      </tr>
+      <tr>
+        <td>Region superior-izquierda</td>
+        <td>(4, 3)</td>
+        <td><span class="chord-type chord-major">Mayor</span></td>
+      </tr>
+      <tr>
+        <td>Region superior-derecha</td>
+        <td>(3, 4)</td>
+        <td><span class="chord-type chord-minor">Menor</span></td>
+      </tr>
+      <tr>
+        <td>Region inferior</td>
+        <td>(3, 3)</td>
+        <td><span class="chord-type chord-dim">Disminuido</span></td>
+      </tr>
+      <tr>
+        <td>Vertice superior</td>
+        <td>(0, 0)</td>
+        <td>Unisono (tres notas iguales)</td>
+      </tr>
+      <tr>
+        <td>Bordes extremos</td>
+        <td>(6, 0) o (0, 6)</td>
+        <td>Clusters y acordes extremos</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note-box insight">
+    <strong>Insight clave:</strong> Los acordes mas consonantes (mayores, menores) estan cerca del centro geometrico. Los acordes disonantes (clusters, segundas) estan en los bordes. La geometria codifica la consonancia!
+  </div>
+</section>
+
+<section id="orbifold">
+  <h2>4. Orbifolds: Topologia torcida</h2>
+
+  <h3>4.1 El problema de las permutaciones</h3>
+
+  <p>
+    Hay un problema sutil: el acorde Do-Mi-Sol es el mismo que Mi-Sol-Do o Sol-Do-Mi. Son permutaciones de las mismas notas. Si las tratamos como puntos diferentes, estamos triplicando (o mas) el espacio.
+  </p>
+
+  <p>
+    La solucion de Tymoczko es elegante: <strong>identificar los puntos equivalentes</strong>. Matematicamente, dividimos el espacio por el grupo de permutaciones. El resultado es un <em>orbifold</em>: un espacio con bordes "pegados" de formas no triviales.
+  </p>
+
+  <h3>4.2 El twist: donde la magia ocurre</h3>
+
+  <p>
+    En el orbifold de triadas, cuando una particula sale por un borde, reentra por el lado opuesto... pero <strong>transpuesta</strong>. Es como una banda de Mobius, pero en 3D.
+  </p>
+
+  <div class="diagram">
+    <pre>
+    Borde izquierdo (y=0)          Borde derecho (y=6)
+           |                              |
+           |   Particula sale --->        |
+           |                              |
+           |   <--- Reentra transpuesta   |
+           |        (x += 6 semitonos)    |
+           |                              |
+    </pre>
+  </div>
+
+  <p>
+    Este "twist" tiene consecuencias musicales fascinantes: cruzar un borde produce un <strong>salto de tritono</strong> en la transposicion. Es como un atajo entre tonalidades lejanas.
+  </p>
+
+  <h3>4.3 Analogia: El mundo de Pac-Man</h3>
+
+  <p>
+    Si has jugado Pac-Man, conoces el concepto: sales por la derecha y apareces por la izquierda. El orbifold es similar, pero con un giro (literalmente). No solo cambias de lado; cambias de orientacion.
+  </p>
+
+  <div class="note-box warning">
+    <strong>Complejidad:</strong> Visualizar un orbifold en nuestra mente es dificil. Por eso usamos Three.js para renderizarlo: podemos rotar, hacer zoom, y ver la particula navegando este espacio torcido.
+  </div>
+</section>
+
+<section id="voice-leading">
+  <h2>5. Voice leading como distancia</h2>
+
+  <h3>5.1 La revelacion geometrica</h3>
+
+  <p>
+    Aqui esta el resultado mas importante de Tymoczko:
+  </p>
+
+  <div class="highlight-quote">
+    <strong>El voice leading suave entre dos acordes es exactamente la distancia entre sus puntos en el orbifold.</strong>
+  </div>
+
+  <p>
+    Si quieres ir de Do Mayor a Sol Mayor moviendo las voces lo minimo posible, basta con encontrar el camino mas corto en el espacio geometrico.
+  </p>
+
+  <h3>5.2 Por que importa</h3>
+
+  <p>
+    Durante siglos, los compositores han buscado voice leadings suaves por intuicion. Ahora sabemos que estaban minimizando distancia en un espacio que no sabian que existia.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Transicion</th><th>Distancia geometrica</th><th>Sensacion musical</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Do Mayor - La menor</td>
+        <td>Muy corta (solo cambia una nota)</td>
+        <td>Suave, natural, "relativo"</td>
+      </tr>
+      <tr>
+        <td>Do Mayor - Do menor</td>
+        <td>Corta (un semitono)</td>
+        <td>Sutil cambio de color</td>
+      </tr>
+      <tr>
+        <td>Do Mayor - Fa# Mayor</td>
+        <td>Larga (tritono)</td>
+        <td>Dramatico, sorprendente</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>5.3 Implicaciones para nuestro walker</h3>
+
+  <p>
+    Si nuestra particula se mueve <strong>continuamente</strong> por el orbifold, los acordes que produce tendran voice leading <strong>infinitamente suave</strong>. No hay saltos; cada voicing fluye al siguiente.
+  </p>
+
+  <p>
+    Esto es imposible en un piano (las notas son discretas), pero perfectamente realizable con sintesis electronica. El resultado es un <strong>glissando armonico</strong>: acordes que mutan como liquido.
+  </p>
+</section>
+
+<section id="implementacion">
+  <h2>6. Implementacion: El Walker</h2>
+
+  <h3>6.1 El sistema fisico</h3>
+
+  <p>
+    La particula se mueve segun fisica newtoniana simple, con algunas fuerzas especiales:
+  </p>
+
+  <ul>
+    <li><strong>Atractores:</strong> Los acordes consonantes (Mayor, menor, dim, aug) ejercen atraccion gravitacional</li>
+    <li><strong>Friccion:</strong> Amortiguamiento para evitar velocidades infinitas</li>
+    <li><strong>Impulso inicial:</strong> El usuario lanza la particula con un click</li>
+  </ul>
+
+  <pre><code class="language-javascript">// Fuerza de cada atractor (Mayor, menor, dim, aug)
+for (const attractor of ATTRACTORS) {
+    const dy = attractor.y - walker.y;
+    const dz = attractor.z - walker.z;
+    const dist = Math.sqrt(dy*dy + dz*dz);
+
+    // Atraccion gravitacional
+    const strength = attractorForce / Math.max(dist*dist, 0.5);
+    ay += (dy / dist) * strength;
+    az += (dz / dist) * strength;
+}
+
+// Friccion
+ax -= vx * friction;
+ay -= vy * friction;
+az -= vz * friction;</code></pre>
+
+  <h3>6.2 Integracion RK4</h3>
+
+  <p>
+    Para precision numerica, usamos el metodo de Runge-Kutta de orden 4 (RK4). Esto es especialmente importante porque pequeños errores se acumulan y podrian destruir el comportamiento caotico.
+  </p>
+
+  <h3>6.3 Manejo de bordes (topologia)</h3>
+
+  <p>
+    Cuando la particula alcanza un borde del orbifold, aplicamos las reglas de identificacion:
+  </p>
+
+  <pre><code class="language-javascript">function wrapOrbifold(x, y, z, vx, vy, vz) {
+    // X es periodico (transposicion)
+    x = ((x % 12) + 12) % 12;
+
+    // Y y Z: reflexion con twist
+    if (y < 0) {
+        y = -y;                // Reflejar posicion
+        vy = -vy;              // Reflejar velocidad
+        x = (x + 6) % 12;      // Transponer tritono!
+    }
+    // ... similar para z y limites superiores
+
+    return { x, y, z, vx, vy, vz };
+}</code></pre>
+
+  <h3>6.4 Visualizacion Three.js</h3>
+
+  <p>
+    El orbifold se renderiza como un prisma semitransparente en Three.js:
+  </p>
+
+  <ul>
+    <li><strong>Walker:</strong> Esfera luminosa con glow</li>
+    <li><strong>Trail:</strong> Linea que muestra el recorrido reciente</li>
+    <li><strong>Atractores:</strong> Esferas coloreadas en los acordes consonantes</li>
+    <li><strong>OrbitControls:</strong> El usuario puede rotar la vista con mouse/touch</li>
+  </ul>
+</section>
+
+<section id="sonificacion">
+  <h2>7. Sonificacion: Del espacio al sonido</h2>
+
+  <h3>7.1 Conversion a frecuencias</h3>
+
+  <p>
+    Cada posicion en el orbifold se convierte a tres frecuencias usando:
+  </p>
+
+  <div class="math-block">
+    f = 440 * 2^((midi - 69) / 12) Hz
+  </div>
+
+  <p>
+    Donde <code>midi</code> se calcula invirtiendo las coordenadas del orbifold.
+  </p>
+
+  <h3>7.2 Modo Drone</h3>
+
+  <p>
+    Tres osciladores suenan continuamente. Cuando el walker se mueve, las frecuencias cambian con <strong>crossfade suave</strong>:
+  </p>
+
+  <pre><code class="language-javascript">// Crossfade suave entre voicings
+oscillators[i].frequency.linearRampToValueAtTime(
+    newFreq,
+    audioContext.currentTime + crossfadeTime
+);</code></pre>
+
+  <p>
+    El resultado es un drone que muta organicamente, como si el acorde respirara.
+  </p>
+
+  <h3>7.3 Modo Trigger</h3>
+
+  <p>
+    Alternativamente, el sonido solo se activa cuando el walker se acerca a un atractor. Cada acercamiento dispara un acorde con envolvente ADSR:
+  </p>
+
+  <ul>
+    <li><strong>Attack:</strong> 20ms (inicio rapido)</li>
+    <li><strong>Decay:</strong> 80ms (bajada inicial)</li>
+    <li><strong>Sustain:</strong> 50% (nivel mantenido)</li>
+    <li><strong>Release:</strong> 700ms (cola larga)</li>
+  </ul>
+
+  <h3>7.4 Efectos</h3>
+
+  <p>
+    La cadena de audio incluye:
+  </p>
+
+  <ol>
+    <li>Osciladores (sine, triangle, saw, square seleccionable)</li>
+    <li>Filtro lowpass (suaviza armónicos)</li>
+    <li>Delay con feedback (espacialidad)</li>
+    <li>Master gain (volumen global)</li>
+  </ol>
+</section>
+
+<section id="emergencia">
+  <h2>8. Lo que emerge</h2>
+
+  <h3>8.1 Comportamiento observado</h3>
+
+  <p>
+    Despues de muchas sesiones de experimentacion, emergen patrones fascinantes:
+  </p>
+
+  <ul>
+    <li><strong>Orbitas cuasi-periodicas:</strong> La particula tiende a orbitar ciertos atractores antes de escapar a otros</li>
+    <li><strong>Transiciones dramaticas:</strong> Cuando cruza un borde, el salto de tritono crea momentos de sorpresa armonica</li>
+    <li><strong>Zonas de estabilidad:</strong> Cerca de los atractores (acordes consonantes), el movimiento se ralentiza</li>
+    <li><strong>Texturas evolutivas:</strong> En modo drone, las armonias mutan como nubes que cambian de forma</li>
+  </ul>
+
+  <h3>8.2 Comparacion con Tonnetz Atractor</h3>
+
+  <table>
+    <thead>
+      <tr><th>Aspecto</th><th>Tonnetz Atractor</th><th>Orbifold Walker</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Espacio</td>
+        <td>2D discreto (triangulos)</td>
+        <td>3D continuo (prisma)</td>
+      </tr>
+      <tr>
+        <td>Acordes</td>
+        <td>Clases (Do Mayor, La menor...)</td>
+        <td>Voicings especificos</td>
+      </tr>
+      <tr>
+        <td>Movimiento</td>
+        <td>Saltos entre triangulos</td>
+        <td>Glissando continuo</td>
+      </tr>
+      <tr>
+        <td>Sonido</td>
+        <td>Acordes disparados</td>
+        <td>Drones que mutan</td>
+      </tr>
+      <tr>
+        <td>Teoria</td>
+        <td>Neo-Riemanniana (Riemann)</td>
+        <td>Geometria de acordes (Tymoczko)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>8.3 Lo que no es</h3>
+
+  <p>
+    Seamos honestos sobre las limitaciones:
+  </p>
+
+  <ul>
+    <li>No genera melodias (solo texturas armonicas)</li>
+    <li>No tiene estructura formal (intro, desarrollo, conclusion)</li>
+    <li>No "entiende" musica; solo navega geometria</li>
+    <li>Puede sonar abstracto o ambient para oidos no acostumbrados</li>
+  </ul>
+
+  <h3>8.4 Lo que si es</h3>
+
+  <div class="highlight-quote">
+    Una ventana a un espacio matematico que los compositores han explorado intuitivamente durante siglos, ahora hecho visible y audible.
+  </div>
+</section>
+
+<section id="conclusiones">
+  <h2>9. Conclusiones</h2>
+
+  <p>
+    El Orbifold Walker es un experimento en la frontera entre matematicas, fisica y musica. Demuestra que:
+  </p>
+
+  <ol>
+    <li><strong>Los voicings tienen geometria.</strong> No son arbitrarios; habitan un espacio con estructura.</li>
+    <li><strong>El voice leading es distancia.</strong> Siglos de intuicion compositiva se reducen a minimizar recorridos.</li>
+    <li><strong>La consonancia tiene ubicacion.</strong> Los acordes "bonitos" estan en el centro; los extremos, en los bordes.</li>
+    <li><strong>La topologia importa.</strong> Los bordes torcidos del orbifold crean conexiones inesperadas entre tonalidades.</li>
+  </ol>
+
+  <p>
+    Tymoczko escribio: "La geometria de la musica no es una metafora. Es literal." Este proyecto intenta hacer tangible esa literalidad.
+  </p>
+
+  <div class="interactive-hint">
+    <p style="margin: 0 0 1rem 0;"><strong>Prueba la demo interactiva</strong></p>
+    <p style="margin: 0; font-size: 0.95em;">
+      <a href="../../generativos/orbifold-walker/index.html">Orbifold Walker</a><br>
+      Click en el canvas para lanzar la particula. Arrastra para rotar el espacio 3D.
+    </p>
+  </div>
+
+  <p style="text-align: center; font-style: italic; margin-top: 2rem; color: #64748b;">
+    "La musica es la aritmetica de los sonidos,<br>
+    como la optica es la geometria de la luz."
+    <br><span style="font-size: 0.85em;">-- Claude Debussy</span>
+  </p>
+</section>
+
+<section id="referencias">
+  <h2>Referencias</h2>
+
+  <div class="references">
+    <p>[1] Tymoczko, D. (2006). "The Geometry of Musical Chords". <em>Science</em>, 313(5783), 72-74.</p>
+
+    <p>[2] Tymoczko, D. (2011). <em>A Geometry of Music: Harmony and Counterpoint in the Extended Common Practice</em>. Oxford University Press.</p>
+
+    <p>[3] Callender, C., Quinn, I., & Tymoczko, D. (2008). "Generalized Voice-Leading Spaces". <em>Science</em>, 320(5874), 346-348.</p>
+
+    <p>[4] Euler, L. (1739). <em>Tentamen novae theoriae musicae</em>. St. Petersburg Academy.</p>
+
+    <p>[5] Cohn, R. (1998). "Introduction to Neo-Riemannian Theory". <em>Journal of Music Theory</em>, 42(2), 167-180.</p>
+
+    <p>[6] Hook, J. (2002). "Uniform Triadic Transformations". <em>Journal of Music Theory</em>, 46(1/2), 57-126.</p>
+
+    <p>[7] Straus, J. N. (2005). <em>Introduction to Post-Tonal Theory</em>. Pearson Prentice Hall.</p>
+
+    <p>[8] Tymoczko, D. Website: <a href="https://dmitri.mycpanel.princeton.edu/">dmitri.mycpanel.princeton.edu</a></p>
+  </div>
+</section>
+
+<footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0; text-align: center; color: #666; font-size: 0.9em;">
+  <p>
+    Demo interactiva: <a href="../../generativos/orbifold-walker/index.html">Orbifold Walker</a>
+  </p>
+  <p>
+    Physics Sound Lab · 2024
+  </p>
+</footer>
+
+</body>
+</html>

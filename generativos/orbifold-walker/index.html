@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbifold Walker - Physics Sound Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --panel-bg: rgba(15, 15, 25, 0.9);
+            --accent: #60a5fa;
+            --accent-dim: #3b82f6;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--bg-dark);
+            color: #e2e8f0;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #container {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            height: 100vh;
+        }
+
+        header {
+            padding: 0.75rem 1.5rem;
+            background: var(--panel-bg);
+            border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin: 0;
+        }
+
+        header .subtitle {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        #canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        #three-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #info-overlay {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: var(--panel-bg);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            font-size: 0.8rem;
+        }
+
+        #info-overlay .chord-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        #info-overlay .chord-notes {
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+
+        #info-overlay .coords {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+
+        #controls {
+            background: var(--panel-bg);
+            border-top: 1px solid rgba(96, 165, 250, 0.2);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="range"] {
+            width: 80px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #1e293b;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        select, button {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        button:hover {
+            background: #334155;
+        }
+
+        button.active {
+            background: var(--accent);
+            color: #0a0a0f;
+            border-color: var(--accent);
+        }
+
+        button.recording {
+            background: #ef4444;
+            border-color: #ef4444;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .btn-group button {
+            border-radius: 0;
+        }
+
+        .btn-group button:first-child {
+            border-radius: 4px 0 0 4px;
+        }
+
+        .btn-group button:last-child {
+            border-radius: 0 4px 4px 0;
+        }
+
+        .value-display {
+            font-size: 0.7rem;
+            color: var(--accent);
+            min-width: 2rem;
+            text-align: right;
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            font-size: 0.65rem;
+            color: #64748b;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <header>
+            <div>
+                <h1>Orbifold Walker</h1>
+                <div class="subtitle">Tymoczko chord space explorer • Physics Sound Lab</div>
+            </div>
+            <div class="btn-group">
+                <button id="btn-start">▶ Start</button>
+                <button id="btn-reset">↺ Reset</button>
+                <button id="btn-record">● Rec</button>
+            </div>
+        </header>
+
+        <div id="canvas-container">
+            <canvas id="three-canvas"></canvas>
+
+            <div id="info-overlay">
+                <div class="chord-name" id="chord-name">C Major</div>
+                <div class="chord-notes" id="chord-notes">C - E - G</div>
+                <div class="coords" id="coords">x: 0.00  y: 4.00  z: 3.00</div>
+            </div>
+
+            <div id="instructions">
+                Click canvas to launch walker<br>
+                Drag to rotate view • Scroll to zoom
+            </div>
+        </div>
+
+        <div id="controls">
+            <div class="control-group">
+                <label>Mode</label>
+                <div class="btn-group">
+                    <button id="mode-drone" class="active">Drone</button>
+                    <button id="mode-trigger">Trigger</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Friction</label>
+                <input type="range" id="friction" min="0" max="0.05" step="0.001" value="0.01">
+                <span class="value-display" id="friction-val">0.01</span>
+            </div>
+
+            <div class="control-group">
+                <label>Force</label>
+                <input type="range" id="force" min="0.1" max="3" step="0.1" value="0.8">
+                <span class="value-display" id="force-val">0.8</span>
+            </div>
+
+            <div class="control-group">
+                <label>Speed</label>
+                <input type="range" id="speed" min="2" max="15" step="0.5" value="5">
+                <span class="value-display" id="speed-val">5.0</span>
+            </div>
+
+            <div class="control-group">
+                <label>Wave</label>
+                <select id="waveform">
+                    <option value="sine">Sine</option>
+                    <option value="triangle" selected>Triangle</option>
+                    <option value="sawtooth">Saw</option>
+                    <option value="square">Square</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Octave</label>
+                <input type="range" id="octave" min="2" max="5" step="1" value="3">
+                <span class="value-display" id="octave-val">3</span>
+            </div>
+
+            <div class="control-group">
+                <label>Crossfade</label>
+                <input type="range" id="crossfade" min="50" max="500" step="10" value="150">
+                <span class="value-display" id="crossfade-val">150</span>
+            </div>
+
+            <div class="control-group">
+                <label>View</label>
+                <div class="btn-group">
+                    <button id="view-prism" class="active">Prism</button>
+                    <button id="view-trail" class="active">Trail</button>
+                    <button id="view-auto">Auto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // ============================================================
+        // CONSTANTS & CONFIG
+        // ============================================================
+
+        const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const SCALE = 1; // Visual scale factor
+
+        // Attractor positions in orbifold space (interval coordinates)
+        const ATTRACTORS = [
+            { y: 4, z: 3, name: 'Major', color: 0x22c55e, symbol: 'M' },
+            { y: 3, z: 4, name: 'Minor', color: 0x3b82f6, symbol: 'm' },
+            { y: 3, z: 3, name: 'Dim', color: 0xef4444, symbol: '°' },
+            { y: 4, z: 4, name: 'Aug', color: 0xf59e0b, symbol: '+' }
+        ];
+
+        // Physics defaults
+        let friction = 0.01;
+        let attractorForce = 0.8;
+        let launchSpeed = 5;
+
+        // Audio settings
+        let audioMode = 'drone';
+        let waveform = 'triangle';
+        let baseOctave = 3;
+        let crossfadeTime = 0.15;
+
+        // View settings
+        let showPrism = true;
+        let showTrail = true;
+        let autoRotate = false;
+
+        // State
+        let isRunning = false;
+        let isRecording = false;
+        let audioContext = null;
+        let masterGain = null;
+        let oscillators = [];
+        let mediaRecorder = null;
+        let recordedChunks = [];
+
+        // ============================================================
+        // ORBIFOLD MATHEMATICS
+        // ============================================================
+
+        // Convert pitch classes to orbifold coordinates
+        // The orbifold for triads is a 3D prism where:
+        // x = transposition (sum/3 mod 12)
+        // y = lower interval (p2 - p1)
+        // z = upper interval (p3 - p2)
+        function triadToOrbifold(p1, p2, p3) {
+            // Sort to get canonical form (p1 ≤ p2 ≤ p3 in pitch space)
+            const sorted = [p1, p2, p3].sort((a, b) => a - b);
+
+            const x = (sorted[0] + sorted[1] + sorted[2]) / 3; // Center (0-12)
+            const y = sorted[1] - sorted[0]; // Lower interval
+            const z = sorted[2] - sorted[1]; // Upper interval
+
+            return { x, y, z };
+        }
+
+        // Convert orbifold position to pitch classes
+        function orbifoldToTriad(ox, oy, oz) {
+            // Given center x and intervals y, z, reconstruct pitches
+            const center = ((ox % 12) + 12) % 12;
+            const int1 = Math.max(0, Math.min(12, oy));
+            const int2 = Math.max(0, Math.min(12, oz));
+
+            // p1 + p2 + p3 = 3 * center
+            // p2 - p1 = int1
+            // p3 - p2 = int2
+            // Therefore: p1 = center - (int1 + int2) / 3
+            const p1 = center - (int1 + int2) / 3;
+            const p2 = p1 + int1;
+            const p3 = p2 + int2;
+
+            return [
+                ((p1 % 12) + 12) % 12,
+                ((p2 % 12) + 12) % 12,
+                ((p3 % 12) + 12) % 12
+            ];
+        }
+
+        // Handle orbifold topology (boundary conditions with twist)
+        function wrapOrbifold(x, y, z, vx, vy, vz) {
+            // X is periodic (transposition)
+            x = ((x % 12) + 12) % 12;
+
+            // Y and Z boundaries: reflect with transposition twist
+            if (y < 0) {
+                y = -y;
+                vy = -vy;
+                x = (x + 6) % 12; // Tritone transpose on reflection
+            }
+            if (y > 6) {
+                y = 12 - y;
+                vy = -vy;
+                x = (x + 6) % 12;
+            }
+
+            if (z < 0) {
+                z = -z;
+                vz = -vz;
+                x = (x + 6) % 12;
+            }
+            if (z > 6) {
+                z = 12 - z;
+                vz = -vz;
+                x = (x + 6) % 12;
+            }
+
+            // Additional constraint: y + z should not exceed 12 (invalid chord)
+            const sum = y + z;
+            if (sum > 12) {
+                const scale = 12 / sum;
+                y *= scale;
+                z *= scale;
+            }
+
+            return { x, y, z, vx, vy, vz };
+        }
+
+        // Get chord name from orbifold position
+        function getChordInfo(ox, oy, oz) {
+            const pitches = orbifoldToTriad(ox, oy, oz);
+            const rootIndex = Math.round(pitches[0]);
+            const root = NOTE_NAMES[rootIndex % 12];
+
+            // Determine chord quality from intervals
+            const int1 = Math.round(oy);
+            const int2 = Math.round(oz);
+
+            let quality = '';
+            let symbol = '';
+
+            if (int1 === 4 && int2 === 3) {
+                quality = 'Major';
+                symbol = '';
+            } else if (int1 === 3 && int2 === 4) {
+                quality = 'Minor';
+                symbol = 'm';
+            } else if (int1 === 3 && int2 === 3) {
+                quality = 'Diminished';
+                symbol = '°';
+            } else if (int1 === 4 && int2 === 4) {
+                quality = 'Augmented';
+                symbol = '+';
+            } else if (int1 === 2 && int2 === 5) {
+                quality = 'sus2';
+                symbol = 'sus2';
+            } else if (int1 === 5 && int2 === 2) {
+                quality = 'sus4';
+                symbol = 'sus4';
+            } else {
+                quality = `(${int1}+${int2})`;
+                symbol = quality;
+            }
+
+            const noteNames = pitches.map(p => NOTE_NAMES[Math.round(p) % 12]);
+
+            return {
+                name: `${root}${symbol}`,
+                fullName: `${root} ${quality}`,
+                notes: noteNames.join(' - '),
+                pitches: pitches
+            };
+        }
+
+        // ============================================================
+        // PHYSICS ENGINE (RK4)
+        // ============================================================
+
+        const walker = {
+            x: 4,    // Transposition coordinate
+            y: 4,    // Lower interval
+            z: 3,    // Upper interval
+            vx: 0,
+            vy: 0,
+            vz: 0,
+            trail: []
+        };
+
+        function computeAcceleration(x, y, z, vx, vy, vz) {
+            let ax = 0, ay = 0, az = 0;
+
+            // Attraction to consonant chord types (in y-z plane)
+            for (const attr of ATTRACTORS) {
+                const dy = attr.y - y;
+                const dz = attr.z - z;
+                const dist = Math.sqrt(dy * dy + dz * dz);
+
+                if (dist > 0.01) {
+                    // Inverse square attraction, capped at close range
+                    const strength = attractorForce / Math.max(dist * dist, 0.5);
+                    ay += (dy / dist) * strength;
+                    az += (dz / dist) * strength;
+                }
+            }
+
+            // Friction (velocity-dependent damping)
+            ax -= vx * friction * 10;
+            ay -= vy * friction * 10;
+            az -= vz * friction * 10;
+
+            // Small drift in x (transposition) based on y-z position
+            // Creates interesting harmonic progressions
+            ax += (y - z) * 0.01;
+
+            return { ax, ay, az };
+        }
+
+        function rk4Step(dt) {
+            const { x, y, z, vx, vy, vz } = walker;
+
+            // k1
+            const a1 = computeAcceleration(x, y, z, vx, vy, vz);
+            const k1 = {
+                dx: vx, dy: vy, dz: vz,
+                dvx: a1.ax, dvy: a1.ay, dvz: a1.az
+            };
+
+            // k2
+            const a2 = computeAcceleration(
+                x + k1.dx * dt/2, y + k1.dy * dt/2, z + k1.dz * dt/2,
+                vx + k1.dvx * dt/2, vy + k1.dvy * dt/2, vz + k1.dvz * dt/2
+            );
+            const k2 = {
+                dx: vx + k1.dvx * dt/2, dy: vy + k1.dvy * dt/2, dz: vz + k1.dvz * dt/2,
+                dvx: a2.ax, dvy: a2.ay, dvz: a2.az
+            };
+
+            // k3
+            const a3 = computeAcceleration(
+                x + k2.dx * dt/2, y + k2.dy * dt/2, z + k2.dz * dt/2,
+                vx + k2.dvx * dt/2, vy + k2.dvy * dt/2, vz + k2.dvz * dt/2
+            );
+            const k3 = {
+                dx: vx + k2.dvx * dt/2, dy: vy + k2.dvy * dt/2, dz: vz + k2.dvz * dt/2,
+                dvx: a3.ax, dvy: a3.ay, dvz: a3.az
+            };
+
+            // k4
+            const a4 = computeAcceleration(
+                x + k3.dx * dt, y + k3.dy * dt, z + k3.dz * dt,
+                vx + k3.dvx * dt, vy + k3.dvy * dt, vz + k3.dvz * dt
+            );
+            const k4 = {
+                dx: vx + k3.dvx * dt, dy: vy + k3.dvy * dt, dz: vz + k3.dvz * dt,
+                dvx: a4.ax, dvy: a4.ay, dvz: a4.az
+            };
+
+            // Combine
+            let newX = x + (k1.dx + 2*k2.dx + 2*k3.dx + k4.dx) * dt / 6;
+            let newY = y + (k1.dy + 2*k2.dy + 2*k3.dy + k4.dy) * dt / 6;
+            let newZ = z + (k1.dz + 2*k2.dz + 2*k3.dz + k4.dz) * dt / 6;
+            let newVx = vx + (k1.dvx + 2*k2.dvx + 2*k3.dvx + k4.dvx) * dt / 6;
+            let newVy = vy + (k1.dvy + 2*k2.dvy + 2*k3.dvy + k4.dvy) * dt / 6;
+            let newVz = vz + (k1.dvz + 2*k2.dvz + 2*k3.dvz + k4.dvz) * dt / 6;
+
+            // Apply orbifold topology
+            const wrapped = wrapOrbifold(newX, newY, newZ, newVx, newVy, newVz);
+
+            walker.x = wrapped.x;
+            walker.y = wrapped.y;
+            walker.z = wrapped.z;
+            walker.vx = wrapped.vx;
+            walker.vy = wrapped.vy;
+            walker.vz = wrapped.vz;
+
+            // Add to trail
+            walker.trail.push({ x: walker.x, y: walker.y, z: walker.z });
+            if (walker.trail.length > 500) walker.trail.shift();
+        }
+
+        // ============================================================
+        // THREE.JS SETUP
+        // ============================================================
+
+        const canvas = document.getElementById('three-canvas');
+        const container = document.getElementById('canvas-container');
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a0f);
+
+        const camera = new THREE.PerspectiveCamera(
+            60,
+            container.clientWidth / container.clientHeight,
+            0.1,
+            1000
+        );
+        camera.position.set(15, 12, 15);
+        camera.lookAt(6, 3, 3);
+
+        const renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            antialias: true
+        });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.target.set(6, 3, 3);
+        controls.update();
+
+        // ============================================================
+        // CREATE ORBIFOLD PRISM GEOMETRY
+        // ============================================================
+
+        // The orbifold for triads is a prism where:
+        // X axis = transposition (0-12, periodic)
+        // Y axis = lower interval (0-6)
+        // Z axis = upper interval (0-6)
+        // With constraint y + z ≤ 12
+
+        const prismGroup = new THREE.Group();
+        scene.add(prismGroup);
+
+        // Create wireframe box for the basic space
+        const boxGeometry = new THREE.BoxGeometry(12, 6, 6);
+        const boxEdges = new THREE.EdgesGeometry(boxGeometry);
+        const boxLine = new THREE.LineSegments(
+            boxEdges,
+            new THREE.LineBasicMaterial({ color: 0x3b82f6, opacity: 0.3, transparent: true })
+        );
+        boxLine.position.set(6, 3, 3);
+        prismGroup.add(boxLine);
+
+        // Grid on the floor (y=0, the unison/cluster plane)
+        const gridHelper = new THREE.GridHelper(12, 12, 0x1e3a5f, 0x1e3a5f);
+        gridHelper.rotation.x = 0;
+        gridHelper.position.set(6, 0, 3);
+        prismGroup.add(gridHelper);
+
+        // Axis labels
+        function createTextSprite(text, color = 0x60a5fa) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 128;
+            canvas.height = 64;
+            ctx.fillStyle = `#${color.toString(16).padStart(6, '0')}`;
+            ctx.font = 'bold 24px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, 64, 40);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+            const sprite = new THREE.Sprite(material);
+            sprite.scale.set(2, 1, 1);
+            return sprite;
+        }
+
+        const labelX = createTextSprite('Transposition (x)');
+        labelX.position.set(6, -1, -1);
+        prismGroup.add(labelX);
+
+        const labelY = createTextSprite('Lower Int (y)');
+        labelY.position.set(-1, 3, -1);
+        prismGroup.add(labelY);
+
+        const labelZ = createTextSprite('Upper Int (z)');
+        labelZ.position.set(-1, -1, 3);
+        prismGroup.add(labelZ);
+
+        // ============================================================
+        // ATTRACTOR MARKERS
+        // ============================================================
+
+        const attractorMeshes = [];
+
+        for (const attr of ATTRACTORS) {
+            // Sphere at each attractor position
+            const geometry = new THREE.SphereGeometry(0.25, 16, 16);
+            const material = new THREE.MeshBasicMaterial({
+                color: attr.color,
+                transparent: true,
+                opacity: 0.7
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+
+            // Position at all 12 transpositions (along x axis)
+            for (let tx = 0; tx < 12; tx += 3) {
+                const clone = mesh.clone();
+                clone.position.set(tx, attr.y, attr.z);
+                scene.add(clone);
+                attractorMeshes.push({ mesh: clone, attractor: attr });
+            }
+
+            // Label sprite
+            const label = createTextSprite(attr.name, attr.color);
+            label.position.set(6, attr.y + 0.5, attr.z + 0.5);
+            scene.add(label);
+        }
+
+        // ============================================================
+        // WALKER VISUALIZATION
+        // ============================================================
+
+        // Walker sphere (glowing)
+        const walkerGeometry = new THREE.SphereGeometry(0.35, 32, 32);
+        const walkerMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const walkerMesh = new THREE.Mesh(walkerGeometry, walkerMaterial);
+        walkerMesh.position.set(walker.x, walker.y, walker.z);
+        scene.add(walkerMesh);
+
+        // Glow effect (larger transparent sphere)
+        const glowGeometry = new THREE.SphereGeometry(0.6, 32, 32);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+            color: 0x60a5fa,
+            transparent: true,
+            opacity: 0.3
+        });
+        const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+        walkerMesh.add(glowMesh);
+
+        // Trail line
+        const trailGeometry = new THREE.BufferGeometry();
+        const trailPositions = new Float32Array(500 * 3);
+        trailGeometry.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+        const trailMaterial = new THREE.LineBasicMaterial({
+            color: 0x60a5fa,
+            transparent: true,
+            opacity: 0.6
+        });
+        const trailLine = new THREE.Line(trailGeometry, trailMaterial);
+        scene.add(trailLine);
+
+        // ============================================================
+        // AUDIO ENGINE
+        // ============================================================
+
+        function initAudio() {
+            if (audioContext) return;
+
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Master chain
+            masterGain = audioContext.createGain();
+            masterGain.gain.value = 0.3;
+
+            // Delay effect
+            const delay = audioContext.createDelay();
+            delay.delayTime.value = 0.3;
+            const delayGain = audioContext.createGain();
+            delayGain.gain.value = 0.2;
+
+            // Filter
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 2000;
+            filter.Q.value = 1;
+
+            // Routing
+            masterGain.connect(filter);
+            filter.connect(audioContext.destination);
+            filter.connect(delay);
+            delay.connect(delayGain);
+            delayGain.connect(audioContext.destination);
+
+            // Create 3 oscillators for triad
+            for (let i = 0; i < 3; i++) {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+
+                osc.type = waveform;
+                osc.frequency.value = 261.63; // C4
+                gain.gain.value = 0;
+
+                osc.connect(gain);
+                gain.connect(masterGain);
+                osc.start();
+
+                oscillators.push({ osc, gain });
+            }
+        }
+
+        function midiToFreq(midi) {
+            return 440 * Math.pow(2, (midi - 69) / 12);
+        }
+
+        function updateAudio() {
+            if (!audioContext || audioMode !== 'drone' || !isRunning) return;
+
+            const info = getChordInfo(walker.x, walker.y, walker.z);
+            const now = audioContext.currentTime;
+
+            info.pitches.forEach((pitch, i) => {
+                const midi = Math.round(pitch) + baseOctave * 12 + 12;
+                const freq = midiToFreq(midi);
+
+                oscillators[i].osc.frequency.linearRampToValueAtTime(
+                    freq,
+                    now + crossfadeTime
+                );
+                oscillators[i].gain.gain.linearRampToValueAtTime(
+                    0.8,
+                    now + crossfadeTime
+                );
+            });
+        }
+
+        let lastTriggerTime = 0;
+        const TRIGGER_COOLDOWN = 0.3;
+
+        function checkTrigger() {
+            if (audioMode !== 'trigger' || !audioContext || !isRunning) return;
+
+            const now = audioContext.currentTime;
+            if (now - lastTriggerTime < TRIGGER_COOLDOWN) return;
+
+            // Check proximity to any attractor
+            for (const attr of ATTRACTORS) {
+                const dy = attr.y - walker.y;
+                const dz = attr.z - walker.z;
+                const dist = Math.sqrt(dy * dy + dz * dz);
+
+                if (dist < 0.5) {
+                    triggerChord();
+                    lastTriggerTime = now;
+                    break;
+                }
+            }
+        }
+
+        function triggerChord() {
+            if (!audioContext) return;
+
+            const info = getChordInfo(walker.x, walker.y, walker.z);
+            const now = audioContext.currentTime;
+
+            // ADSR envelope for each note
+            info.pitches.forEach((pitch, i) => {
+                const midi = Math.round(pitch) + baseOctave * 12 + 12;
+                const freq = midiToFreq(midi);
+
+                oscillators[i].osc.frequency.setValueAtTime(freq, now);
+                oscillators[i].gain.gain.cancelScheduledValues(now);
+                oscillators[i].gain.gain.setValueAtTime(0, now);
+                oscillators[i].gain.gain.linearRampToValueAtTime(0.8, now + 0.02);
+                oscillators[i].gain.gain.exponentialRampToValueAtTime(0.4, now + 0.1);
+                oscillators[i].gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+            });
+        }
+
+        function setDroneVolume(vol) {
+            if (!audioContext) return;
+            const now = audioContext.currentTime;
+            oscillators.forEach(o => {
+                o.gain.gain.linearRampToValueAtTime(vol, now + 0.1);
+            });
+        }
+
+        // ============================================================
+        // RECORDING
+        // ============================================================
+
+        function startRecording() {
+            if (!audioContext || isRecording) return;
+
+            const dest = audioContext.createMediaStreamDestination();
+            masterGain.connect(dest);
+
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm')
+                ? 'audio/webm'
+                : 'audio/mp4';
+
+            mediaRecorder = new MediaRecorder(dest.stream, { mimeType });
+            recordedChunks = [];
+
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `orbifold-walker-${Date.now()}.${mimeType.split('/')[1]}`;
+                a.click();
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            document.getElementById('btn-record').classList.add('recording');
+            document.getElementById('btn-record').textContent = '■ Stop';
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                document.getElementById('btn-record').classList.remove('recording');
+                document.getElementById('btn-record').textContent = '● Rec';
+            }
+        }
+
+        // ============================================================
+        // UI CONTROLS
+        // ============================================================
+
+        // Sliders
+        const sliders = ['friction', 'force', 'speed', 'octave', 'crossfade'];
+        sliders.forEach(id => {
+            const slider = document.getElementById(id);
+            const display = document.getElementById(`${id}-val`);
+
+            slider.addEventListener('input', () => {
+                const val = parseFloat(slider.value);
+                display.textContent = val.toFixed(id === 'friction' ? 3 : id === 'crossfade' ? 0 : 1);
+
+                if (id === 'friction') friction = val;
+                if (id === 'force') attractorForce = val;
+                if (id === 'speed') launchSpeed = val;
+                if (id === 'octave') baseOctave = val;
+                if (id === 'crossfade') crossfadeTime = val / 1000;
+            });
+        });
+
+        // Waveform
+        document.getElementById('waveform').addEventListener('change', e => {
+            waveform = e.target.value;
+            oscillators.forEach(o => {
+                o.osc.type = waveform;
+            });
+        });
+
+        // Mode toggle
+        document.getElementById('mode-drone').addEventListener('click', () => {
+            audioMode = 'drone';
+            document.getElementById('mode-drone').classList.add('active');
+            document.getElementById('mode-trigger').classList.remove('active');
+            if (isRunning) setDroneVolume(0.8);
+        });
+
+        document.getElementById('mode-trigger').addEventListener('click', () => {
+            audioMode = 'trigger';
+            document.getElementById('mode-trigger').classList.add('active');
+            document.getElementById('mode-drone').classList.remove('active');
+            setDroneVolume(0);
+        });
+
+        // View toggles
+        document.getElementById('view-prism').addEventListener('click', e => {
+            showPrism = !showPrism;
+            e.target.classList.toggle('active', showPrism);
+            prismGroup.visible = showPrism;
+        });
+
+        document.getElementById('view-trail').addEventListener('click', e => {
+            showTrail = !showTrail;
+            e.target.classList.toggle('active', showTrail);
+            trailLine.visible = showTrail;
+        });
+
+        document.getElementById('view-auto').addEventListener('click', e => {
+            autoRotate = !autoRotate;
+            e.target.classList.toggle('active', autoRotate);
+            controls.autoRotate = autoRotate;
+            controls.autoRotateSpeed = 0.5;
+        });
+
+        // Start/Stop
+        document.getElementById('btn-start').addEventListener('click', () => {
+            initAudio();
+            isRunning = !isRunning;
+
+            const btn = document.getElementById('btn-start');
+            btn.textContent = isRunning ? '⏸ Pause' : '▶ Start';
+            btn.classList.toggle('active', isRunning);
+
+            if (isRunning && audioMode === 'drone') {
+                setDroneVolume(0.8);
+            } else {
+                setDroneVolume(0);
+            }
+        });
+
+        // Reset
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            walker.x = 4;
+            walker.y = 4;
+            walker.z = 3;
+            walker.vx = 0;
+            walker.vy = 0;
+            walker.vz = 0;
+            walker.trail = [];
+        });
+
+        // Record
+        document.getElementById('btn-record').addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                initAudio();
+                startRecording();
+            }
+        });
+
+        // Canvas click to launch
+        canvas.addEventListener('click', e => {
+            initAudio();
+
+            // Random launch direction
+            const angle1 = Math.random() * Math.PI * 2;
+            const angle2 = Math.random() * Math.PI - Math.PI / 2;
+
+            walker.vx = Math.cos(angle1) * Math.cos(angle2) * launchSpeed;
+            walker.vy = Math.sin(angle1) * Math.cos(angle2) * launchSpeed;
+            walker.vz = Math.sin(angle2) * launchSpeed;
+
+            if (!isRunning) {
+                isRunning = true;
+                document.getElementById('btn-start').textContent = '⏸ Pause';
+                document.getElementById('btn-start').classList.add('active');
+                if (audioMode === 'drone') setDroneVolume(0.8);
+            }
+        });
+
+        // ============================================================
+        // ANIMATION LOOP
+        // ============================================================
+
+        const dt = 1/60;
+
+        function updateInfoDisplay() {
+            const info = getChordInfo(walker.x, walker.y, walker.z);
+            document.getElementById('chord-name').textContent = info.fullName;
+            document.getElementById('chord-notes').textContent = info.notes;
+            document.getElementById('coords').textContent =
+                `x: ${walker.x.toFixed(2)}  y: ${walker.y.toFixed(2)}  z: ${walker.z.toFixed(2)}`;
+        }
+
+        function updateTrailGeometry() {
+            const positions = trailLine.geometry.attributes.position.array;
+            const trail = walker.trail;
+
+            for (let i = 0; i < trail.length; i++) {
+                positions[i * 3] = trail[i].x;
+                positions[i * 3 + 1] = trail[i].y;
+                positions[i * 3 + 2] = trail[i].z;
+            }
+
+            // Clear unused positions
+            for (let i = trail.length; i < 500; i++) {
+                positions[i * 3] = positions[i * 3 + 1] = positions[i * 3 + 2] = 0;
+            }
+
+            trailLine.geometry.attributes.position.needsUpdate = true;
+            trailLine.geometry.setDrawRange(0, trail.length);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (isRunning) {
+                // Physics step
+                rk4Step(dt);
+
+                // Update visuals
+                walkerMesh.position.set(walker.x, walker.y, walker.z);
+                updateTrailGeometry();
+                updateInfoDisplay();
+
+                // Audio
+                updateAudio();
+                checkTrigger();
+
+                // Glow pulse
+                const speed = Math.sqrt(walker.vx*walker.vx + walker.vy*walker.vy + walker.vz*walker.vz);
+                glowMaterial.opacity = 0.2 + Math.min(speed * 0.05, 0.4);
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        // Initial state
+        updateInfoDisplay();
+        animate();
+    </script>
+</body>
+</html>

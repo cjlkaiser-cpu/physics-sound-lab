@@ -188,6 +188,45 @@
             </div>
         </section>
 
+        <!-- Orbifold Walker -->
+        <section class="card bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border border-blue-500/30 rounded-2xl p-8 mb-8">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <div class="flex-1">
+                    <span class="text-blue-400 text-sm font-medium tracking-wide">ORBIFOLD WALKER</span>
+                    <h2 class="text-3xl font-light mt-2 mb-4">
+                        <span class="text-blue-400 font-medium">Tymoczko Chord Space</span>
+                    </h2>
+                    <p class="text-gray-400 mb-6">
+                        Exploracion del espacio de orbifolds de Dmitri Tymoczko. Una particula se mueve
+                        en el prisma 3D donde cada punto representa un voicing concreto de triada.
+                        Los acordes consonantes (mayor, menor, dim, aug) actuan como atractores.
+                        Voice leading suave = distancia corta en el espacio geometrico.
+                    </p>
+
+                    <div class="flex flex-wrap gap-3 mb-6">
+                        <span class="px-3 py-1 bg-blue-500/10 text-blue-400/80 rounded-full text-sm">Tymoczko</span>
+                        <span class="px-3 py-1 bg-blue-500/10 text-blue-400/80 rounded-full text-sm">Three.js 3D</span>
+                        <span class="px-3 py-1 bg-blue-500/10 text-blue-400/80 rounded-full text-sm">Orbifold T³/S₃</span>
+                        <span class="px-3 py-1 bg-blue-500/10 text-blue-400/80 rounded-full text-sm">Drone/Trigger</span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3">
+                        <a href="orbifold-walker/index.html"
+                           class="variant-btn px-5 py-2.5 bg-blue-500 text-gray-900 rounded-lg font-medium hover:bg-blue-400">
+                            ▶ Demo
+                        </a>
+                        <a href="../papers/paper-orbifold-walker/ARTICLE_v1.html" target="_blank"
+                           class="variant-btn px-5 py-2.5 bg-gray-800 text-gray-200 rounded-lg font-medium hover:bg-gray-700">
+                            Articulo
+                        </a>
+                    </div>
+                </div>
+                <div class="lg:w-72">
+                    <canvas id="preview-orbifold" class="w-full h-48 bg-gray-950 rounded-xl"></canvas>
+                </div>
+            </div>
+        </section>
+
         <!-- Cadencia Orbital -->
         <section class="card bg-gradient-to-r from-cyan-900/20 to-green-900/20 border border-cyan-500/30 rounded-2xl p-8 mb-8">
             <div class="flex flex-col lg:flex-row gap-8">
@@ -232,10 +271,12 @@
             <h3 class="text-lg font-medium mb-4 text-gray-500">Tecnologias</h3>
             <div class="flex flex-wrap justify-center gap-3">
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Canvas 2D</span>
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Three.js</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Web Audio API</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">FFT Analyser</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Ecuaciones de Kepler</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Neo-Riemannian Theory</span>
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Tymoczko Orbifolds</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Sistemas caoticos</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">RK4 Integration</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">MediaRecorder</span>
@@ -285,6 +326,17 @@
                     h: cadencia.height = cadencia.offsetHeight * 2,
                     trail1: [],
                     trail2: []
+                };
+            }
+
+            // Orbifold Walker
+            const orbifold = document.getElementById('preview-orbifold');
+            if (orbifold) {
+                previews.orbifold = {
+                    ctx: orbifold.getContext('2d'),
+                    w: orbifold.width = orbifold.offsetWidth * 2,
+                    h: orbifold.height = orbifold.offsetHeight * 2,
+                    trail: []
                 };
             }
         }
@@ -485,6 +537,92 @@
                 c.ctx.beginPath();
                 c.ctx.arc(p2x, p2y, 6, 0, Math.PI * 2);
                 c.ctx.fill();
+            }
+
+            // Orbifold Walker preview (3D prism projection)
+            if (previews.orbifold) {
+                const o = previews.orbifold;
+                o.ctx.fillStyle = '#030712';
+                o.ctx.fillRect(0, 0, o.w, o.h);
+
+                const cx = o.w / 2, cy = o.h / 2;
+
+                // Draw 3D prism (isometric projection)
+                const scale = 8;
+                const offsetX = -30, offsetY = 20;
+
+                // Project 3D to 2D (simple isometric)
+                function project(x, y, z) {
+                    return {
+                        x: cx + (x - z * 0.5) * scale + offsetX,
+                        y: cy + (y * 0.8 - z * 0.3 - x * 0.2) * scale + offsetY
+                    };
+                }
+
+                // Prism edges (12x6x6 box)
+                const edges = [
+                    [[0,0,0], [12,0,0]], [[0,6,0], [12,6,0]], [[0,0,6], [12,0,6]], [[0,6,6], [12,6,6]],
+                    [[0,0,0], [0,6,0]], [[12,0,0], [12,6,0]], [[0,0,6], [0,6,6]], [[12,0,6], [12,6,6]],
+                    [[0,0,0], [0,0,6]], [[12,0,0], [12,0,6]], [[0,6,0], [0,6,6]], [[12,6,0], [12,6,6]]
+                ];
+
+                o.ctx.strokeStyle = '#3b82f640';
+                o.ctx.lineWidth = 1;
+                edges.forEach(([a, b]) => {
+                    const p1 = project(a[0], a[1], a[2]);
+                    const p2 = project(b[0], b[1], b[2]);
+                    o.ctx.beginPath();
+                    o.ctx.moveTo(p1.x, p1.y);
+                    o.ctx.lineTo(p2.x, p2.y);
+                    o.ctx.stroke();
+                });
+
+                // Attractor positions (Major, Minor, Dim, Aug at different x)
+                const attractors = [
+                    { x: 3, y: 4, z: 3, color: '#22c55e' },  // Major
+                    { x: 6, y: 3, z: 4, color: '#3b82f6' },  // Minor
+                    { x: 9, y: 3, z: 3, color: '#ef4444' },  // Dim
+                    { x: 6, y: 4, z: 4, color: '#f59e0b' }   // Aug
+                ];
+
+                attractors.forEach(a => {
+                    const p = project(a.x, a.y, a.z);
+                    o.ctx.fillStyle = a.color;
+                    o.ctx.beginPath();
+                    o.ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                    o.ctx.fill();
+                });
+
+                // Walker position (chaotic orbit in 3D)
+                const wx = 6 + 4 * Math.sin(time * 1.7);
+                const wy = 3.5 + 1.5 * Math.sin(time * 2.3) * Math.cos(time * 1.1);
+                const wz = 3.5 + 1.5 * Math.cos(time * 1.9);
+
+                const wp = project(wx, wy, wz);
+                o.trail.push({ x: wp.x, y: wp.y });
+                if (o.trail.length > 60) o.trail.shift();
+
+                // Trail
+                o.ctx.beginPath();
+                o.trail.forEach((p, i) => {
+                    if (i === 0) o.ctx.moveTo(p.x, p.y);
+                    else o.ctx.lineTo(p.x, p.y);
+                });
+                o.ctx.strokeStyle = '#60a5fa50';
+                o.ctx.lineWidth = 2;
+                o.ctx.stroke();
+
+                // Walker
+                o.ctx.fillStyle = '#ffffff';
+                o.ctx.beginPath();
+                o.ctx.arc(wp.x, wp.y, 7, 0, Math.PI * 2);
+                o.ctx.fill();
+
+                // Glow
+                o.ctx.fillStyle = '#60a5fa40';
+                o.ctx.beginPath();
+                o.ctx.arc(wp.x, wp.y, 12, 0, Math.PI * 2);
+                o.ctx.fill();
             }
 
             requestAnimationFrame(animate);
