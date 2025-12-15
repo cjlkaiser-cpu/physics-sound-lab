@@ -575,6 +575,14 @@
                 alto:    { min: 55, max: 74 },
                 soprano: { min: 60, max: 81 }
             };
+            // Centros ideales para cada voz (registro más resonante)
+            this.voiceCenters = {
+                bass:    48,  // C3
+                tenor:   52,  // E3
+                alto:    64,  // E4
+                soprano: 72   // C5
+            };
+            this.centerPenaltyWeight = 0.15; // Peso de la penalización por alejarse del centro
             this.style = 'clasico';
         }
 
@@ -617,10 +625,27 @@
             if (valid.length === 0) valid = candidates;
             if (valid.length === 0) return null;
 
+            const centers = [
+                this.voiceCenters.bass,
+                this.voiceCenters.tenor,
+                this.voiceCenters.alto,
+                this.voiceCenters.soprano
+            ];
+
             return valid.reduce((best, candidate) => {
-                const distance = this.totalVoiceDistance(this.voices, candidate);
-                return distance < best.distance ? { voicing: candidate, distance } : best;
-            }, { voicing: null, distance: Infinity }).voicing;
+                // Costo por movimiento de voces (voice leading)
+                const movementCost = this.totalVoiceDistance(this.voices, candidate);
+
+                // Costo por alejarse del centro ideal (mantiene voces en registro resonante)
+                const centerCost = candidate.reduce((sum, note, i) => {
+                    return sum + Math.abs(note - centers[i]);
+                }, 0);
+
+                // Costo total: movimiento + penalización por alejarse del centro
+                const totalCost = movementCost + (centerCost * this.centerPenaltyWeight);
+
+                return totalCost < best.cost ? { voicing: candidate, cost: totalCost } : best;
+            }, { voicing: null, cost: Infinity }).voicing;
         }
 
         generateVoicings(pitchClasses, bassNote) {
@@ -1280,27 +1305,43 @@
                 .attr('stroke-width', 3);
         }
 
-        showProbabilities(fromChord) {
-            const probs = DETAILED_TRANSITIONS[fromChord];
+        showProbabilities(fromChord, modifiedProbs = null) {
+            // Usa probabilidades modificadas por gravedad si se pasan, si no las base
+            const probs = modifiedProbs || DETAILED_TRANSITIONS[fromChord];
 
             this.arcGroup.selectAll('*').remove();
 
             const fromNode = this.nodes.find(n => n.id === fromChord);
 
+            // Encontrar la probabilidad máxima para escalar
+            const maxProb = Math.max(...Object.values(probs));
+
             for (const [toChord, prob] of Object.entries(probs)) {
-                if (prob < 0.05) continue;
+                if (prob < 0.03) continue;
                 const toNode = this.nodes.find(n => n.id === toChord);
                 if (!toNode || toChord === fromChord) continue;
+
+                // Normalizar para que la línea más probable sea muy visible
+                const normalizedProb = prob / maxProb;
+
+                // Grosor: 1-8px según probabilidad
+                const strokeWidth = 1 + normalizedProb * 7;
+
+                // Opacidad: más alta = más visible
+                const strokeOpacity = 0.15 + normalizedProb * 0.7;
+
+                // Color más saturado para alta probabilidad
+                const baseColor = FUNCTION_COLORS[CHORDS[toChord].function];
 
                 this.arcGroup.append('line')
                     .attr('x1', fromNode.x)
                     .attr('y1', fromNode.y)
                     .attr('x2', toNode.x)
                     .attr('y2', toNode.y)
-                    .attr('stroke', FUNCTION_COLORS[CHORDS[toChord].function])
-                    .attr('stroke-width', 1 + prob * 4)
-                    .attr('stroke-opacity', 0.2 + prob * 0.6)
-                    .attr('stroke-dasharray', '4,4');
+                    .attr('stroke', baseColor)
+                    .attr('stroke-width', strokeWidth)
+                    .attr('stroke-opacity', strokeOpacity)
+                    .attr('stroke-dasharray', normalizedProb > 0.5 ? 'none' : '4,4');
             }
         }
 
@@ -1707,6 +1748,9 @@
 
             // Update label
             document.getElementById('currentChordLabel').textContent = currentChord;
+
+            // Actualizar visualización con líneas proporcionales a probabilidad
+            this.viz.showProbabilities(currentChord, probs);
 
             // Sort by probability descending
             const sorted = Object.entries(probs).sort((a, b) => b[1] - a[1]);
