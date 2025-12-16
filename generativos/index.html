@@ -309,8 +309,43 @@
             </div>
         </section>
 
+        <!-- Chromatic Emission -->
+        <section class="card bg-gradient-to-r from-cyan-900/20 to-indigo-900/20 border border-cyan-500/30 rounded-2xl p-8 mb-8">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <div class="flex-1">
+                    <span class="text-cyan-400 text-sm font-medium tracking-wide">CHROMATIC EMISSION</span>
+                    <h2 class="text-3xl font-light mt-2 mb-4">
+                        <span class="text-cyan-400 font-medium">Modelo de Bohr Musical</span>
+                    </h2>
+                    <p class="text-gray-400 mb-6">
+                        Fusion de Pitch-Class Set Theory + Modelo de Bohr. Las notas son electrones orbitando
+                        un nucleo armonico. Cuando saltan entre acordes, emiten fotones cuyo color depende
+                        del intervalo: semitonos emiten rojo (baja energia), quintas emiten azul (alta energia).
+                        ΔE = hν se convierte en ΔPitch = Intervalo.
+                    </p>
+
+                    <div class="flex flex-wrap gap-3 mb-6">
+                        <span class="px-3 py-1 bg-cyan-500/10 text-cyan-400/80 rounded-full text-sm">Bohr Model</span>
+                        <span class="px-3 py-1 bg-cyan-500/10 text-cyan-400/80 rounded-full text-sm">Photon Intervals</span>
+                        <span class="px-3 py-1 bg-cyan-500/10 text-cyan-400/80 rounded-full text-sm">Voice Leading</span>
+                        <span class="px-3 py-1 bg-cyan-500/10 text-cyan-400/80 rounded-full text-sm">Spectrum Analyzer</span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3">
+                        <a href="chromatic-emission/index.html"
+                           class="variant-btn px-5 py-2.5 bg-cyan-500 text-gray-900 rounded-lg font-medium hover:bg-cyan-400">
+                            ▶ Demo
+                        </a>
+                    </div>
+                </div>
+                <div class="lg:w-72">
+                    <canvas id="preview-chromatic" class="w-full h-48 bg-gray-950 rounded-xl"></canvas>
+                </div>
+            </div>
+        </section>
+
         <!-- Cadencia Orbital -->
-        <section class="card bg-gradient-to-r from-cyan-900/20 to-green-900/20 border border-cyan-500/30 rounded-2xl p-8 mb-8">
+        <section class="card bg-gradient-to-r from-green-900/20 to-teal-900/20 border border-green-500/30 rounded-2xl p-8 mb-8">
             <div class="flex flex-col lg:flex-row gap-8">
                 <div class="flex-1">
                     <span class="text-cyan-400 text-sm font-medium tracking-wide">CADENCIA ORBITAL</span>
@@ -366,6 +401,8 @@
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Markov Chains</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Pitch-Class Sets</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Allen Forte Theory</span>
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Bohr Model</span>
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Photon Emission</span>
             </div>
         </section>
     </main>
@@ -446,6 +483,18 @@
                     w: setclass.width = setclass.offsetWidth * 2,
                     h: setclass.height = setclass.offsetHeight * 2,
                     trail: []
+                };
+            }
+
+            // Chromatic Emission
+            const chromatic = document.getElementById('preview-chromatic');
+            if (chromatic) {
+                previews.chromatic = {
+                    ctx: chromatic.getContext('2d'),
+                    w: chromatic.width = chromatic.offsetWidth * 2,
+                    h: chromatic.height = chromatic.offsetHeight * 2,
+                    photons: [],
+                    electrons: []
                 };
             }
         }
@@ -890,6 +939,113 @@
                 r.ctx.fillText('T', cx, cy + 30);
                 r.ctx.fillText('D', cx + 50, cy);
                 r.ctx.fillText('S', cx, cy - 80);
+            }
+
+            // Chromatic Emission preview (Bohr atom with photons)
+            if (previews.chromatic) {
+                const ch = previews.chromatic;
+                ch.ctx.fillStyle = '#020617';
+                ch.ctx.fillRect(0, 0, ch.w, ch.h);
+
+                const cx = ch.w / 2, cy = ch.h / 2;
+                const atomRadius = 50;
+
+                // Draw orbital rings
+                for (let i = 1; i <= 3; i++) {
+                    ch.ctx.strokeStyle = `rgba(34, 211, 238, ${0.1 * i})`;
+                    ch.ctx.lineWidth = 1;
+                    ch.ctx.setLineDash([2, 4]);
+                    ch.ctx.beginPath();
+                    ch.ctx.arc(cx, cy, atomRadius * (i / 3), 0, Math.PI * 2);
+                    ch.ctx.stroke();
+                    ch.ctx.setLineDash([]);
+                }
+
+                // Nucleus
+                const nucleusGrad = ch.ctx.createRadialGradient(cx, cy, 0, cx, cy, 18);
+                nucleusGrad.addColorStop(0, '#fff');
+                nucleusGrad.addColorStop(0.4, '#22d3ee');
+                nucleusGrad.addColorStop(1, '#0891b2');
+                ch.ctx.fillStyle = nucleusGrad;
+                ch.ctx.beginPath();
+                ch.ctx.arc(cx, cy, 15, 0, Math.PI * 2);
+                ch.ctx.fill();
+
+                // Electrons (notes) orbiting
+                const notes = [0, 4, 7]; // Major triad positions
+                notes.forEach((note, i) => {
+                    const baseAngle = (note / 12) * Math.PI * 2 - Math.PI / 2;
+                    const wobble = Math.sin(time * (0.5 + i * 0.1)) * 0.05;
+                    const angle = baseAngle + wobble + time * 0.3;
+                    const dist = atomRadius * 0.7;
+
+                    const ex = cx + Math.cos(angle) * dist;
+                    const ey = cy + Math.sin(angle) * dist;
+
+                    // Electron glow
+                    ch.ctx.fillStyle = 'rgba(34, 211, 238, 0.3)';
+                    ch.ctx.beginPath();
+                    ch.ctx.arc(ex, ey, 10, 0, Math.PI * 2);
+                    ch.ctx.fill();
+
+                    // Electron
+                    ch.ctx.fillStyle = '#22d3ee';
+                    ch.ctx.beginPath();
+                    ch.ctx.arc(ex, ey, 6, 0, Math.PI * 2);
+                    ch.ctx.fill();
+                });
+
+                // Emit photons periodically
+                if (Math.random() < 0.03) {
+                    const emitAngle = Math.random() * Math.PI * 2;
+                    const intervalClass = Math.floor(Math.random() * 6) + 1;
+                    const colors = ['#ff4444', '#ff8844', '#ffff44', '#44ff44', '#4488ff', '#aa44ff'];
+                    ch.photons.push({
+                        x: cx + Math.cos(emitAngle) * 30,
+                        y: cy + Math.sin(emitAngle) * 30,
+                        vx: Math.cos(emitAngle) * (2 + intervalClass * 0.5),
+                        vy: Math.sin(emitAngle) * (2 + intervalClass * 0.5),
+                        color: colors[intervalClass - 1],
+                        life: 1,
+                        phase: 0
+                    });
+                }
+
+                // Update and draw photons
+                ch.photons = ch.photons.filter(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.015;
+                    p.phase += 0.3;
+
+                    // Wave motion
+                    const perpX = -p.vy / Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                    const perpY = p.vx / Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                    const wave = Math.sin(p.phase) * 3;
+
+                    const drawX = p.x + perpX * wave;
+                    const drawY = p.y + perpY * wave;
+
+                    // Photon glow
+                    ch.ctx.fillStyle = p.color + Math.floor(p.life * 60).toString(16).padStart(2, '0');
+                    ch.ctx.beginPath();
+                    ch.ctx.arc(drawX, drawY, 4 * p.life, 0, Math.PI * 2);
+                    ch.ctx.fill();
+
+                    return p.life > 0 && p.x > 0 && p.x < ch.w && p.y > 0 && p.y < ch.h;
+                });
+
+                // Spectrum bar at bottom
+                const barY = ch.h - 25;
+                const barH = 10;
+                const colors = ['#ff4444', '#ff8844', '#ffff44', '#44ff44', '#4488ff', '#aa44ff'];
+                const barW = (ch.w - 40) / 6;
+
+                colors.forEach((color, i) => {
+                    const intensity = 0.3 + Math.sin(time * 2 + i) * 0.2;
+                    ch.ctx.fillStyle = color + Math.floor(intensity * 255).toString(16).padStart(2, '0');
+                    ch.ctx.fillRect(20 + i * barW, barY, barW - 2, barH);
+                });
             }
 
             requestAnimationFrame(animate);

@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chromatic Emission | Physics Sound Lab</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #020617;
+      color: #e0e0e0;
+      font-family: 'SF Mono', 'Consolas', monospace;
+      overflow: hidden;
+    }
+
+    #app {
+      display: flex;
+      height: 100vh;
+    }
+
+    #canvas-container {
+      flex: 1;
+      position: relative;
+    }
+
+    #mainCanvas {
+      display: block;
+    }
+
+    /* Panel lateral */
+    #controls {
+      width: 300px;
+      background: rgba(8, 12, 20, 0.95);
+      border-left: 1px solid rgba(34, 211, 238, 0.15);
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    h1 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 3px;
+      color: #22d3ee;
+    }
+
+    .subtitle {
+      font-size: 10px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 20px;
+    }
+
+    .section {
+      margin-bottom: 22px;
+    }
+
+    .section-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(34, 211, 238, 0.7);
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid rgba(34, 211, 238, 0.15);
+    }
+
+    /* Botones */
+    .btn {
+      display: inline-block;
+      padding: 8px 14px;
+      background: rgba(34, 211, 238, 0.1);
+      border: 1px solid rgba(34, 211, 238, 0.25);
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-right: 5px;
+      margin-bottom: 5px;
+      border-radius: 4px;
+    }
+
+    .btn:hover {
+      background: rgba(34, 211, 238, 0.2);
+      border-color: rgba(34, 211, 238, 0.4);
+    }
+
+    .btn.active {
+      background: rgba(34, 211, 238, 0.3);
+      border-color: rgba(34, 211, 238, 0.6);
+      color: #fff;
+    }
+
+    .btn.primary {
+      background: rgba(34, 211, 238, 0.2);
+      border-color: rgba(34, 211, 238, 0.4);
+    }
+
+    .btn.primary:hover {
+      background: rgba(34, 211, 238, 0.35);
+    }
+
+    /* Sliders */
+    .slider-container {
+      margin-bottom: 14px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+
+    .slider-value {
+      color: rgba(34, 211, 238, 0.8);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      -webkit-appearance: none;
+      background: rgba(34, 211, 238, 0.15);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      background: linear-gradient(135deg, #22d3ee, #0891b2);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    /* Toggles */
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 11px;
+    }
+
+    .toggle {
+      position: relative;
+      width: 38px;
+      height: 20px;
+      background: rgba(100, 100, 100, 0.25);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle.active {
+      background: rgba(34, 211, 238, 0.5);
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle.active::after {
+      transform: translateX(18px);
+    }
+
+    /* Info panel */
+    #info-panel {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    #info-panel .label {
+      color: rgba(255,255,255,0.4);
+    }
+
+    #info-panel .value {
+      color: #fff;
+      font-weight: 500;
+    }
+
+    /* Cardinalidad buttons */
+    .card-buttons {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .card-btn {
+      width: 42px;
+      text-align: center;
+    }
+
+    /* Photon legend */
+    .photon-legend {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      font-size: 9px;
+    }
+
+    .photon-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .photon-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    /* Status indicator */
+    .status {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .status.running {
+      background: #22d3ee;
+      animation: pulse 1s infinite;
+    }
+
+    .status.paused {
+      background: #fbbf24;
+    }
+
+    .status.stopped {
+      background: #475569;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(34, 211, 238, 0.6); }
+      50% { opacity: 0.6; box-shadow: none; }
+    }
+
+    /* Overlay de inicio */
+    #start-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(2, 6, 23, 0.97);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      cursor: pointer;
+    }
+
+    #start-overlay h2 {
+      font-size: 32px;
+      color: #22d3ee;
+      margin-bottom: 8px;
+      letter-spacing: 2px;
+    }
+
+    #start-overlay .tagline {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 25px;
+    }
+
+    #start-overlay p {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 30px;
+      max-width: 450px;
+      text-align: center;
+      line-height: 1.7;
+    }
+
+    #start-overlay .equation {
+      font-family: 'Times New Roman', serif;
+      font-style: italic;
+      font-size: 18px;
+      color: #22d3ee;
+      margin-bottom: 30px;
+      padding: 15px 30px;
+      border: 1px solid rgba(34, 211, 238, 0.3);
+      border-radius: 8px;
+      background: rgba(34, 211, 238, 0.05);
+    }
+
+    #start-overlay .start-btn {
+      padding: 14px 40px;
+      font-size: 14px;
+      background: rgba(34, 211, 238, 0.15);
+      border: 2px solid rgba(34, 211, 238, 0.5);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s;
+      border-radius: 8px;
+      letter-spacing: 1px;
+    }
+
+    #start-overlay .start-btn:hover {
+      background: rgba(34, 211, 238, 0.3);
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(34, 211, 238, 0.3);
+    }
+
+    /* Equation display */
+    .equation-box {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px;
+      border-radius: 6px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .equation-text {
+      font-family: 'Times New Roman', serif;
+      font-style: italic;
+      font-size: 13px;
+      color: rgba(34, 211, 238, 0.9);
+    }
+  </style>
+</head>
+<body>
+  <div id="start-overlay">
+    <h2>Chromatic Emission</h2>
+    <div class="tagline">Pitch-Class Set Theory + Modelo de Bohr</div>
+    <div class="equation">ΔE = hν → ΔPitch = Intervalo</div>
+    <p>
+      Las notas son electrones orbitando un núcleo armónico.
+      Cuando saltan entre acordes, emiten fotones cuyo color
+      depende del intervalo: semitonos emiten rojo (baja energía),
+      quintas emiten azul (alta energía).
+    </p>
+    <button class="start-btn">Iniciar Emisión</button>
+  </div>
+
+  <div id="app">
+    <div id="canvas-container">
+      <canvas id="mainCanvas"></canvas>
+    </div>
+
+    <div id="controls">
+      <h1>Chromatic Emission</h1>
+      <div class="subtitle">ΔPitch = Intervalo → Fotón</div>
+
+      <!-- Estado -->
+      <div class="section">
+        <div class="section-title">Estado</div>
+        <div style="margin-bottom: 10px;">
+          <span class="status stopped" id="status-indicator"></span>
+          <span id="status-text">Detenido</span>
+        </div>
+        <button class="btn primary" id="btn-play">Play</button>
+        <button class="btn" id="btn-pause">Pausa</button>
+        <button class="btn" id="btn-impulse">Impulso</button>
+      </div>
+
+      <!-- Cardinalidad -->
+      <div class="section">
+        <div class="section-title">Cardinalidad</div>
+        <div class="card-buttons">
+          <button class="btn card-btn active" data-card="all">All</button>
+          <button class="btn card-btn" data-card="3">3</button>
+          <button class="btn card-btn" data-card="4">4</button>
+          <button class="btn card-btn" data-card="5">5</button>
+          <button class="btn card-btn" data-card="6">6</button>
+        </div>
+      </div>
+
+      <!-- Física -->
+      <div class="section">
+        <div class="section-title">Física</div>
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>Atracción</span>
+            <span class="slider-value" id="attr-value">15%</span>
+          </div>
+          <input type="range" id="attraction" min="0" max="50" value="15">
+        </div>
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>Fricción</span>
+            <span class="slider-value" id="fric-value">97%</span>
+          </div>
+          <input type="range" id="friction" min="90" max="99" value="97">
+        </div>
+      </div>
+
+      <!-- Ecuación -->
+      <div class="section">
+        <div class="section-title">Emisión de Fotones</div>
+        <div class="equation-box">
+          <div class="equation-text">Intervalo = Color del Fotón</div>
+        </div>
+        <div class="photon-legend">
+          <div class="photon-item">
+            <div class="photon-color" style="background: #ff4444;"></div>
+            <span>m2 (rojo)</span>
+          </div>
+          <div class="photon-item">
+            <div class="photon-color" style="background: #ff8844;"></div>
+            <span>M2</span>
+          </div>
+          <div class="photon-item">
+            <div class="photon-color" style="background: #ffff44;"></div>
+            <span>m3</span>
+          </div>
+          <div class="photon-item">
+            <div class="photon-color" style="background: #44ff44;"></div>
+            <span>M3</span>
+          </div>
+          <div class="photon-item">
+            <div class="photon-color" style="background: #4488ff;"></div>
+            <span>P4/P5</span>
+          </div>
+          <div class="photon-item">
+            <div class="photon-color" style="background: #aa44ff;"></div>
+            <span>TT (violeta)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="section">
+        <div class="section-title">Features</div>
+        <div class="toggle-row">
+          <span>Z-Portals</span>
+          <div class="toggle active" id="toggle-zportals"></div>
+        </div>
+        <div class="toggle-row">
+          <span>Sonido</span>
+          <div class="toggle active" id="toggle-sound"></div>
+        </div>
+        <div class="toggle-row">
+          <span>Sonificar Fotones</span>
+          <div class="toggle active" id="toggle-photon-sound"></div>
+        </div>
+      </div>
+
+      <!-- Audio -->
+      <div class="section">
+        <div class="section-title">Audio</div>
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>Volumen</span>
+            <span class="slider-value" id="vol-value">30%</span>
+          </div>
+          <input type="range" id="volume" min="0" max="100" value="30">
+        </div>
+        <div style="margin-top: 10px;">
+          <button class="btn" data-wave="sine">Sine</button>
+          <button class="btn active" data-wave="triangle">Triangle</button>
+          <button class="btn" data-wave="sawtooth">Saw</button>
+        </div>
+      </div>
+
+      <!-- Info del set actual -->
+      <div class="section">
+        <div class="section-title">Set Actual</div>
+        <div id="info-panel">
+          <div><span class="label">Forte:</span> <span class="value" id="info-forte">-</span></div>
+          <div><span class="label">Prime:</span> <span class="value" id="info-prime">-</span></div>
+          <div><span class="label">IV:</span> <span class="value" id="info-iv">-</span></div>
+          <div><span class="label">Tensión:</span> <span class="value" id="info-tension">-</span></div>
+          <div><span class="label">Nombre:</span> <span class="value" id="info-name">-</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/set-theory.js"></script>
+  <script src="js/photon.js"></script>
+  <script src="js/visualization.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/audio.js"></script>
+
+  <script>
+    // Aplicación principal
+    class ChromaticEmissionApp {
+      constructor() {
+        this.canvas = document.getElementById('mainCanvas');
+        this.ctx = this.canvas.getContext('2d');
+
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+
+        // Inicializar sistemas
+        this.viz = new SetClassVisualization(this.canvas);
+        this.physics = new PhysicsSystem(this.viz);
+        this.zPortals = new ZPortalSystem();
+        this.photonSystem = new PhotonSystem();
+        this.spectrumAnalyzer = new SpectrumAnalyzer();
+        this.audio = new AudioEngine();
+        this.voiceLeader = new VoiceLeader(this.audio);
+
+        // Conectar sistemas
+        this.physics.setPhotonSystem(this.photonSystem, this.spectrumAnalyzer);
+
+        // Estado
+        this.isRunning = false;
+        this.soundEnabled = true;
+        this.photonSoundEnabled = true;
+        this.lastTime = 0;
+
+        // Setup UI
+        this.setupUI();
+        this.setupStartOverlay();
+        this.setupDrag();
+
+        // Loop inicial
+        this.renderLoop();
+      }
+
+      resizeCanvas() {
+        const container = document.getElementById('canvas-container');
+        this.canvas.width = container.clientWidth;
+        this.canvas.height = container.clientHeight;
+
+        if (this.viz) {
+          this.viz.resize(this.canvas.width, this.canvas.height);
+        }
+      }
+
+      setupStartOverlay() {
+        const overlay = document.getElementById('start-overlay');
+        const startBtn = overlay.querySelector('.start-btn');
+
+        const startApp = async () => {
+          await this.audio.init();
+          overlay.style.display = 'none';
+          this.start();
+        };
+
+        startBtn.addEventListener('click', startApp);
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) startApp();
+        });
+      }
+
+      setupUI() {
+        // Play/Pause/Impulse
+        document.getElementById('btn-play').addEventListener('click', () => this.start());
+        document.getElementById('btn-pause').addEventListener('click', () => this.togglePause());
+        document.getElementById('btn-impulse').addEventListener('click', () => {
+          this.physics.randomImpulse(8);
+        });
+
+        // Cardinalidad
+        document.querySelectorAll('.card-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.card-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const card = btn.dataset.card;
+            this.viz.setActiveCardinality(card === 'all' ? null : parseInt(card));
+          });
+        });
+
+        // Sliders
+        const attrSlider = document.getElementById('attraction');
+        attrSlider.addEventListener('input', () => {
+          this.physics.params.attractionStrength = attrSlider.value / 100;
+          document.getElementById('attr-value').textContent = `${attrSlider.value}%`;
+        });
+
+        const fricSlider = document.getElementById('friction');
+        fricSlider.addEventListener('input', () => {
+          this.physics.params.friction = fricSlider.value / 100;
+          document.getElementById('fric-value').textContent = `${fricSlider.value}%`;
+        });
+
+        const volSlider = document.getElementById('volume');
+        volSlider.addEventListener('input', () => {
+          this.audio.setVolume(volSlider.value / 100);
+          document.getElementById('vol-value').textContent = `${volSlider.value}%`;
+        });
+
+        // Toggles
+        document.getElementById('toggle-zportals').addEventListener('click', (e) => {
+          e.currentTarget.classList.toggle('active');
+          this.zPortals.enabled = e.currentTarget.classList.contains('active');
+          this.viz.showZPortals = this.zPortals.enabled;
+        });
+
+        document.getElementById('toggle-sound').addEventListener('click', (e) => {
+          e.currentTarget.classList.toggle('active');
+          this.soundEnabled = e.currentTarget.classList.contains('active');
+        });
+
+        document.getElementById('toggle-photon-sound').addEventListener('click', (e) => {
+          e.currentTarget.classList.toggle('active');
+          this.photonSoundEnabled = e.currentTarget.classList.contains('active');
+        });
+
+        // Waveform
+        document.querySelectorAll('[data-wave]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-wave]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            this.audio.setWaveform(btn.dataset.wave);
+          });
+        });
+
+        // Callback de cambio de set
+        this.physics.onSetChange = (event) => this.onSetChange(event);
+
+        // Callback de emisión de fotones
+        this.physics.onPhotonEmission = (photons) => {
+          if (this.photonSoundEnabled && this.soundEnabled && this.audio.isInitialized) {
+            this.audio.sonifyPhotonEmission(photons);
+          }
+        };
+      }
+
+      setupDrag() {
+        this.isDragging = false;
+        this.dragVelocity = { x: 0, y: 0 };
+        this.lastDragPos = { x: 0, y: 0 };
+
+        this.canvas.addEventListener('mousedown', (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          const dx = x - this.physics.particle.x;
+          const dy = y - this.physics.particle.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 25) {
+            this.isDragging = true;
+            this.lastDragPos = { x, y };
+            this.dragVelocity = { x: 0, y: 0 };
+            this.canvas.style.cursor = 'grabbing';
+          }
+        });
+
+        this.canvas.addEventListener('mousemove', (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          if (this.isDragging) {
+            this.dragVelocity = {
+              x: (x - this.lastDragPos.x) * 0.3,
+              y: (y - this.lastDragPos.y) * 0.3
+            };
+            this.lastDragPos = { x, y };
+            this.physics.setParticlePosition(x, y);
+          } else {
+            const dx = x - this.physics.particle.x;
+            const dy = y - this.physics.particle.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            this.canvas.style.cursor = dist < 25 ? 'grab' : 'default';
+          }
+        });
+
+        this.canvas.addEventListener('mouseup', () => {
+          if (this.isDragging) {
+            this.isDragging = false;
+            this.canvas.style.cursor = 'default';
+            this.physics.particle.vx = this.dragVelocity.x;
+            this.physics.particle.vy = this.dragVelocity.y;
+          }
+        });
+
+        this.canvas.addEventListener('click', (e) => {
+          if (!this.isDragging && this.viz.hoveredSet) {
+            this.physics.attractTo(this.viz.hoveredSet.forte);
+          }
+        });
+      }
+
+      start() {
+        this.isRunning = true;
+        this.physics.start();
+        this.updateStatus('running', 'En ejecución');
+        this.physics.randomImpulse(5);
+      }
+
+      togglePause() {
+        if (this.physics.isPaused) {
+          this.physics.resume();
+          this.updateStatus('running', 'En ejecución');
+        } else {
+          this.physics.pause();
+          this.updateStatus('paused', 'Pausado');
+        }
+      }
+
+      updateStatus(state, text) {
+        const indicator = document.getElementById('status-indicator');
+        indicator.className = `status ${state}`;
+        document.getElementById('status-text').textContent = text;
+      }
+
+      updateInfoPanel(setClass) {
+        if (!setClass) {
+          ['forte', 'prime', 'iv', 'tension', 'name'].forEach(id => {
+            document.getElementById(`info-${id}`).textContent = '-';
+          });
+          return;
+        }
+
+        document.getElementById('info-forte').textContent = setClass.forte;
+        document.getElementById('info-prime').textContent = `[${setClass.primeForm.join(', ')}]`;
+        document.getElementById('info-iv').textContent = `<${setClass.intervalVector.join('')}>`;
+        document.getElementById('info-tension').textContent = `${(setClass.tension * 100).toFixed(0)}%`;
+        document.getElementById('info-name').textContent = setClass.name || '-';
+      }
+
+      onSetChange(event) {
+        this.updateInfoPanel(event.to);
+
+        // Sonido del acorde
+        if (this.soundEnabled && this.audio.isInitialized) {
+          this.voiceLeader.playWithVoiceLeading(event.to);
+        }
+      }
+
+      update(deltaTime) {
+        if (!this.isRunning) return;
+
+        if (this.isDragging) {
+          // Detectar set mientras arrastramos
+          const nearest = this.viz.getNearestSet(
+            this.physics.particle.x,
+            this.physics.particle.y
+          );
+          if (nearest.distance < 20 && nearest.set !== this.physics.particle.currentSet) {
+            // Emitir fotones manualmente
+            if (this.physics.particle.currentSet) {
+              const photons = this.photonSystem.analyzeVoiceLeading(
+                this.physics.particle.currentSet.primeForm,
+                nearest.set.primeForm,
+                { x: this.physics.particle.x, y: this.physics.particle.y }
+              );
+              this.photonSystem.emit(photons);
+              this.spectrumAnalyzer.record(photons);
+
+              if (this.photonSoundEnabled && this.soundEnabled && this.audio.isInitialized) {
+                this.audio.sonifyPhotonEmission(photons);
+              }
+            }
+
+            this.physics.particle.currentSet = nearest.set;
+            this.updateInfoPanel(nearest.set);
+
+            if (this.soundEnabled && this.audio.isInitialized) {
+              this.voiceLeader.playWithVoiceLeading(nearest.set);
+            }
+          }
+          return;
+        }
+
+        // Actualizar física
+        this.physics.update();
+
+        // Z-Portal check
+        if (this.physics.particle.currentSet && this.zPortals.enabled) {
+          const depth = Math.max(0.5, 1 - this.physics.particle.getSpeed() * 0.5);
+          const tunnel = this.zPortals.checkTunnel(this.physics.particle.currentSet, depth);
+
+          if (tunnel) {
+            const targetPos = this.viz.getPosition(tunnel.to);
+            if (targetPos) {
+              this.physics.particle.teleportTo(targetPos.x, targetPos.y);
+              this.physics.particle.currentSet = tunnel.targetSet;
+              this.updateInfoPanel(tunnel.targetSet);
+
+              if (this.soundEnabled && this.audio.isInitialized) {
+                this.audio.playTunnelSound();
+                setTimeout(() => {
+                  if (tunnel.targetSet) {
+                    this.audio.playSet(tunnel.targetSet);
+                  }
+                }, 300);
+              }
+            }
+          }
+        }
+
+        // Actualizar sistemas
+        this.zPortals.update();
+        this.photonSystem.update(deltaTime);
+        this.spectrumAnalyzer.update();
+      }
+
+      render() {
+        // Dibujar todo
+        this.viz.draw(
+          this.isRunning ? this.physics.particle : null,
+          this.photonSystem,
+          this.spectrumAnalyzer
+        );
+
+        // Efectos Z-Portal
+        this.zPortals.drawEffects(this.ctx, this.viz);
+      }
+
+      renderLoop() {
+        const now = performance.now();
+        const deltaTime = (now - this.lastTime) / 1000;
+        this.lastTime = now;
+
+        this.update(Math.min(deltaTime, 0.1));
+        this.render();
+
+        requestAnimationFrame(() => this.renderLoop());
+      }
+    }
+
+    // Iniciar
+    const app = new ChromaticEmissionApp();
+  </script>
+</body>
+</html>
