@@ -251,6 +251,93 @@ class AudioEngine {
       delay += 50;
     });
   }
+
+  /**
+   * Sonido cuando un fotón excita un nodo
+   * El sonido depende de las propiedades del fotón y del set excitado
+   */
+  playPhotonExcitation(setClass, photonProps) {
+    if (!this.isInitialized || !setClass) return;
+
+    const { intervalClass, energy, velocity } = photonProps;
+
+    // Mapear energía del fotón a parámetros de sonido
+    // Alta energía (tritono) = agudo, brillante, ataque rápido
+    // Baja energía (semitono) = grave, suave, ataque lento
+    const octaveShift = Math.floor(energy * 2) - 1; // -1 a +1
+    const attackTime = 0.01 + (1 - energy) * 0.04;
+    const volume = 0.08 + energy * 0.12;
+    const duration = 0.2 + (1 - energy) * 0.3;
+
+    // Filtro basado en intervalo
+    const filterFreq = 800 + intervalClass * 400;
+
+    const now = this.audioContext.currentTime;
+
+    // Tocar las notas del set como arpegio rápido
+    setClass.primeForm.forEach((pc, i) => {
+      const noteTime = now + i * 0.025 * (2 - energy); // Más rápido para alta energía
+
+      this.playExcitedNote(pc, noteTime, {
+        octaveShift,
+        attackTime,
+        volume,
+        duration,
+        filterFreq
+      });
+    });
+  }
+
+  /**
+   * Tocar una nota con parámetros de excitación
+   */
+  playExcitedNote(pc, startTime, params) {
+    if (!this.isInitialized) return;
+
+    const { octaveShift = 0, attackTime = 0.02, volume = 0.15, duration = 0.3, filterFreq = 1500 } = params;
+
+    // Frecuencia con shift de octava
+    const baseOctave = 4 + octaveShift;
+    const freq = this.pcToFrequency(pc, baseOctave);
+
+    // Oscilador
+    const osc = this.audioContext.createOscillator();
+    osc.type = 'sine'; // Más suave para excitaciones
+    osc.frequency.value = freq;
+
+    // Segundo oscilador armónico
+    const osc2 = this.audioContext.createOscillator();
+    osc2.type = 'triangle';
+    osc2.frequency.value = freq * 2; // Octava arriba
+
+    // Envelope
+    const env = this.audioContext.createGain();
+    env.gain.setValueAtTime(0, startTime);
+    env.gain.linearRampToValueAtTime(volume, startTime + attackTime);
+    env.gain.exponentialRampToValueAtTime(volume * 0.3, startTime + duration * 0.5);
+    env.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+
+    // Filtro
+    const filter = this.audioContext.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = filterFreq;
+    filter.Q.value = 1;
+
+    // Mixer para los dos osciladores
+    const mixer = this.audioContext.createGain();
+    mixer.gain.value = 1;
+
+    osc.connect(mixer);
+    osc2.connect(mixer);
+    mixer.connect(filter);
+    filter.connect(env);
+    env.connect(this.masterGain);
+
+    osc.start(startTime);
+    osc2.start(startTime);
+    osc.stop(startTime + duration + 0.1);
+    osc2.stop(startTime + duration + 0.1);
+  }
 }
 
 

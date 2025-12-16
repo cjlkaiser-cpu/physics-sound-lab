@@ -371,7 +371,7 @@
         </div>
         <button class="btn primary" id="btn-play">Play</button>
         <button class="btn" id="btn-pause">Pausa</button>
-        <button class="btn" id="btn-impulse">Impulso</button>
+        <button class="btn" id="btn-excite">Excitar (Espacio)</button>
       </div>
 
       <!-- Cardinalidad -->
@@ -388,20 +388,20 @@
 
       <!-- Física -->
       <div class="section">
-        <div class="section-title">Física</div>
+        <div class="section-title">Física Orbital</div>
         <div class="slider-container">
           <div class="slider-label">
-            <span>Atracción</span>
-            <span class="slider-value" id="attr-value">15%</span>
+            <span>Temperatura</span>
+            <span class="slider-value" id="temp-value">30%</span>
           </div>
-          <input type="range" id="attraction" min="0" max="50" value="15">
+          <input type="range" id="temperature" min="0" max="100" value="30">
         </div>
         <div class="slider-container">
           <div class="slider-label">
-            <span>Fricción</span>
-            <span class="slider-value" id="fric-value">97%</span>
+            <span>Atracción</span>
+            <span class="slider-value" id="attr-value">12%</span>
           </div>
-          <input type="range" id="friction" min="90" max="99" value="97">
+          <input type="range" id="attraction" min="0" max="50" value="12">
         </div>
       </div>
 
@@ -451,8 +451,8 @@
           <div class="toggle active" id="toggle-sound"></div>
         </div>
         <div class="toggle-row">
-          <span>Sonificar Fotones</span>
-          <div class="toggle active" id="toggle-photon-sound"></div>
+          <span>Fotones Sonoros</span>
+          <div class="toggle active" id="toggle-sonorous"></div>
         </div>
       </div>
 
@@ -519,7 +519,6 @@
         // Estado
         this.isRunning = false;
         this.soundEnabled = true;
-        this.photonSoundEnabled = true;
         this.lastTime = 0;
 
         // Setup UI
@@ -558,11 +557,11 @@
       }
 
       setupUI() {
-        // Play/Pause/Impulse
+        // Play/Pause/Excite
         document.getElementById('btn-play').addEventListener('click', () => this.start());
         document.getElementById('btn-pause').addEventListener('click', () => this.togglePause());
-        document.getElementById('btn-impulse').addEventListener('click', () => {
-          this.physics.randomImpulse(8);
+        document.getElementById('btn-excite').addEventListener('click', () => {
+          this.physics.exciteMax();
         });
 
         // Cardinalidad
@@ -576,16 +575,16 @@
         });
 
         // Sliders
+        const tempSlider = document.getElementById('temperature');
+        tempSlider.addEventListener('input', () => {
+          this.physics.setTemperature(tempSlider.value / 100);
+          document.getElementById('temp-value').textContent = `${tempSlider.value}%`;
+        });
+
         const attrSlider = document.getElementById('attraction');
         attrSlider.addEventListener('input', () => {
           this.physics.params.attractionStrength = attrSlider.value / 100;
           document.getElementById('attr-value').textContent = `${attrSlider.value}%`;
-        });
-
-        const fricSlider = document.getElementById('friction');
-        fricSlider.addEventListener('input', () => {
-          this.physics.params.friction = fricSlider.value / 100;
-          document.getElementById('fric-value').textContent = `${fricSlider.value}%`;
         });
 
         const volSlider = document.getElementById('volume');
@@ -606,9 +605,9 @@
           this.soundEnabled = e.currentTarget.classList.contains('active');
         });
 
-        document.getElementById('toggle-photon-sound').addEventListener('click', (e) => {
+        document.getElementById('toggle-sonorous').addEventListener('click', (e) => {
           e.currentTarget.classList.toggle('active');
-          this.photonSoundEnabled = e.currentTarget.classList.contains('active');
+          this.photonSystem.setSonorousPhotons(e.currentTarget.classList.contains('active'));
         });
 
         // Waveform
@@ -623,33 +622,49 @@
         // Callback de cambio de set
         this.physics.onSetChange = (event) => this.onSetChange(event);
 
-        // Callback de emisión de fotones
+        // Callback de emisión de fotones (sonido de la emisión, no de los nodos excitados)
         this.physics.onPhotonEmission = (photons) => {
-          if (this.photonSoundEnabled && this.soundEnabled && this.audio.isInitialized) {
+          if (this.soundEnabled && this.audio.isInitialized) {
             this.audio.sonifyPhotonEmission(photons);
           }
         };
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+          if (e.code === 'Space') {
+            e.preventDefault();
+            this.physics.exciteMax();
+          } else if (e.code === 'KeyT') {
+            // Ciclar temperatura: 0 -> 30 -> 70 -> 100 -> 0
+            const tempSlider = document.getElementById('temperature');
+            const current = parseInt(tempSlider.value);
+            let next;
+            if (current < 15) next = 30;
+            else if (current < 50) next = 70;
+            else if (current < 85) next = 100;
+            else next = 0;
+            tempSlider.value = next;
+            this.physics.setTemperature(next / 100);
+            document.getElementById('temp-value').textContent = `${next}%`;
+          } else if (e.code === 'KeyS' && !e.ctrlKey && !e.metaKey) {
+            // Toggle sonorous photons
+            const toggle = document.getElementById('toggle-sonorous');
+            toggle.classList.toggle('active');
+            this.photonSystem.setSonorousPhotons(toggle.classList.contains('active'));
+          }
+        });
       }
 
       setupDrag() {
-        this.isDragging = false;
-        this.dragVelocity = { x: 0, y: 0 };
-        this.lastDragPos = { x: 0, y: 0 };
-
+        // Slingshot interaction
         this.canvas.addEventListener('mousedown', (e) => {
           const rect = this.canvas.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
 
-          const dx = x - this.physics.particle.x;
-          const dy = y - this.physics.particle.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < 25) {
-            this.isDragging = true;
-            this.lastDragPos = { x, y };
-            this.dragVelocity = { x: 0, y: 0 };
-            this.canvas.style.cursor = 'grabbing';
+          // Try to start slingshot near particle
+          if (this.physics.startSlingshot(x, y)) {
+            this.canvas.style.cursor = 'crosshair';
           }
         });
 
@@ -658,34 +673,38 @@
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
 
-          if (this.isDragging) {
-            this.dragVelocity = {
-              x: (x - this.lastDragPos.x) * 0.3,
-              y: (y - this.lastDragPos.y) * 0.3
-            };
-            this.lastDragPos = { x, y };
-            this.physics.setParticlePosition(x, y);
+          if (this.physics.slingshot.active) {
+            this.physics.updateSlingshot(x, y);
           } else {
+            // Cursor near particle
             const dx = x - this.physics.particle.x;
             const dy = y - this.physics.particle.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            this.canvas.style.cursor = dist < 25 ? 'grab' : 'default';
+            this.canvas.style.cursor = dist < 60 ? 'grab' : 'default';
           }
         });
 
-        this.canvas.addEventListener('mouseup', () => {
-          if (this.isDragging) {
-            this.isDragging = false;
+        this.canvas.addEventListener('mouseup', (e) => {
+          if (this.physics.slingshot.active) {
+            this.physics.releaseSlingshot();
             this.canvas.style.cursor = 'default';
-            this.physics.particle.vx = this.dragVelocity.x;
-            this.physics.particle.vy = this.dragVelocity.y;
+          }
+        });
+
+        this.canvas.addEventListener('mouseleave', () => {
+          if (this.physics.slingshot.active) {
+            this.physics.releaseSlingshot();
+            this.canvas.style.cursor = 'default';
           }
         });
 
         this.canvas.addEventListener('click', (e) => {
-          if (!this.isDragging && this.viz.hoveredSet) {
-            this.physics.attractTo(this.viz.hoveredSet.forte);
-          }
+          const rect = this.canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          // Click para excitar o atraer
+          this.physics.handleClick(x, y);
         });
       }
 
@@ -693,7 +712,8 @@
         this.isRunning = true;
         this.physics.start();
         this.updateStatus('running', 'En ejecución');
-        this.physics.randomImpulse(5);
+        // Dar un pequeño impulso inicial
+        this.physics.randomImpulse(4);
       }
 
       togglePause() {
@@ -739,38 +759,6 @@
       update(deltaTime) {
         if (!this.isRunning) return;
 
-        if (this.isDragging) {
-          // Detectar set mientras arrastramos
-          const nearest = this.viz.getNearestSet(
-            this.physics.particle.x,
-            this.physics.particle.y
-          );
-          if (nearest.distance < 20 && nearest.set !== this.physics.particle.currentSet) {
-            // Emitir fotones manualmente
-            if (this.physics.particle.currentSet) {
-              const photons = this.photonSystem.analyzeVoiceLeading(
-                this.physics.particle.currentSet.primeForm,
-                nearest.set.primeForm,
-                { x: this.physics.particle.x, y: this.physics.particle.y }
-              );
-              this.photonSystem.emit(photons);
-              this.spectrumAnalyzer.record(photons);
-
-              if (this.photonSoundEnabled && this.soundEnabled && this.audio.isInitialized) {
-                this.audio.sonifyPhotonEmission(photons);
-              }
-            }
-
-            this.physics.particle.currentSet = nearest.set;
-            this.updateInfoPanel(nearest.set);
-
-            if (this.soundEnabled && this.audio.isInitialized) {
-              this.voiceLeader.playWithVoiceLeading(nearest.set);
-            }
-          }
-          return;
-        }
-
         // Actualizar física
         this.physics.update();
 
@@ -800,16 +788,18 @@
 
         // Actualizar sistemas
         this.zPortals.update();
-        this.photonSystem.update(deltaTime);
+        // Pasar visualization y audio al photon system para fotones sonoros
+        this.photonSystem.update(deltaTime, this.viz, this.soundEnabled ? this.audio : null);
         this.spectrumAnalyzer.update();
       }
 
       render() {
-        // Dibujar todo
+        // Dibujar todo (incluido physicsSystem para slingshot y órbitas)
         this.viz.draw(
           this.isRunning ? this.physics.particle : null,
           this.photonSystem,
-          this.spectrumAnalyzer
+          this.spectrumAnalyzer,
+          this.physics
         );
 
         // Efectos Z-Portal

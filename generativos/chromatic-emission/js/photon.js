@@ -17,6 +17,10 @@ class PhotonSystem {
     this.photons = [];
     this.maxPhotons = 100;
 
+    // Fotones sonoros (atraviesan nodos y los hacen sonar)
+    this.sonorousPhotons = true;
+    this.onNodeExcited = null; // Callback opcional
+
     // Espectro de intervalos (clase de intervalo → color)
     // ic1 = semitono, ic6 = tritono
     this.intervalSpectrum = {
@@ -210,7 +214,9 @@ class PhotonSystem {
         amplitude: 3 + spectrum.energy * 5,
         frequency: 0.1 + spectrum.energy * 0.2,
         phase: 0
-      }
+      },
+      // Tracking de nodos excitados (para evitar re-excitar el mismo)
+      excitedNodes: new Set()
     };
   }
 
@@ -230,8 +236,11 @@ class PhotonSystem {
 
   /**
    * Actualizar física de todos los fotones
+   * @param {number} deltaTime - Tiempo desde el último frame
+   * @param {SetClassVisualization} visualization - Para detectar colisiones con nodos
+   * @param {AudioEngine} audioEngine - Para sonificar las excitaciones
    */
-  update(deltaTime) {
+  update(deltaTime, visualization = null, audioEngine = null) {
     this.photons = this.photons.filter(photon => {
       // Actualizar posición
       photon.x += photon.vx;
@@ -246,11 +255,77 @@ class PhotonSystem {
       // Actualizar fase de onda
       photon.wave.phase += photon.wave.frequency;
 
+      // === COLISIÓN CON NODOS ===
+      if (visualization && this.sonorousPhotons) {
+        this.checkNodeCollisions(photon, visualization, audioEngine);
+      }
+
       // Decay de vida
       photon.life -= deltaTime * 0.8;
 
       return photon.life > 0;
     });
+  }
+
+  /**
+   * Comprobar colisiones de un fotón con nodos
+   */
+  checkNodeCollisions(photon, visualization, audioEngine) {
+    const collisionRadius = 18; // Radio para detectar cruce
+
+    for (const [forte, pos] of visualization.setPositions) {
+      // Ya excitó este nodo?
+      if (photon.excitedNodes.has(forte)) continue;
+
+      const dx = photon.x - pos.x;
+      const dy = photon.y - pos.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < collisionRadius) {
+        // Marcar como excitado
+        photon.excitedNodes.add(forte);
+
+        // Excitar el nodo visualmente
+        visualization.exciteNode(forte);
+
+        // Sonificar si está habilitado
+        if (audioEngine && audioEngine.isInitialized) {
+          this.exciteNodeSound(pos.setClass, photon, audioEngine);
+        }
+
+        // Callback opcional
+        if (this.onNodeExcited) {
+          this.onNodeExcited(pos.setClass, photon);
+        }
+      }
+    }
+  }
+
+  /**
+   * Generar sonido cuando un fotón excita un nodo
+   */
+  exciteNodeSound(setClass, photon, audioEngine) {
+    // Usar el método específico si existe, o fallback
+    if (audioEngine.playPhotonExcitation) {
+      audioEngine.playPhotonExcitation(setClass, {
+        intervalClass: photon.intervalClass,
+        energy: photon.energy,
+        velocity: Math.sqrt(photon.vx * photon.vx + photon.vy * photon.vy)
+      });
+    } else {
+      // Fallback: tocar el acorde rápido
+      const now = audioEngine.audioContext.currentTime;
+      setClass.primeForm.forEach((pc, i) => {
+        audioEngine.playNote(pc, now + i * 0.03, 0.3);
+      });
+    }
+  }
+
+  /**
+   * Activar/desactivar fotones sonoros
+   */
+  setSonorousPhotons(enabled) {
+    this.sonorousPhotons = enabled;
   }
 
   /**

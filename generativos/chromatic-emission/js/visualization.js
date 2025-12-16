@@ -367,7 +367,7 @@ class SetClassVisualization {
     });
   }
 
-  draw(particle = null, photonSystem = null, spectrumAnalyzer = null) {
+  draw(particle = null, photonSystem = null, spectrumAnalyzer = null, physicsSystem = null) {
     const ctx = this.ctx;
     const now = performance.now();
     const deltaTime = (now - this.lastTime) / 1000;
@@ -376,11 +376,14 @@ class SetClassVisualization {
     // Actualizar átomo de Bohr
     this.bohrAtom.update(deltaTime);
 
+    // Actualizar efectos de excitación de nodos
+    this.updateNodeExcitation(deltaTime);
+
     // Fondo
     ctx.fillStyle = '#020617';
     ctx.fillRect(0, 0, this.width, this.height);
 
-    // Dibujar órbitas
+    // Dibujar órbitas de cardinalidad
     this.drawOrbits(ctx);
 
     // Z-Portal connections
@@ -388,12 +391,22 @@ class SetClassVisualization {
       this.drawZPortalConnections(ctx);
     }
 
-    // Nodos de set-classes
+    // Nodos de set-classes (con efectos de excitación)
     this.drawSetNodes(ctx);
+
+    // Órbita actual de la partícula
+    if (particle && particle.orbitCenter) {
+      this.drawParticleOrbit(ctx, particle, physicsSystem);
+    }
 
     // Partícula
     if (particle) {
       this.drawParticle(ctx, particle);
+    }
+
+    // Slingshot
+    if (physicsSystem) {
+      physicsSystem.drawSlingshot(ctx);
     }
 
     // Fotones
@@ -415,9 +428,133 @@ class SetClassVisualization {
       this.bohrAtom.draw(ctx, bohrX, bohrY, 65);
     }
 
+    // Estado de la partícula
+    if (particle) {
+      this.drawParticleStatus(ctx, particle);
+    }
+
     // Label del hover
     if (this.hoveredSet && !particle?.currentSet) {
       this.drawHoverLabel(ctx, this.hoveredSet);
+    }
+  }
+
+  /**
+   * Dibujar la órbita actual de la partícula
+   */
+  drawParticleOrbit(ctx, particle, physicsSystem) {
+    if (!particle.orbitCenter) return;
+
+    const center = particle.orbitCenter;
+    const radius = physicsSystem ? physicsSystem.getOrbitRadius(particle.energyLevel) : 20;
+
+    // Color según nivel de energía
+    const energyColors = {
+      1: 'rgba(100, 200, 255, 0.3)',   // Ground - azul tenue
+      2: 'rgba(255, 200, 100, 0.4)',   // Excited 1 - naranja
+      3: 'rgba(255, 100, 100, 0.5)',   // Excited 2 - rojo
+      4: 'rgba(255, 50, 255, 0.6)'     // Excited 3 - magenta
+    };
+
+    const color = energyColors[particle.energyLevel] || energyColors[1];
+
+    // Dibujar órbita
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = particle.state === 'EXCITED' ? 2 : 1;
+
+    if (particle.state === 'EXCITED') {
+      ctx.setLineDash([4, 4]);
+    } else {
+      ctx.setLineDash([2, 6]);
+    }
+
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Si está excitado, dibujar también los otros niveles
+    if (particle.energyLevel > 1 && physicsSystem) {
+      // Ground state
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, physicsSystem.orbital.groundRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(100, 200, 255, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 6]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  /**
+   * Dibujar indicador de estado de la partícula
+   */
+  drawParticleStatus(ctx, particle) {
+    const x = 15;
+    const y = 20;
+
+    // Fondo del panel
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.fillRect(x, y, 130, 55);
+
+    // Estado
+    const stateColors = {
+      'FREE': '#88ff88',
+      'ORBITING': '#88ccff',
+      'EXCITED': '#ffaa44',
+      'ESCAPING': '#ff6666'
+    };
+
+    ctx.fillStyle = stateColors[particle.state] || '#ffffff';
+    ctx.font = 'bold 11px monospace';
+    ctx.fillText(particle.state, x + 8, y + 16);
+
+    // Nivel de energía
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '10px monospace';
+    ctx.fillText(`Nivel: n=${particle.energyLevel}`, x + 8, y + 32);
+
+    // Barras de energía
+    const barX = x + 70;
+    const barY = y + 26;
+    for (let i = 1; i <= 4; i++) {
+      ctx.fillStyle = i <= particle.energyLevel ? '#ffaa44' : 'rgba(255, 255, 255, 0.2)';
+      ctx.fillRect(barX + (i - 1) * 12, barY, 10, 8);
+    }
+
+    // Set actual
+    if (particle.currentSet) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.font = '10px monospace';
+      ctx.fillText(particle.currentSet.forte, x + 8, y + 48);
+    }
+  }
+
+  /**
+   * Excitar visualmente un nodo (llamado cuando un fotón lo cruza)
+   */
+  exciteNode(forte) {
+    if (!this.nodeExcitations) {
+      this.nodeExcitations = new Map();
+    }
+
+    this.nodeExcitations.set(forte, {
+      intensity: 1.0,
+      startTime: performance.now()
+    });
+  }
+
+  /**
+   * Actualizar efectos de excitación de nodos
+   */
+  updateNodeExcitation(deltaTime) {
+    if (!this.nodeExcitations) return;
+
+    for (const [forte, excitation] of this.nodeExcitations) {
+      excitation.intensity -= deltaTime * 1.5; // Decay
+      if (excitation.intensity <= 0) {
+        this.nodeExcitations.delete(forte);
+      }
     }
   }
 
@@ -489,29 +626,57 @@ class SetClassVisualization {
       const isSelected = this.selectedSet === setClass;
       const isZRelated = setClass.zMate !== null;
 
+      // Comprobar excitación
+      const excitation = this.nodeExcitations?.get(forte);
+      const isExcited = excitation && excitation.intensity > 0;
+
       let r = pos.nodeRadius;
       if (isHovered) r *= 1.6;
       if (isSelected) r *= 1.3;
+      if (isExcited) r *= (1 + excitation.intensity * 0.5);
 
       const color = setClass.getColor();
 
-      // Glow para Z-related
-      if (isZRelated || isHovered) {
-        ctx.shadowBlur = isHovered ? 15 : 8;
-        ctx.shadowColor = isZRelated ? 'rgba(0, 255, 200, 0.6)' : color;
+      // Ring de excitación expandiéndose
+      if (isExcited) {
+        const ringProgress = 1 - excitation.intensity;
+        const ringRadius = r + ringProgress * 25;
+        const ringAlpha = excitation.intensity * 0.6;
+
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, ringRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${ringAlpha})`;
+        ctx.lineWidth = 2 * excitation.intensity;
+        ctx.stroke();
+      }
+
+      // Glow para Z-related o excitado
+      if (isZRelated || isHovered || isExcited) {
+        ctx.shadowBlur = isExcited ? 25 * excitation.intensity : (isHovered ? 15 : 8);
+        ctx.shadowColor = isExcited ? '#ffffff' : (isZRelated ? 'rgba(0, 255, 200, 0.6)' : color);
       }
 
       // Nodo
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = isHovered ? '#fff' : color;
+
+      if (isExcited) {
+        // Gradiente de excitación
+        const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, r);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.5, color);
+        grad.addColorStop(1, color);
+        ctx.fillStyle = grad;
+      } else {
+        ctx.fillStyle = isHovered ? '#fff' : color;
+      }
       ctx.fill();
 
       ctx.shadowBlur = 0;
 
       // Borde
-      if (isSelected || isHovered) {
-        ctx.strokeStyle = '#fff';
+      if (isSelected || isHovered || isExcited) {
+        ctx.strokeStyle = isExcited ? `rgba(255, 255, 255, ${excitation.intensity})` : '#fff';
         ctx.lineWidth = isSelected ? 2 : 1;
         ctx.stroke();
       }
