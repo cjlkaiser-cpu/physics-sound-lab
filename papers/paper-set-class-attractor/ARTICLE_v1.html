@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Set-Class Attractor: Navegando el Espacio Atonal con Física de Partículas</title>
+  <link rel="stylesheet" href="paper-style.css" />
+  <style>
+    .epigraph {
+      font-style: italic;
+      text-align: right;
+      margin: 2rem 0;
+      padding-right: 2rem;
+      color: #555;
+    }
+    .epigraph-source {
+      font-size: 0.9em;
+      margin-top: 0.5rem;
+    }
+    .note-box {
+      background: #fff3e0;
+      border-left: 3px solid #ff9800;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .note-box.blue {
+      background: #e3f2fd;
+      border-left-color: #2196f3;
+    }
+    .note-box.purple {
+      background: #f3e8ff;
+      border-left-color: #9333ea;
+    }
+    .diagram {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.85em;
+      background: #f5f5f5;
+      padding: 1rem;
+      overflow-x: auto;
+      border-radius: 4px;
+      line-height: 1.4;
+      text-align: center;
+    }
+    .highlight-quote {
+      font-size: 1.1em;
+      text-align: center;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+      border-radius: 8px;
+    }
+    .iv-table td:first-child {
+      font-family: monospace;
+      font-weight: 600;
+    }
+    .set-example {
+      background: #fafafa;
+      padding: 0.8rem 1.2rem;
+      border-radius: 4px;
+      margin: 1rem 0;
+      font-family: 'Source Code Pro', monospace;
+    }
+    .orbit-diagram {
+      text-align: center;
+      margin: 2rem 0;
+    }
+    .tension-scale {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .tension-scale span {
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+  </style>
+</head>
+<body>
+
+<header id="title-block-header">
+  <h1 class="title">Set-Class Attractor: Navegando el Espacio Atonal con Física de Partículas</h1>
+  <p style="font-style: italic; color: #666;">Teoría de Pitch-Class Sets de Allen Forte + Dinámica de partículas = Exploración sonora del universo atonal</p>
+  <p style="font-size: 0.9rem; color: #666; margin-top: 1rem;">Diciembre 2024</p>
+</header>
+
+<nav id="TOC" role="doc-toc">
+  <strong>Contenidos</strong>
+  <ul>
+    <li><a href="#abstract">Resumen</a></li>
+    <li><a href="#introduccion">1. Introducción</a></li>
+    <li><a href="#pitch-class">2. Pitch-Class Set Theory</a></li>
+    <li><a href="#forte">3. El catálogo de Allen Forte</a></li>
+    <li><a href="#z-relations">4. Z-Relations: Los agujeros de gusano</a></li>
+    <li><a href="#tension">5. El mapa de tensión</a></li>
+    <li><a href="#fisica">6. La física del sistema</a></li>
+    <li><a href="#voice-leading">7. Voice Leading Parsimonioso</a></li>
+    <li><a href="#ghosts">8. Ghost Traces: Memoria auditiva</a></li>
+    <li><a href="#emergencia">9. Lo que emerge</a></li>
+    <li><a href="#conclusiones">10. Conclusiones</a></li>
+    <li><a href="#referencias">Referencias</a></li>
+  </ul>
+</nav>
+
+<section id="abstract">
+  <h2>Resumen</h2>
+  <p>
+    ¿Cómo suena el espacio atonal? Este artículo presenta un sistema donde una partícula navega físicamente entre los 223 set-classes catalogados por Allen Forte en 1973. Cada set-class es un atractor gravitacional; la partícula orbita entre ellos siguiendo leyes de física simple. Cuando la partícula "cae" en un atractor, suena el conjunto de alturas correspondiente. El resultado es una exploración sonora del universo de la música atonal —un territorio que tradicionalmente solo habitaron Schönberg, Webern y Berg.
+  </p>
+  <p class="keywords"><strong>Palabras clave:</strong> Pitch-Class Set Theory, Allen Forte, música atonal, sistemas dinámicos, Z-relations, voice leading, Web Audio API</p>
+</section>
+
+<section id="introduccion">
+  <h2>1. Introducción: El problema de la atonalidad</h2>
+
+  <div class="epigraph">
+    "La emancipación de la disonancia"
+    <div class="epigraph-source">— Arnold Schönberg</div>
+  </div>
+
+  <p>
+    En 1908, Schönberg cruzó un umbral. Con sus <em>Drei Klavierstücke</em> Op. 11, abandonó la tonalidad que había organizado la música occidental durante tres siglos. Pero con la libertad vino un problema: <strong>¿cómo orientarse en un espacio sin centro?</strong>
+  </p>
+
+  <p>
+    La tonalidad era un mapa. Sabías dónde estabas (en Do Mayor, en La menor) y hacia dónde ibas (la dominante, la tónica). La atonalidad era territorio salvaje: todas las notas igualmente válidas, ninguna jerarquía, ningún hogar.
+  </p>
+
+  <p>
+    Durante décadas, la música atonal se compuso "a oído". Los compositores desarrollaban intuiciones sobre qué combinaciones de notas funcionaban, pero no existía un marco teórico comparable a la armonía tradicional. Hasta que llegó Allen Forte.
+  </p>
+
+  <div class="note-box">
+    <strong>La pregunta central:</strong> Si eliminamos la tonalidad, ¿qué estructura queda? ¿Hay algún orden oculto en el aparente caos de la música atonal?
+  </div>
+</section>
+
+<section id="pitch-class">
+  <h2>2. Pitch-Class Set Theory: Las matemáticas de la atonalidad</h2>
+
+  <h3>2.1 Pitch Classes: Olvidando las octavas</h3>
+
+  <p>
+    El primer paso es radical: <strong>ignoramos las octavas</strong>. Un Do grave y un Do agudo son "el mismo" pitch class. Esto reduce las infinitas notas posibles a solo 12:
+  </p>
+
+  <div class="set-example">
+    0 = Do, 1 = Do#, 2 = Re, 3 = Re#, 4 = Mi, 5 = Fa,<br>
+    6 = Fa#, 7 = Sol, 8 = Sol#, 9 = La, 10 = La#, 11 = Si
+  </div>
+
+  <p>
+    Esta simplificación captura algo profundo: cuando escuchamos Do-Mi-Sol, lo reconocemos como "acorde mayor" sin importar en qué octava suene. El pitch class captura la <em>identidad</em> de la nota, no su registro.
+  </p>
+
+  <h3>2.2 Sets: Conjuntos de notas</h3>
+
+  <p>
+    Un <strong>pitch-class set</strong> (o simplemente "set") es cualquier combinación de pitch classes. El acorde de Do Mayor es el set {0, 4, 7} (Do, Mi, Sol). Un cluster cromático podría ser {0, 1, 2, 3}.
+  </p>
+
+  <p>
+    Pero aquí viene la clave: consideramos <strong>equivalentes</strong> los sets que son:
+  </p>
+
+  <ul>
+    <li><strong>Transposiciones:</strong> {0, 4, 7} y {2, 6, 9} son "el mismo" set (Do Mayor = Re Mayor)</li>
+    <li><strong>Inversiones:</strong> {0, 4, 7} y {0, 3, 7} son equivalentes (Mayor = menor, estructuralmente)</li>
+  </ul>
+
+  <p>
+    Con estas equivalencias, los miles de combinaciones posibles se reducen a un número manejable de <strong>set-classes</strong>: familias de sets relacionados por transposición e inversión.
+  </p>
+
+  <h3>2.3 Prime Form: La forma canónica</h3>
+
+  <p>
+    Cada set-class tiene una <strong>prime form</strong> (forma prima): la versión más compacta, empezando en 0. Es como poner todos los acordes "en posición fundamental".
+  </p>
+
+  <div class="set-example">
+    Acorde Mayor: Prime Form [0, 4, 7]<br>
+    Acorde menor: Prime Form [0, 3, 7]<br>
+    Acorde disminuido: Prime Form [0, 3, 6]<br>
+    Acorde aumentado: Prime Form [0, 4, 8]
+  </div>
+</section>
+
+<section id="forte">
+  <h2>3. El catálogo de Allen Forte: 223 mundos sonoros</h2>
+
+  <h3>3.1 The Structure of Atonal Music (1973)</h3>
+
+  <p>
+    En 1973, el teórico Allen Forte publicó <em>The Structure of Atonal Music</em>, un trabajo monumental que catalogó <strong>todos los set-classes posibles</strong>. El resultado: exactamente 223 set-classes distintos, organizados por cardinalidad (número de notas).
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Cardinalidad</th><th>Número de set-classes</th><th>Ejemplo</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>3 (tríadas)</td><td>12</td><td>3-11 [0,3,7] = menor</td></tr>
+      <tr><td>4 (tétradas)</td><td>29</td><td>4-27 [0,2,5,8] = dom7</td></tr>
+      <tr><td>5 (pentacordios)</td><td>38</td><td>5-35 [0,2,4,7,9] = pentatónica</td></tr>
+      <tr><td>6 (hexacordios)</td><td>50</td><td>6-32 [0,2,4,5,7,9] = escala mayor</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.2 Los Forte Numbers</h3>
+
+  <p>
+    Forte asignó a cada set-class un identificador único: el <strong>Forte number</strong>. El formato es <code>X-Y</code> donde X es la cardinalidad e Y es un número secuencial.
+  </p>
+
+  <div class="set-example">
+    3-1 [0,1,2] = cluster cromático (muy tenso)<br>
+    3-11 [0,3,7] = tríada menor (consonante)<br>
+    3-12 [0,4,8] = acorde aumentado (simétrico)
+  </div>
+
+  <p>
+    Este catálogo es el <strong>mapa del territorio atonal</strong>. Cada Forte number es una coordenada en el espacio de todas las sonoridades posibles.
+  </p>
+
+  <h3>3.3 El Interval Vector: La huella dactilar</h3>
+
+  <p>
+    Cada set-class tiene un <strong>interval vector</strong> (vector interválico): seis números que cuentan cuántos de cada tipo de intervalo contiene el set.
+  </p>
+
+  <div class="set-example">
+    Interval Vector = [ic1, ic2, ic3, ic4, ic5, ic6]<br><br>
+    ic1 = semitonos (segundas menores/séptimas mayores)<br>
+    ic2 = tonos (segundas mayores/séptimas menores)<br>
+    ic3 = terceras menores/sextas mayores<br>
+    ic4 = terceras mayores/sextas menores<br>
+    ic5 = cuartas/quintas justas<br>
+    ic6 = tritonos
+  </div>
+
+  <p>
+    El interval vector es la "huella dactilar" del set-class. Dos sets con el mismo vector suenan similarmente tensos o consonantes, aunque contengan notas diferentes.
+  </p>
+
+  <table class="iv-table">
+    <thead>
+      <tr><th>Set-class</th><th>Prime Form</th><th>Interval Vector</th><th>Carácter</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>3-11</td><td>[0,3,7]</td><td>[0,0,1,1,1,0]</td><td>Consonante (menor)</td></tr>
+      <tr><td>3-1</td><td>[0,1,2]</td><td>[2,1,0,0,0,0]</td><td>Muy tenso (cluster)</td></tr>
+      <tr><td>3-12</td><td>[0,4,8]</td><td>[0,0,0,3,0,0]</td><td>Simétrico (aumentado)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="z-relations">
+  <h2>4. Z-Relations: Los agujeros de gusano del espacio atonal</h2>
+
+  <h3>4.1 El fenómeno Z</h3>
+
+  <p>
+    Forte descubrió algo inesperado: existen pares de set-classes con <strong>el mismo interval vector pero diferente prime form</strong>. Los llamó <strong>Z-related sets</strong> (la Z viene de "zygotic", gemelos).
+  </p>
+
+  <div class="highlight-quote">
+    Dos sets Z-related suenan igual de tensos, tienen la misma "textura interválica", pero son estructuralmente diferentes. Son gemelos sonoros que no comparten ADN.
+  </div>
+
+  <div class="set-example">
+    4-Z15 [0,1,4,6] — IV: [1,1,1,1,1,1]<br>
+    4-Z29 [0,1,3,7] — IV: [1,1,1,1,1,1]<br><br>
+    ¡Mismo vector, diferentes notas!
+  </div>
+
+  <h3>4.2 Z-Portals en nuestro sistema</h3>
+
+  <p>
+    En Set-Class Attractor, las Z-relations funcionan como <strong>agujeros de gusano</strong>. Cuando la partícula está en un set con Z-mate, tiene una probabilidad de "tunelizar" instantáneamente a su gemelo.
+  </p>
+
+  <div class="diagram">
+    <pre>
+    Órbita 4 (tétradas)                    Órbita 5 (pentacordios)
+
+         ●4-Z15                                  ●5-Z17
+           ↑                                       ↑
+           ║ ←── Z-Portal ──→                     ║
+           ↓                                       ↓
+         ●4-Z29                                  ●5-Z37
+    </pre>
+  </div>
+
+  <p>
+    Este mecanismo permite saltos dramáticos en el espacio sonoro: la partícula puede estar explorando una región y súbitamente aparecer en otra estructuralmente diferente pero perceptualmente similar.
+  </p>
+
+  <div class="note-box blue">
+    <strong>Intuición física:</strong> Los Z-Portals son como túneles cuánticos. La partícula no viaja por el espacio intermedio; simplemente aparece en otro lugar. El efecto sonoro es un "salto" que mantiene la tensión pero cambia el color.
+  </div>
+</section>
+
+<section id="tension">
+  <h2>5. El mapa de tensión: Heat Map del espacio atonal</h2>
+
+  <h3>5.1 Calculando la tensión</h3>
+
+  <p>
+    No todos los set-classes son igualmente tensos. Un cluster cromático [0,1,2] chirría; una tríada mayor [0,4,7] suena estable. ¿Podemos cuantificar esto?
+  </p>
+
+  <p>
+    Usamos el interval vector con pesos perceptuales:
+  </p>
+
+  <div class="set-example">
+    Tensión = ic1×1.0 + ic2×0.3 + ic3×0.1 + ic4×0.1 + ic5×0.0 + ic6×0.8<br><br>
+    • ic1 (semitonos): máxima tensión<br>
+    • ic6 (tritonos): alta tensión<br>
+    • ic5 (quintas): máxima consonancia<br>
+    • ic3, ic4 (terceras): moderada consonancia
+  </div>
+
+  <h3>5.2 Visualización: El Heat Map</h3>
+
+  <p>
+    En la visualización, cada set-class se colorea según su tensión:
+  </p>
+
+  <div class="tension-scale">
+    <span style="background: #4444ff; color: white;">Consonante</span>
+    <span style="background: #44ff44; color: black;">Neutro</span>
+    <span style="background: #ffff44; color: black;">Tenso</span>
+    <span style="background: #ff4444; color: white;">Muy tenso</span>
+  </div>
+
+  <p>
+    Esto crea un mapa térmico del espacio atonal: regiones frías (consonantes) y calientes (disonantes). La partícula navega este paisaje, alternando entre zonas de tensión y relajación.
+  </p>
+
+  <div class="diagram">
+    <pre>
+                    Card. 3          Card. 4          Card. 5          Card. 6
+                      │                │                │                │
+                    ┌─┴─┐            ┌─┴─┐            ┌─┴─┐            ┌─┴─┐
+                    │   │            │   │            │   │            │   │
+                  🔵 🟢 🔴        🔵 🟡 🔴 🟢      🔵 🟡 🔴 🟢 🟡    🔵 🟡 🔴 🟢 🟡 🔵
+                    │   │            │   │            │   │            │   │
+                    └─┬─┘            └─┬─┘            └─┬─┘            └─┬─┘
+                      │                │                │                │
+                      └────────────────┴────────────────┴────────────────┘
+                                            │
+                                         Centro
+    </pre>
+  </div>
+</section>
+
+<section id="fisica">
+  <h2>6. La física del sistema</h2>
+
+  <h3>6.1 Distribución orbital</h3>
+
+  <p>
+    Los 223 set-classes se distribuyen en <strong>órbitas concéntricas</strong> según su cardinalidad:
+  </p>
+
+  <ul>
+    <li><strong>Órbita interior (r=100):</strong> Cardinalidad 3 — 12 tríadas</li>
+    <li><strong>Órbita media-interior (r=180):</strong> Cardinalidad 4 — 29 tétradas</li>
+    <li><strong>Órbita media-exterior (r=260):</strong> Cardinalidad 5 — 38 pentacordios</li>
+    <li><strong>Órbita exterior (r=340):</strong> Cardinalidad 6 — 50 hexacordios</li>
+  </ul>
+
+  <p>
+    Dentro de cada órbita, los sets se ordenan por <strong>similitud de interval vector</strong>, de modo que sets vecinos suenan parecido.
+  </p>
+
+  <h3>6.2 Fuerzas sobre la partícula</h3>
+
+  <p>
+    La partícula experimenta varias fuerzas simultáneas:
+  </p>
+
+  <pre><code class="language-javascript">// 1. Atracción hacia sets cercanos (ponderada por similitud)
+for (const set of visibleSets) {
+    const similarity = 1 / (1 + distance(currentSet, set));
+    const attraction = STRENGTH * similarity / (dist * dist);
+    force += attraction * direction;
+}
+
+// 2. Snap: fuerza extra cuando está muy cerca de un atractor
+if (dist < SNAP_DISTANCE) {
+    force += SNAP_STRENGTH * (1 - dist/SNAP_DISTANCE);
+}
+
+// 3. Escape: repulsión si lleva demasiado tiempo en un set
+if (timeInCurrentSet > ESCAPE_TIME) {
+    force -= ESCAPE_STRENGTH * escapeRatio;
+}
+
+// 4. Wanderlust: fuerza tangencial para explorar
+force += tangentDirection * WANDERLUST;
+
+// 5. Centrípeta oscilante: para cambiar de órbita
+force += radialDirection * sin(time) * CENTRIPETAL;</code></pre>
+
+  <h3>6.3 Mecanismos anti-atrapamiento</h3>
+
+  <p>
+    Un problema inicial: la partícula tendía a quedar atrapada en un set o a orbitar indefinidamente una cardinalidad. Soluciones implementadas:
+  </p>
+
+  <ul>
+    <li><strong>Escape temporizado:</strong> Después de 1.5s en el mismo set, la atracción se convierte en repulsión</li>
+    <li><strong>Impulso browniano creciente:</strong> El ruido aleatorio aumenta con el tiempo de atrapamiento</li>
+    <li><strong>Salto de órbita aleatorio:</strong> Probabilidad de impulso radial cuando está escapando</li>
+    <li><strong>Impulso de emergencia:</strong> Si la velocidad es muy baja por 3s, impulso fuerte aleatorio</li>
+  </ul>
+</section>
+
+<section id="voice-leading">
+  <h2>7. Voice Leading Parsimonioso</h2>
+
+  <h3>7.1 El problema de la conducción</h3>
+
+  <p>
+    Cuando la partícula pasa de un set a otro, ¿cómo transicionamos las notas? Podríamos simplemente tocar el nuevo set, pero eso suena abrupto. La música real usa <strong>voice leading</strong>: las voces individuales se mueven lo mínimo posible.
+  </p>
+
+  <h3>7.2 Parsimonia: El ideal de Webern</h3>
+
+  <p>
+    Anton Webern llevó la parsimonia al extremo: cada voz se mueve por semitono o se mantiene. Nuestro sistema implementa un parámetro de <strong>smoothness</strong> (0 a 1):
+  </p>
+
+  <div class="set-example">
+    smoothness = 0: Estilo Webern, saltos libres<br>
+    smoothness = 1: Máxima parsimonia, mínimo movimiento
+  </div>
+
+  <pre><code class="language-javascript">// 1. Mantener notas comunes (common tones)
+const commonTones = currentVoices.filter(midi =>
+    targetPitchClasses.includes(midi % 12)
+);
+
+// 2. Mover voces restantes por distancia mínima
+for (const targetPC of remainingPCs) {
+    const closestVoice = findClosestUnusedVoice(targetPC);
+    const newMidi = moveByMinimalDistance(closestVoice, targetPC);
+    newVoices.push(newMidi);
+}</code></pre>
+
+  <h3>7.3 El efecto sonoro</h3>
+
+  <p>
+    Con alta parsimonia, las transiciones suenan como <strong>metamorfosis</strong>: un acorde se transforma gradualmente en otro. Con baja parsimonia, los saltos son más dramáticos, al estilo puntillista de Webern.
+  </p>
+
+  <div class="note-box purple">
+    <strong>Experimento auditivo:</strong> Escucha la diferencia entre smoothness 0.2 y 0.9. Con 0.2, cada set-class suena como un evento discreto. Con 0.9, la música fluye como un río continuo donde los acordes emergen y se disuelven.
+  </div>
+</section>
+
+<section id="ghosts">
+  <h2>8. Ghost Traces: La memoria auditiva a corto plazo</h2>
+
+  <h3>8.1 ¿Por qué memoria?</h3>
+
+  <p>
+    La percepción musical depende de la memoria. Reconocemos una melodía porque recordamos las notas anteriores. En música atonal, donde no hay "hogar" tonal, la memoria de corto plazo es aún más crucial.
+  </p>
+
+  <h3>8.2 Implementación de los fantasmas</h3>
+
+  <p>
+    Cada vez que la partícula visita un set-class, deja un <strong>ghost trace</strong> (rastro fantasma):
+  </p>
+
+  <ul>
+    <li>Representación visual: círculo semitransparente que se desvanece</li>
+    <li>Duración: ~6 segundos hasta desaparecer</li>
+    <li>Visitas múltiples: el fantasma crece y persiste más</li>
+  </ul>
+
+  <h3>8.3 Reconocimiento y reverb</h3>
+
+  <p>
+    Cuando la partícula <strong>regresa</strong> a territorio familiar (cerca de fantasmas existentes):
+  </p>
+
+  <ul>
+    <li>Los fantasmas cercanos <strong>brillan</strong></li>
+    <li>El <strong>reverb aumenta</strong>, creando sensación de "déjà vu" sonoro</li>
+    <li>Se registra como patrón de retorno en la memoria auditiva</li>
+  </ul>
+
+  <pre><code class="language-javascript">// Detectar retorno a territorio familiar
+const nearbyGhosts = ghosts.filter(g =>
+    distance(particle, g.position) < THRESHOLD
+);
+
+if (nearbyGhosts.length > 0) {
+    // Efecto visual: brillar fantasmas
+    nearbyGhosts.forEach(g => g.brightness = 1.5);
+
+    // Efecto auditivo: aumentar reverb
+    audioEngine.setReverbWet(0.2 + 0.4 * intensity);
+}</code></pre>
+
+  <div class="highlight-quote">
+    Los Ghost Traces crean una forma de <strong>coherencia emergente</strong>: aunque la partícula se mueve caóticamente, las revisitas a territorios familiares generan una sensación de estructura y retorno.
+  </div>
+</section>
+
+<section id="emergencia">
+  <h2>9. Lo que emerge</h2>
+
+  <h3>9.1 Patrones observados</h3>
+
+  <p>
+    Después de extensas sesiones de escucha, emergen comportamientos característicos:
+  </p>
+
+  <ul>
+    <li><strong>Exploración por similitud:</strong> La partícula tiende a visitar sets vecinos (similar interval vector) antes de saltar a regiones distantes</li>
+    <li><strong>Ciclos de tensión:</strong> Periodos en zonas calientes (disonantes) seguidos de "descansos" en zonas frías</li>
+    <li><strong>Z-Saltos dramáticos:</strong> Los túneles Z crean momentos de sorpresa que rompen patrones predecibles</li>
+    <li><strong>Retornos fantasmales:</strong> La revisita a territorios familiares crea puntos de anclaje perceptual</li>
+  </ul>
+
+  <h3>9.2 Lo que NO es</h3>
+
+  <p>
+    Es importante ser honestos:
+  </p>
+
+  <ul>
+    <li>No es "composición" en el sentido tradicional</li>
+    <li>No tiene estructura de forma (ABA, sonata, etc.)</li>
+    <li>No "entiende" la música atonal; solo navega su espacio</li>
+    <li>No siempre suena "bien" según ningún estándar</li>
+  </ul>
+
+  <h3>9.3 Lo que SÍ es</h3>
+
+  <p>
+    Pero logra algo notable:
+  </p>
+
+  <div class="highlight-quote">
+    Hace audible la <strong>estructura matemática</strong> del espacio atonal. <br>
+    Convierte el catálogo abstracto de Forte en una <strong>experiencia sensorial</strong>.
+  </div>
+
+  <p>
+    Es como tener un telescopio que te permite "ver" las 223 constelaciones del universo atonal. No compone música; <strong>explora un territorio</strong>.
+  </p>
+</section>
+
+<section id="conclusiones">
+  <h2>10. Conclusiones</h2>
+
+  <p>
+    En 1973, Allen Forte mapeó el territorio de la atonalidad. Cincuenta años después, este proyecto permite <strong>habitarlo</strong>.
+  </p>
+
+  <p>
+    La física de partículas proporciona un mecanismo de exploración que es:
+  </p>
+
+  <ul>
+    <li><strong>No aleatorio:</strong> La partícula sigue leyes deterministas</li>
+    <li><strong>No predeterminado:</strong> Las trayectorias son impredecibles a largo plazo</li>
+    <li><strong>Coherente:</strong> La estructura del espacio garantiza transiciones musicalmente sensatas</li>
+  </ul>
+
+  <p>
+    Los Z-Portals añaden una dimensión de sorpresa estructurada. Los Ghost Traces añaden memoria y retorno. El voice leading parsimonioso añade continuidad.
+  </p>
+
+  <p>
+    El resultado no es música compuesta ni ruido aleatorio. Es algo intermedio: <strong>exploración sonora guiada por la geometría del espacio atonal</strong>.
+  </p>
+
+  <div class="epigraph" style="margin-top: 2rem;">
+    "El espacio atonal no es un vacío. Es un territorio con su propia geografía, sus propias rutas, sus propios puntos de interés. Solo necesitábamos un vehículo para explorarlo."
+  </div>
+</section>
+
+<section id="referencias">
+  <h2>Referencias</h2>
+
+  <div class="references">
+    <p>[1] Forte, A. (1973). <em>The Structure of Atonal Music</em>. Yale University Press.</p>
+
+    <p>[2] Straus, J. N. (2016). <em>Introduction to Post-Tonal Theory</em> (4th ed.). W. W. Norton.</p>
+
+    <p>[3] Rahn, J. (1980). <em>Basic Atonal Theory</em>. Schirmer Books.</p>
+
+    <p>[4] Morris, R. (1987). <em>Composition with Pitch-Classes: A Theory of Compositional Design</em>. Yale University Press.</p>
+
+    <p>[5] Lewin, D. (1987). <em>Generalized Musical Intervals and Transformations</em>. Yale University Press.</p>
+
+    <p>[6] Perle, G. (1991). <em>Serial Composition and Atonality</em> (6th ed.). University of California Press.</p>
+
+    <p>[7] Tymoczko, D. (2011). <em>A Geometry of Music: Harmony and Counterpoint in the Extended Common Practice</em>. Oxford University Press.</p>
+
+    <p>[8] Roads, C. (1996). <em>The Computer Music Tutorial</em>. MIT Press.</p>
+  </div>
+</section>
+
+<footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0; text-align: center; color: #666; font-size: 0.9em;">
+  <p>
+    Demo interactiva: <a href="https://cjlkaiser-cpu.github.io/set-class-attractor/">Set-Class Attractor</a>
+  </p>
+  <p>
+    Physics Sound Lab · 2024
+  </p>
+</footer>
+
+</body>
+</html>

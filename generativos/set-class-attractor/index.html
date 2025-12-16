@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set-Class Attractor | Physics Sound Lab</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0a0a15;
+      color: #e0e0e0;
+      font-family: 'SF Mono', 'Consolas', monospace;
+      overflow: hidden;
+    }
+
+    #app {
+      display: flex;
+      height: 100vh;
+    }
+
+    #canvas-container {
+      flex: 1;
+      position: relative;
+    }
+
+    #mainCanvas {
+      display: block;
+    }
+
+    /* Panel lateral */
+    #controls {
+      width: 280px;
+      background: rgba(15, 15, 25, 0.95);
+      border-left: 1px solid rgba(100, 150, 255, 0.2);
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #fff;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 20px;
+    }
+
+    .section {
+      margin-bottom: 25px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(100, 150, 255, 0.8);
+      margin-bottom: 12px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid rgba(100, 150, 255, 0.2);
+    }
+
+    /* Botones */
+    .btn {
+      display: inline-block;
+      padding: 8px 16px;
+      background: rgba(100, 150, 255, 0.15);
+      border: 1px solid rgba(100, 150, 255, 0.3);
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+
+    .btn:hover {
+      background: rgba(100, 150, 255, 0.25);
+      border-color: rgba(100, 150, 255, 0.5);
+    }
+
+    .btn.active {
+      background: rgba(100, 150, 255, 0.4);
+      border-color: rgba(100, 150, 255, 0.7);
+    }
+
+    .btn.primary {
+      background: rgba(100, 200, 150, 0.2);
+      border-color: rgba(100, 200, 150, 0.4);
+    }
+
+    .btn.primary:hover {
+      background: rgba(100, 200, 150, 0.3);
+    }
+
+    /* Sliders */
+    .slider-container {
+      margin-bottom: 15px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+
+    .slider-value {
+      color: rgba(100, 150, 255, 0.8);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      -webkit-appearance: none;
+      background: rgba(100, 150, 255, 0.2);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      background: rgba(100, 150, 255, 0.8);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    /* Toggles */
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+
+    .toggle {
+      position: relative;
+      width: 40px;
+      height: 20px;
+      background: rgba(100, 100, 100, 0.3);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle.active {
+      background: rgba(0, 200, 150, 0.5);
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle.active::after {
+      transform: translateX(20px);
+    }
+
+    /* Info panel */
+    #info-panel {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    #info-panel .label {
+      color: rgba(255,255,255,0.5);
+    }
+
+    #info-panel .value {
+      color: #fff;
+      font-weight: 500;
+    }
+
+    /* Cardinalidad buttons */
+    .card-buttons {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .card-btn {
+      width: 45px;
+      text-align: center;
+    }
+
+    /* Heat map legend */
+    .heat-legend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      margin-top: 10px;
+    }
+
+    .heat-gradient {
+      flex: 1;
+      height: 8px;
+      background: linear-gradient(to right, hsl(240, 70%, 50%), hsl(180, 80%, 50%), hsl(120, 80%, 50%), hsl(60, 85%, 50%), hsl(0, 90%, 50%));
+      border-radius: 4px;
+    }
+
+    /* Status indicator */
+    .status {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .status.running {
+      background: #4CAF50;
+      animation: pulse 1s infinite;
+    }
+
+    .status.paused {
+      background: #FF9800;
+    }
+
+    .status.stopped {
+      background: #666;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Overlay de inicio */
+    #start-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(10, 10, 21, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      cursor: pointer;
+    }
+
+    #start-overlay h2 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    #start-overlay p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 30px;
+      max-width: 400px;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    #start-overlay .start-btn {
+      padding: 15px 40px;
+      font-size: 16px;
+      background: rgba(100, 150, 255, 0.2);
+      border: 2px solid rgba(100, 150, 255, 0.5);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    #start-overlay .start-btn:hover {
+      background: rgba(100, 150, 255, 0.35);
+      transform: scale(1.05);
+    }
+
+    /* Memory panel */
+    #memory-panel {
+      margin-top: 15px;
+      font-size: 10px;
+    }
+
+    .memory-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+  </style>
+</head>
+<body>
+  <div id="start-overlay">
+    <h2>Set-Class Attractor</h2>
+    <p>Explora el espacio de la Pitch-Class Set Theory de Allen Forte a traves de fisica y sonido. Navega entre los 223 set classes, experimenta Z-Portals y descubre relaciones armonicas atonales.</p>
+    <button class="start-btn">Iniciar Experiencia</button>
+  </div>
+
+  <div id="app">
+    <div id="canvas-container">
+      <canvas id="mainCanvas"></canvas>
+    </div>
+
+    <div id="controls">
+      <h1>Set-Class Attractor</h1>
+      <div class="subtitle">Pitch-Class Set Theory Explorer</div>
+
+      <!-- Estado -->
+      <div class="section">
+        <div class="section-title">Estado</div>
+        <div style="margin-bottom: 10px;">
+          <span class="status stopped" id="status-indicator"></span>
+          <span id="status-text">Detenido</span>
+        </div>
+        <button class="btn primary" id="btn-play">Play</button>
+        <button class="btn" id="btn-pause">Pausa</button>
+        <button class="btn" id="btn-impulse">Impulso</button>
+      </div>
+
+      <!-- Cardinalidad -->
+      <div class="section">
+        <div class="section-title">Cardinalidad</div>
+        <div class="card-buttons">
+          <button class="btn card-btn active" data-card="all">All</button>
+          <button class="btn card-btn" data-card="3">3</button>
+          <button class="btn card-btn" data-card="4">4</button>
+          <button class="btn card-btn" data-card="5">5</button>
+          <button class="btn card-btn" data-card="6">6</button>
+        </div>
+      </div>
+
+      <!-- Voice Leading -->
+      <div class="section">
+        <div class="section-title">Voice Leading</div>
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>Parsimonia</span>
+            <span class="slider-value" id="vl-value">50%</span>
+          </div>
+          <input type="range" id="voice-leading" min="0" max="100" value="50">
+          <div style="display: flex; justify-content: space-between; font-size: 9px; color: rgba(255,255,255,0.4); margin-top: 3px;">
+            <span>Webern</span>
+            <span>Parsimoniosa</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fisica -->
+      <div class="section">
+        <div class="section-title">Fisica</div>
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>Atraccion</span>
+            <span class="slider-value" id="attr-value">15%</span>
+          </div>
+          <input type="range" id="attraction" min="0" max="50" value="15">
+        </div>
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>Friccion</span>
+            <span class="slider-value" id="fric-value">97%</span>
+          </div>
+          <input type="range" id="friction" min="90" max="99" value="97">
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="section">
+        <div class="section-title">Features</div>
+        <div class="toggle-row">
+          <span>Z-Portals</span>
+          <div class="toggle active" id="toggle-zportals"></div>
+        </div>
+        <div class="toggle-row">
+          <span>Ghost Traces</span>
+          <div class="toggle active" id="toggle-ghosts"></div>
+        </div>
+        <div class="toggle-row">
+          <span>Sonido</span>
+          <div class="toggle active" id="toggle-sound"></div>
+        </div>
+      </div>
+
+      <!-- Audio -->
+      <div class="section">
+        <div class="section-title">Audio</div>
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>Volumen</span>
+            <span class="slider-value" id="vol-value">30%</span>
+          </div>
+          <input type="range" id="volume" min="0" max="100" value="30">
+        </div>
+        <div style="margin-top: 10px;">
+          <button class="btn" data-wave="sine">Sine</button>
+          <button class="btn active" data-wave="triangle">Triangle</button>
+          <button class="btn" data-wave="sawtooth">Saw</button>
+        </div>
+      </div>
+
+      <!-- Info del set actual -->
+      <div class="section">
+        <div class="section-title">Set Actual</div>
+        <div id="info-panel">
+          <div><span class="label">Forte:</span> <span class="value" id="info-forte">-</span></div>
+          <div><span class="label">Prime:</span> <span class="value" id="info-prime">-</span></div>
+          <div><span class="label">IV:</span> <span class="value" id="info-iv">-</span></div>
+          <div><span class="label">Tension:</span> <span class="value" id="info-tension">-</span></div>
+          <div><span class="label">Nombre:</span> <span class="value" id="info-name">-</span></div>
+        </div>
+      </div>
+
+      <!-- Heat Map Legend -->
+      <div class="section">
+        <div class="section-title">Heat Map (Tension)</div>
+        <div class="heat-legend">
+          <span>Frio</span>
+          <div class="heat-gradient"></div>
+          <span>Caliente</span>
+        </div>
+      </div>
+
+      <!-- Memoria -->
+      <div class="section">
+        <div class="section-title">Memoria</div>
+        <div id="memory-panel">
+          <div class="memory-item"><span>Coherencia:</span> <span id="mem-coherence">0%</span></div>
+          <div class="memory-item"><span>Sets visitados:</span> <span id="mem-visited">0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/set-theory.js"></script>
+  <script src="js/visualization.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/ghosts.js"></script>
+
+  <script>
+    // Aplicacion principal
+    class SetClassAttractorApp {
+      constructor() {
+        this.canvas = document.getElementById('mainCanvas');
+        this.ctx = this.canvas.getContext('2d');
+
+        // Resize canvas
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+
+        // Inicializar sistemas
+        this.viz = new SetClassVisualization(this.canvas);
+        this.physics = new PhysicsSystem(this.viz);
+        this.zPortals = new ZPortalSystem();
+        this.audio = new AudioEngine();
+        this.ghosts = new GhostTraceSystem();
+        this.memory = new AuditoryMemory();
+
+        // Estado
+        this.isRunning = false;
+        this.soundEnabled = true;
+        this.lastTime = 0;
+        this.lastSetChange = null;
+
+        // Setup UI
+        this.setupUI();
+        this.setupStartOverlay();
+
+        // Loop inicial (sin fisica)
+        this.renderLoop();
+      }
+
+      resizeCanvas() {
+        const container = document.getElementById('canvas-container');
+        this.canvas.width = container.clientWidth;
+        this.canvas.height = container.clientHeight;
+
+        if (this.viz) {
+          this.viz.resize(this.canvas.width, this.canvas.height);
+        }
+      }
+
+      setupStartOverlay() {
+        const overlay = document.getElementById('start-overlay');
+        const startBtn = overlay.querySelector('.start-btn');
+
+        const startApp = async () => {
+          await this.audio.init();
+          overlay.style.display = 'none';
+          this.start();
+        };
+
+        startBtn.addEventListener('click', startApp);
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) startApp();
+        });
+      }
+
+      setupUI() {
+        // Play/Pause/Impulse
+        document.getElementById('btn-play').addEventListener('click', () => this.start());
+        document.getElementById('btn-pause').addEventListener('click', () => this.togglePause());
+        document.getElementById('btn-impulse').addEventListener('click', () => {
+          this.physics.randomImpulse(8);
+        });
+
+        // Cardinalidad
+        document.querySelectorAll('.card-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.card-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const card = btn.dataset.card;
+            this.viz.setActiveCardinality(card === 'all' ? null : parseInt(card));
+          });
+        });
+
+        // Voice Leading slider
+        const vlSlider = document.getElementById('voice-leading');
+        vlSlider.addEventListener('input', () => {
+          const val = vlSlider.value / 100;
+          this.audio.voiceLeader.setSmoothness(val);
+          document.getElementById('vl-value').textContent = `${vlSlider.value}%`;
+        });
+
+        // Attraction slider
+        const attrSlider = document.getElementById('attraction');
+        attrSlider.addEventListener('input', () => {
+          this.physics.params.attractionStrength = attrSlider.value / 100;
+          document.getElementById('attr-value').textContent = `${attrSlider.value}%`;
+        });
+
+        // Friction slider
+        const fricSlider = document.getElementById('friction');
+        fricSlider.addEventListener('input', () => {
+          this.physics.params.friction = fricSlider.value / 100;
+          document.getElementById('fric-value').textContent = `${fricSlider.value}%`;
+        });
+
+        // Volume slider
+        const volSlider = document.getElementById('volume');
+        volSlider.addEventListener('input', () => {
+          this.audio.setVolume(volSlider.value / 100);
+          document.getElementById('vol-value').textContent = `${volSlider.value}%`;
+        });
+
+        // Toggles
+        document.getElementById('toggle-zportals').addEventListener('click', (e) => {
+          e.currentTarget.classList.toggle('active');
+          this.zPortals.enabled = e.currentTarget.classList.contains('active');
+          this.viz.showZPortals = this.zPortals.enabled;
+        });
+
+        document.getElementById('toggle-ghosts').addEventListener('click', (e) => {
+          e.currentTarget.classList.toggle('active');
+          this.ghosts.setEnabled(e.currentTarget.classList.contains('active'));
+        });
+
+        document.getElementById('toggle-sound').addEventListener('click', (e) => {
+          e.currentTarget.classList.toggle('active');
+          this.soundEnabled = e.currentTarget.classList.contains('active');
+        });
+
+        // Waveform buttons
+        document.querySelectorAll('[data-wave]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-wave]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            this.audio.setWaveform(btn.dataset.wave);
+          });
+        });
+
+        // Drag de la particula
+        this.isDragging = false;
+        this.dragOffset = { x: 0, y: 0 };
+        this.lastDragPos = { x: 0, y: 0 };
+        this.dragVelocity = { x: 0, y: 0 };
+
+        this.canvas.addEventListener('mousedown', (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          // Verificar si clickeamos cerca de la particula
+          const dx = x - this.physics.particle.x;
+          const dy = y - this.physics.particle.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 25) {
+            this.isDragging = true;
+            this.dragOffset = { x: dx, y: dy };
+            this.lastDragPos = { x, y };
+            this.dragVelocity = { x: 0, y: 0 };
+            this.canvas.style.cursor = 'grabbing';
+          }
+        });
+
+        this.canvas.addEventListener('mousemove', (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          if (this.isDragging) {
+            // Calcular velocidad del drag
+            this.dragVelocity = {
+              x: (x - this.lastDragPos.x) * 0.3,
+              y: (y - this.lastDragPos.y) * 0.3
+            };
+            this.lastDragPos = { x, y };
+
+            // Mover particula
+            this.physics.particle.x = x - this.dragOffset.x;
+            this.physics.particle.y = y - this.dragOffset.y;
+            this.physics.particle.vx = 0;
+            this.physics.particle.vy = 0;
+            this.physics.particle.timeInCurrentSet = 0;
+          } else {
+            // Cambiar cursor si estamos sobre la particula
+            const dx = x - this.physics.particle.x;
+            const dy = y - this.physics.particle.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < 25) {
+              this.canvas.style.cursor = 'grab';
+            } else if (this.viz.hoveredSet) {
+              this.canvas.style.cursor = 'pointer';
+            } else {
+              this.canvas.style.cursor = 'default';
+            }
+          }
+        });
+
+        this.canvas.addEventListener('mouseup', (e) => {
+          if (this.isDragging) {
+            this.isDragging = false;
+            this.canvas.style.cursor = 'default';
+
+            // Aplicar velocidad del drag
+            this.physics.particle.vx = this.dragVelocity.x;
+            this.physics.particle.vy = this.dragVelocity.y;
+          }
+        });
+
+        this.canvas.addEventListener('mouseleave', () => {
+          if (this.isDragging) {
+            this.isDragging = false;
+            this.canvas.style.cursor = 'default';
+            this.physics.particle.vx = this.dragVelocity.x;
+            this.physics.particle.vy = this.dragVelocity.y;
+          }
+        });
+
+        // Click en canvas para atraer particula (solo si no estamos arrastrando)
+        this.canvas.addEventListener('click', (e) => {
+          if (!this.isDragging && this.viz.hoveredSet) {
+            this.physics.attractTo(this.viz.hoveredSet.forte);
+          }
+        });
+      }
+
+      start() {
+        this.isRunning = true;
+        this.physics.start();
+        this.updateStatus('running', 'En ejecucion');
+
+        // Impulso inicial
+        this.physics.randomImpulse(5);
+      }
+
+      stop() {
+        this.isRunning = false;
+        this.physics.stop();
+        this.updateStatus('stopped', 'Detenido');
+      }
+
+      togglePause() {
+        if (this.physics.isPaused) {
+          this.physics.resume();
+          this.updateStatus('running', 'En ejecucion');
+        } else {
+          this.physics.pause();
+          this.updateStatus('paused', 'Pausado');
+        }
+      }
+
+      updateStatus(state, text) {
+        const indicator = document.getElementById('status-indicator');
+        indicator.className = `status ${state}`;
+        document.getElementById('status-text').textContent = text;
+      }
+
+      updateInfoPanel(setClass) {
+        if (!setClass) {
+          document.getElementById('info-forte').textContent = '-';
+          document.getElementById('info-prime').textContent = '-';
+          document.getElementById('info-iv').textContent = '-';
+          document.getElementById('info-tension').textContent = '-';
+          document.getElementById('info-name').textContent = '-';
+          return;
+        }
+
+        document.getElementById('info-forte').textContent = setClass.forte;
+        document.getElementById('info-prime').textContent = `[${setClass.primeForm.join(', ')}]`;
+        document.getElementById('info-iv').textContent = `[${setClass.intervalVector.join(', ')}]`;
+        document.getElementById('info-tension').textContent = `${(setClass.tension * 100).toFixed(0)}%`;
+        document.getElementById('info-name').textContent = setClass.name || '-';
+      }
+
+      updateMemoryPanel() {
+        document.getElementById('mem-coherence').textContent =
+          `${(this.memory.coherenceScore * 100).toFixed(0)}%`;
+        document.getElementById('mem-visited').textContent =
+          this.ghosts.totalVisits.size.toString();
+      }
+
+      update(deltaTime) {
+        if (!this.isRunning) return;
+
+        // No actualizar fisica si estamos arrastrando
+        if (this.isDragging) {
+          // Pero si detectar sets cercanos para feedback
+          const nearest = this.viz.getNearestSet(this.physics.particle.x, this.physics.particle.y);
+          if (nearest.distance < 20 && nearest.set !== this.physics.particle.currentSet) {
+            this.physics.particle.currentSet = nearest.set;
+            this.updateInfoPanel(nearest.set);
+            // Sonido suave al pasar sobre sets
+            if (this.soundEnabled && this.audio.isInitialized) {
+              this.audio.playArpeggio(nearest.set, null, 300);
+            }
+          }
+          return;
+        }
+
+        // Update fisica
+        const event = this.physics.update();
+
+        // Manejar cambio de set
+        if (event && event.type === 'SET_CHANGE') {
+          this.onSetChange(event);
+        }
+
+        // Check Z-Portal
+        if (this.physics.particle.currentSet && this.zPortals.enabled) {
+          const depth = Math.max(0.5, 1 - this.physics.particle.getSpeed() * 0.5);
+          const tunnel = this.zPortals.checkTunnel(this.physics.particle.currentSet, depth);
+
+          if (tunnel) {
+            this.onZTunnel(tunnel);
+          }
+        }
+
+        // Update Z-Portal effects
+        this.zPortals.update();
+
+        // Update ghosts
+        this.ghosts.update(deltaTime);
+
+        // Check return to familiar territory
+        if (this.ghosts.enabled) {
+          const returnCheck = this.ghosts.checkReturn(
+            { x: this.physics.particle.x, y: this.physics.particle.y },
+            this.audio
+          );
+        }
+
+        // Update memory panel
+        this.updateMemoryPanel();
+      }
+
+      onSetChange(event) {
+        const setClass = event.to;
+
+        // Update info panel
+        this.updateInfoPanel(setClass);
+
+        // Add ghost
+        const pos = this.viz.getPosition(setClass.forte);
+        if (pos) {
+          this.ghosts.addGhost(setClass, pos);
+        }
+
+        // Update memory
+        this.memory.remember(setClass);
+
+        // Play sound
+        if (this.soundEnabled && this.audio.isInitialized) {
+          // Arpegio rapido para tricordios, acordes para hexacordios
+          if (setClass.cardinality <= 4) {
+            this.audio.playArpeggio(setClass, null, 200);
+          } else {
+            this.audio.playSet(setClass);
+          }
+        }
+      }
+
+      onZTunnel(tunnel) {
+        // Teleportar particula
+        const targetPos = this.viz.getPosition(tunnel.to);
+        if (targetPos) {
+          this.physics.particle.teleportTo(targetPos.x, targetPos.y);
+          this.physics.particle.currentSet = tunnel.targetSet;
+
+          // Update UI
+          this.updateInfoPanel(tunnel.targetSet);
+
+          // Sound effect
+          if (this.soundEnabled && this.audio.isInitialized) {
+            this.audio.playTunnelSound();
+
+            // Tocar el nuevo set despues del whoosh
+            setTimeout(() => {
+              if (tunnel.targetSet) {
+                this.audio.playSet(tunnel.targetSet);
+              }
+            }, 300);
+          }
+        }
+      }
+
+      render() {
+        // Clear
+        this.ctx.fillStyle = '#0a0a15';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Draw visualization
+        this.viz.draw(
+          this.isRunning ? this.physics.particle : null,
+          this.ghosts.ghosts
+        );
+
+        // Draw Z-Portal effects
+        this.zPortals.drawEffects(this.ctx, this.viz);
+
+        // Draw ghosts
+        this.ghosts.draw(this.ctx);
+      }
+
+      renderLoop() {
+        const now = performance.now();
+        const deltaTime = (now - this.lastTime) / 1000;
+        this.lastTime = now;
+
+        this.update(Math.min(deltaTime, 0.1)); // Cap delta
+        this.render();
+
+        requestAnimationFrame(() => this.renderLoop());
+      }
+    }
+
+    // Iniciar app
+    const app = new SetClassAttractorApp();
+  </script>
+</body>
+</html>

@@ -270,6 +270,45 @@
             </div>
         </section>
 
+        <!-- Set-Class Attractor -->
+        <section class="card bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-2xl p-8 mb-8">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <div class="flex-1">
+                    <span class="text-orange-400 text-sm font-medium tracking-wide">SET-CLASS ATTRACTOR</span>
+                    <h2 class="text-3xl font-light mt-2 mb-4">
+                        <span class="text-orange-400 font-medium">Pitch-Class Set Theory</span>
+                    </h2>
+                    <p class="text-gray-400 mb-6">
+                        Exploracion del espacio atonal segun Allen Forte (1973). Una particula navega
+                        entre los 223 set-classes organizados por cardinalidad. Cada set es un atractor
+                        gravitacional; Z-Relations funcionan como agujeros de gusano. Heat map de tension
+                        basado en interval vectors, ghost traces para memoria auditiva.
+                    </p>
+
+                    <div class="flex flex-wrap gap-3 mb-6">
+                        <span class="px-3 py-1 bg-orange-500/10 text-orange-400/80 rounded-full text-sm">Forte 1973</span>
+                        <span class="px-3 py-1 bg-orange-500/10 text-orange-400/80 rounded-full text-sm">223 Set-Classes</span>
+                        <span class="px-3 py-1 bg-orange-500/10 text-orange-400/80 rounded-full text-sm">Z-Portals</span>
+                        <span class="px-3 py-1 bg-orange-500/10 text-orange-400/80 rounded-full text-sm">Voice Leading</span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3">
+                        <a href="set-class-attractor/index.html"
+                           class="variant-btn px-5 py-2.5 bg-orange-500 text-gray-900 rounded-lg font-medium hover:bg-orange-400">
+                            ▶ Demo
+                        </a>
+                        <a href="../papers/paper-set-class-attractor/ARTICLE_v1.html" target="_blank"
+                           class="variant-btn px-5 py-2.5 bg-gray-800 text-gray-200 rounded-lg font-medium hover:bg-gray-700">
+                            Articulo
+                        </a>
+                    </div>
+                </div>
+                <div class="lg:w-72">
+                    <canvas id="preview-setclass" class="w-full h-48 bg-gray-950 rounded-xl"></canvas>
+                </div>
+            </div>
+        </section>
+
         <!-- Cadencia Orbital -->
         <section class="card bg-gradient-to-r from-cyan-900/20 to-green-900/20 border border-cyan-500/30 rounded-2xl p-8 mb-8">
             <div class="flex flex-col lg:flex-row gap-8">
@@ -325,6 +364,8 @@
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">MediaRecorder</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Rameau Funcional</span>
                 <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Markov Chains</span>
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Pitch-Class Sets</span>
+                <span class="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-400">Allen Forte Theory</span>
             </div>
         </section>
     </main>
@@ -394,6 +435,17 @@
                     h: rameau.height = rameau.offsetHeight * 2,
                     activeChord: 0,
                     tension: 0
+                };
+            }
+
+            // Set-Class Attractor
+            const setclass = document.getElementById('preview-setclass');
+            if (setclass) {
+                previews.setclass = {
+                    ctx: setclass.getContext('2d'),
+                    w: setclass.width = setclass.offsetWidth * 2,
+                    h: setclass.height = setclass.offsetHeight * 2,
+                    trail: []
                 };
             }
         }
@@ -680,6 +732,86 @@
                 o.ctx.beginPath();
                 o.ctx.arc(wp.x, wp.y, 12, 0, Math.PI * 2);
                 o.ctx.fill();
+            }
+
+            // Set-Class Attractor preview (orbital rings with particle)
+            if (previews.setclass) {
+                const s = previews.setclass;
+                s.ctx.fillStyle = '#030712';
+                s.ctx.fillRect(0, 0, s.w, s.h);
+
+                const cx = s.w / 2, cy = s.h / 2;
+
+                // Draw orbital rings (cardinalidades 3, 4, 5, 6)
+                const orbits = [
+                    { r: 30, color: '#3b82f6', nodes: 4 },
+                    { r: 50, color: '#8b5cf6', nodes: 6 },
+                    { r: 70, color: '#ec4899', nodes: 8 },
+                    { r: 90, color: '#f97316', nodes: 10 }
+                ];
+
+                orbits.forEach(orbit => {
+                    // Orbit ring
+                    s.ctx.strokeStyle = orbit.color + '30';
+                    s.ctx.lineWidth = 1;
+                    s.ctx.beginPath();
+                    s.ctx.arc(cx, cy, orbit.r, 0, Math.PI * 2);
+                    s.ctx.stroke();
+
+                    // Nodes on orbit (set-classes)
+                    for (let i = 0; i < orbit.nodes; i++) {
+                        const angle = (i / orbit.nodes) * Math.PI * 2 - Math.PI / 2;
+                        const x = cx + orbit.r * Math.cos(angle);
+                        const y = cy + orbit.r * Math.sin(angle);
+
+                        // Heat map color (random tension)
+                        const tension = (Math.sin(time + i * 0.7) + 1) / 2;
+                        const hue = 240 - tension * 240; // blue to red
+                        s.ctx.fillStyle = `hsla(${hue}, 70%, 50%, 0.7)`;
+                        s.ctx.beginPath();
+                        s.ctx.arc(x, y, 4, 0, Math.PI * 2);
+                        s.ctx.fill();
+                    }
+                });
+
+                // Z-Portal connection (dashed line between orbits)
+                s.ctx.setLineDash([3, 4]);
+                s.ctx.strokeStyle = '#00ffc840';
+                s.ctx.beginPath();
+                const z1Angle = time * 0.3;
+                const z2Angle = time * 0.3 + Math.PI * 0.7;
+                s.ctx.moveTo(cx + 50 * Math.cos(z1Angle), cy + 50 * Math.sin(z1Angle));
+                s.ctx.lineTo(cx + 70 * Math.cos(z2Angle), cy + 70 * Math.sin(z2Angle));
+                s.ctx.stroke();
+                s.ctx.setLineDash([]);
+
+                // Particle orbiting chaotically between rings
+                const orbitR = 50 + 25 * Math.sin(time * 0.8);
+                const px = cx + orbitR * Math.sin(time * 1.5) * Math.cos(time * 0.9);
+                const py = cy + orbitR * Math.cos(time * 1.2) * Math.sin(time * 1.1);
+
+                s.trail.push({ x: px, y: py });
+                if (s.trail.length > 60) s.trail.shift();
+
+                // Trail
+                s.ctx.beginPath();
+                s.trail.forEach((p, i) => {
+                    if (i === 0) s.ctx.moveTo(p.x, p.y);
+                    else s.ctx.lineTo(p.x, p.y);
+                });
+                s.ctx.strokeStyle = '#ffffff40';
+                s.ctx.lineWidth = 2;
+                s.ctx.stroke();
+
+                // Particle
+                const grad = s.ctx.createRadialGradient(px, py, 0, px, py, 10);
+                grad.addColorStop(0, '#ffffff');
+                grad.addColorStop(0.5, '#f97316');
+                grad.addColorStop(1, '#f9731600');
+                s.ctx.fillStyle = grad;
+                s.ctx.beginPath();
+                s.ctx.arc(px, py, 10, 0, Math.PI * 2);
+                s.ctx.fill();
             }
 
             // Rameau Machine preview
