@@ -1287,13 +1287,111 @@ rameau-machine/
 - [ ] Feedback de naturalidad
 
 ### Fase 10: Grabacion y Export
-- [ ] MediaRecorder para audio
-- [ ] Export progresion como texto
+- [x] MediaRecorder para audio
+- [x] Export progresion como texto
 
-### Fase 11: Pulido
-- [ ] README.md
-- [ ] Actualizar hub de generativos
+### Fase 11: Mixer de Voces ✅ (2025-12-21)
+- [x] Panel mixer con faders verticales (Bajo, Tenor, Alto, Soprano)
+- [x] Botones Mute por voz
+- [x] LEDs de actividad (parpadean al atacar)
+- [x] Display de nota actual por voz
+- [x] Canvas Voice Trail (historial melódico 10 acordes)
+- [x] Toggle colapsable para matriz de transición
+
+### Fase 12: Motor de Audio Profesional ✅ (2025-12-21)
+
+#### 12.1 Síntesis (Fase 1)
+- [x] Freeverb algorítmico (8 comb + 4 allpass filters)
+- [x] Osciladores duales por voz (unísono con detune)
+- [x] Filtros por registro:
+  | Voz | Freq | Q | Env Amount |
+  |-----|------|---|------------|
+  | Bajo | 800Hz | 0.7 | 400 |
+  | Tenor | 1500Hz | 0.8 | 600 |
+  | Alto | 2500Hz | 0.9 | 800 |
+  | Soprano | 4000Hz | 1.0 | 1200 |
+- [x] Saturador suave (tanh waveshaper, oversample 2x)
+
+#### 12.2 Expresividad (Fase 2)
+- [x] LFO vibrato por voz:
+  | Voz | Rate | Depth |
+  |-----|------|-------|
+  | Bajo | 4.5 Hz | 8 cents |
+  | Tenor | 5.0 Hz | 12 cents |
+  | Alto | 5.5 Hz | 18 cents |
+  | Soprano | 6.0 Hz | 25 cents |
+- [x] Micro-timing humanización (0-12ms offsets aleatorios)
+- [x] Filter envelopes con exponential decay
+- [x] Vibrato con entrada gradual post-ataque
+
+#### 12.3 Timbres por Estilo (Fase 3)
+- [x] STYLES expandido con parámetros de síntesis:
+  ```javascript
+  barroco:   { filterMult: 1.3, vibratoMult: 0.3, attackMult: 0.7, reverbMix: 0.4, reverbSize: 0.8 }
+  clasico:   { filterMult: 1.0, vibratoMult: 0.5, attackMult: 1.0, reverbMix: 0.3, reverbSize: 0.6 }
+  romantico: { filterMult: 0.8, vibratoMult: 1.5, attackMult: 1.4, reverbMix: 0.5, reverbSize: 0.85 }
+  jazz:      { filterMult: 0.6, vibratoMult: 0.2, attackMult: 0.5, reverbMix: 0.15, reverbSize: 0.3 }
+  ```
+- [x] Método applyStyle() actualiza waveform, reverb, filtros, vibrato, detune
+
+#### 12.4 Espacialización (Fase 4)
+- [x] Panning estéreo por voz:
+  | Voz | Pan |
+  |-----|-----|
+  | Bajo | -0.5 |
+  | Tenor | -0.15 |
+  | Alto | +0.15 |
+  | Soprano | +0.5 |
+- [x] Early reflections (4 taps):
+  - 11ms, pan -0.7, gain 0.15 (pared izq)
+  - 19ms, pan +0.7, gain 0.12 (pared der)
+  - 27ms, pan -0.3, gain 0.08 (fondo izq)
+  - 37ms, pan +0.3, gain 0.06 (fondo der)
+  - Filtro lowpass 6kHz (absorción acústica)
+- [x] Compresor master:
+  - Threshold: -18dB
+  - Knee: 12dB (soft)
+  - Ratio: 3:1
+  - Attack: 15ms
+  - Release: 250ms
+
+### Fase 13: Pulido
+- [x] README.md actualizado
+- [x] Actualizar hub de generativos
 - [ ] Preview animado en hub
+
+---
+
+## Cadena de Audio Final (Implementada)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        POR VOZ (x4)                             │
+├─────────────────────────────────────────────────────────────────┤
+│  osc1 ──┬──► osc1Gain ──┐                                       │
+│         │               ├──► oscMerge ──► Filter ──► Gain ──►   │
+│  osc2 ──┴──► osc2Gain ──┘                                       │
+│         ▲                                           │           │
+│         │                                           ▼           │
+│  LFO ──► lfoGain (vibrato)                      Panner          │
+│                                                     │           │
+└─────────────────────────────────────────────────────┼───────────┘
+                                                      │
+                                                      ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      MASTER CHAIN                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  4 voces ──► MasterGain ──► Saturator ──► Early Reflections     │
+│                                                  │              │
+│                                                  ▼              │
+│                              Freeverb ◄──────────┘              │
+│                                  │                              │
+│                                  ▼                              │
+│                             Compressor ──► destination          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
