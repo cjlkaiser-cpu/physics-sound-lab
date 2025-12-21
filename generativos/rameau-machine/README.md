@@ -132,11 +132,56 @@ El "Traité de l'harmonie" (1722) estableció los principios de la armonía func
 | Por qué V->I suena "bien" | ✓ | |
 | Por qué C->E->Ab suena "mágico" | | ✓ |
 
+## Motor de Audio Profesional
+
+### Síntesis
+
+| Componente | Descripción |
+|------------|-------------|
+| Osciladores duales | Unísono con detune para chorus |
+| Filtros por registro | Bajo cálido → Soprano brillante |
+| LFO vibrato | Profundidad escalada por voz |
+| Micro-timing | Humanización 0-12ms por ataque |
+| Saturador suave | Calidez analógica (tanh) |
+
+### Espacialización
+
+| Voz | Pan | Early Reflections |
+|-----|-----|-------------------|
+| Bajo | -0.5 (izq) | 4 taps estéreo |
+| Tenor | -0.15 | 11-37ms delays |
+| Alto | +0.15 | Filtro 6kHz |
+| Soprano | +0.5 (der) | Absorción simulada |
+
+### Reverb (Freeverb)
+
+Implementación Schroeder/Moorer:
+- 8 filtros comb paralelos (feedback)
+- 4 filtros allpass en serie (difusión)
+- Control de room size y damping
+- Mezcla wet/dry ajustable por estilo
+
+### Compresor Master
+
+- Threshold: -18dB
+- Ratio: 3:1 (gentle glue)
+- Attack: 15ms (preserva transientes)
+- Release: 250ms
+
+## Mixer de Voces
+
+Panel de control individual para cada voz:
+- **Faders verticales**: Volumen independiente
+- **Botones Mute**: Silenciar voces específicas
+- **LEDs**: Indicador de actividad por ataque
+- **Voice Trail**: Visualización del movimiento melódico
+
 ## Tecnologías
 
-- D3.js (visualización)
-- Web Audio API (síntesis)
+- D3.js (visualización funcional)
+- Web Audio API (síntesis profesional)
 - Tailwind CSS (estilos)
+- Canvas 2D (voice trail)
 
 ## Licencia
 
