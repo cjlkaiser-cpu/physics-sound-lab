@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rameau Machine - Armonia Funcional Generativa</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
 
@@ -199,19 +199,154 @@
         .cadence-semi { background: #854d0e; color: #fef08a; }
         .cadence-frigia { background: #581c87; color: #e9d5ff; }
 
-        .voice-line {
-            position: relative;
-            height: 60px;
+        /* Voice Mixer */
+        .voice-mixer {
+            display: flex;
+            justify-content: space-around;
+            gap: 8px;
+            padding: 12px 8px;
             background: #0f172a;
+            border-radius: 8px;
+        }
+
+        .voice-channel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            min-width: 48px;
+        }
+
+        .voice-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .voice-led {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #1e293b;
+            transition: all 0.1s ease;
+        }
+
+        .voice-led.active {
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        .voice-channel[data-voice="0"] .voice-led { color: #f97316; }
+        .voice-channel[data-voice="1"] .voice-led { color: #22c55e; }
+        .voice-channel[data-voice="2"] .voice-led { color: #3b82f6; }
+        .voice-channel[data-voice="3"] .voice-led { color: #a855f7; }
+
+        .voice-channel[data-voice="0"] .voice-led.active { background: #f97316; }
+        .voice-channel[data-voice="1"] .voice-led.active { background: #22c55e; }
+        .voice-channel[data-voice="2"] .voice-led.active { background: #3b82f6; }
+        .voice-channel[data-voice="3"] .voice-led.active { background: #a855f7; }
+
+        .voice-fader-container {
+            position: relative;
+            width: 24px;
+            height: 80px;
+            background: #1e293b;
             border-radius: 4px;
             overflow: hidden;
         }
 
-        .voice-note {
+        .voice-fader-fill {
             position: absolute;
-            height: 4px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            border-radius: 4px;
+            transition: height 0.1s ease;
+        }
+
+        .voice-channel[data-voice="0"] .voice-fader-fill { background: linear-gradient(to top, #f97316, #fb923c); }
+        .voice-channel[data-voice="1"] .voice-fader-fill { background: linear-gradient(to top, #22c55e, #4ade80); }
+        .voice-channel[data-voice="2"] .voice-fader-fill { background: linear-gradient(to top, #3b82f6, #60a5fa); }
+        .voice-channel[data-voice="3"] .voice-fader-fill { background: linear-gradient(to top, #a855f7, #c084fc); }
+
+        .voice-fader {
+            position: absolute;
+            width: 80px;
+            height: 24px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-90deg);
+            -webkit-appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .voice-fader::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 10px;
+            background: #fff;
             border-radius: 2px;
-            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+        }
+
+        .voice-mute {
+            width: 28px;
+            height: 20px;
+            border: none;
+            border-radius: 4px;
+            background: #334155;
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .voice-mute:hover {
+            background: #475569;
+        }
+
+        .voice-mute.muted {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .voice-note-display {
+            font-size: 10px;
+            font-family: monospace;
+            color: #64748b;
+            min-width: 28px;
+            text-align: center;
+        }
+
+        /* Voice Trail Visualization */
+        .voice-trail-container {
+            margin-top: 12px;
+            background: #0f172a;
+            border-radius: 6px;
+            padding: 8px;
+            position: relative;
+        }
+
+        .voice-trail-labels {
+            position: absolute;
+            right: 4px;
+            top: 8px;
+            bottom: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 8px;
+            color: #475569;
+        }
+
+        #voiceTrail {
+            width: 100%;
+            height: 80px;
+            display: block;
         }
 
         .bass-line-viz {
@@ -273,6 +408,17 @@
         .matrix-container {
             font-size: 10px;
             overflow: hidden;
+            max-height: 200px;
+            transition: max-height 0.3s ease, opacity 0.2s ease;
+        }
+
+        .matrix-container.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        .matrix-chevron-rotated {
+            transform: rotate(-90deg);
         }
 
         .matrix-grid {
@@ -502,8 +648,13 @@
 
                 <!-- Matriz de Transiciones -->
                 <section>
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider">Matriz P(j|i)</h3>
+                    <div class="flex justify-between items-center mb-2 cursor-pointer select-none" id="matrixHeader">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-3 h-3 text-slate-500 transition-transform" id="matrixChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                            <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider">Matriz P(j|i)</h3>
+                        </div>
                         <span class="text-xs text-slate-500">desde <span id="currentChordLabel" class="text-white font-mono">I</span></span>
                     </div>
                     <div class="matrix-container" id="matrixDisplay">
@@ -559,17 +710,64 @@
                     </div>
                 </section>
 
-                <!-- Voice Leading Display -->
+                <!-- Voice Mixer -->
                 <section>
-                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Voces SATB</h3>
-                    <div class="voice-line" id="voiceDisplay">
-                        <div class="voice-note bg-purple-500" data-voice="soprano" style="bottom: 80%; left: 0; width: 0;"></div>
-                        <div class="voice-note bg-blue-500" data-voice="alto" style="bottom: 60%; left: 0; width: 0;"></div>
-                        <div class="voice-note bg-green-500" data-voice="tenor" style="bottom: 40%; left: 0; width: 0;"></div>
-                        <div class="voice-note bg-orange-500" data-voice="bass" style="bottom: 20%; left: 0; width: 0;"></div>
+                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Voces</h3>
+                    <div class="voice-mixer" id="voiceMixer">
+                        <!-- Bajo -->
+                        <div class="voice-channel" data-voice="0">
+                            <span class="voice-label">Bajo</span>
+                            <div class="voice-led" id="led-0"></div>
+                            <div class="voice-fader-container">
+                                <div class="voice-fader-fill" id="faderFill-0" style="height: 80%"></div>
+                                <input type="range" class="voice-fader" id="fader-0" min="0" max="100" value="80">
+                            </div>
+                            <button class="voice-mute" id="mute-0">M</button>
+                            <span class="voice-note-display" id="note-0">--</span>
+                        </div>
+                        <!-- Tenor -->
+                        <div class="voice-channel" data-voice="1">
+                            <span class="voice-label">Tenor</span>
+                            <div class="voice-led" id="led-1"></div>
+                            <div class="voice-fader-container">
+                                <div class="voice-fader-fill" id="faderFill-1" style="height: 80%"></div>
+                                <input type="range" class="voice-fader" id="fader-1" min="0" max="100" value="80">
+                            </div>
+                            <button class="voice-mute" id="mute-1">M</button>
+                            <span class="voice-note-display" id="note-1">--</span>
+                        </div>
+                        <!-- Alto -->
+                        <div class="voice-channel" data-voice="2">
+                            <span class="voice-label">Alto</span>
+                            <div class="voice-led" id="led-2"></div>
+                            <div class="voice-fader-container">
+                                <div class="voice-fader-fill" id="faderFill-2" style="height: 80%"></div>
+                                <input type="range" class="voice-fader" id="fader-2" min="0" max="100" value="80">
+                            </div>
+                            <button class="voice-mute" id="mute-2">M</button>
+                            <span class="voice-note-display" id="note-2">--</span>
+                        </div>
+                        <!-- Soprano -->
+                        <div class="voice-channel" data-voice="3">
+                            <span class="voice-label">Soprano</span>
+                            <div class="voice-led" id="led-3"></div>
+                            <div class="voice-fader-container">
+                                <div class="voice-fader-fill" id="faderFill-3" style="height: 80%"></div>
+                                <input type="range" class="voice-fader" id="fader-3" min="0" max="100" value="80">
+                            </div>
+                            <button class="voice-mute" id="mute-3">M</button>
+                            <span class="voice-note-display" id="note-3">--</span>
+                        </div>
                     </div>
-                    <div class="flex justify-between text-xs text-slate-500 mt-1">
-                        <span>S</span><span>A</span><span>T</span><span>B</span>
+                    <!-- Voice Trail Visualization -->
+                    <div class="voice-trail-container">
+                        <canvas id="voiceTrail"></canvas>
+                        <div class="voice-trail-labels">
+                            <span style="color: #a855f7">S</span>
+                            <span style="color: #3b82f6">A</span>
+                            <span style="color: #22c55e">T</span>
+                            <span style="color: #f97316">B</span>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -722,10 +920,58 @@
     };
 
     const STYLES = {
-        barroco: { tempo: 60, waveform: 'triangle', bassStyle: 'walking' },
-        clasico: { tempo: 80, waveform: 'sine', bassStyle: 'alberti' },
-        romantico: { tempo: 70, waveform: 'sawtooth', bassStyle: 'octaves' },
-        jazz: { tempo: 120, waveform: 'sine', bassStyle: 'walking' }
+        barroco: {
+            tempo: 60,
+            waveform: 'triangle',
+            bassStyle: 'walking',
+            // Órgano positivo - brillante y claro
+            filterMult: 1.3,        // Filtros más abiertos
+            vibratoMult: 0.3,       // Poco vibrato (órgano no vibra)
+            attackMult: 0.7,        // Ataque más rápido
+            reverbMix: 0.4,         // Más reverb (iglesia)
+            reverbSize: 0.8,
+            harmonics: [1, 0.5, 0.25], // 8', 4', 2' (fundamental + octavas)
+            unisonWidth: 0.3        // Menos chorus
+        },
+        clasico: {
+            tempo: 80,
+            waveform: 'triangle',
+            bassStyle: 'alberti',
+            // Cuerdas suaves - cálido y redondo
+            filterMult: 1.0,
+            vibratoMult: 0.8,
+            attackMult: 1.0,
+            reverbMix: 0.3,
+            reverbSize: 0.7,
+            harmonics: [1, 0.3, 0.1],
+            unisonWidth: 1.0
+        },
+        romantico: {
+            tempo: 70,
+            waveform: 'sawtooth',
+            bassStyle: 'octaves',
+            // Cuerdas expresivas - rico y dramático
+            filterMult: 1.2,
+            vibratoMult: 1.5,       // Más vibrato
+            attackMult: 1.3,        // Ataque más suave
+            reverbMix: 0.45,
+            reverbSize: 0.85,
+            harmonics: [1, 0.6, 0.3, 0.15],
+            unisonWidth: 1.5        // Más chorus
+        },
+        jazz: {
+            tempo: 120,
+            waveform: 'sine',
+            bassStyle: 'walking',
+            // Piano eléctrico - limpio con overtones
+            filterMult: 0.8,        // Más oscuro
+            vibratoMult: 0.5,
+            attackMult: 0.5,        // Ataque percusivo
+            reverbMix: 0.25,
+            reverbSize: 0.5,
+            harmonics: [1, 0.7, 0, 0.2], // Fundamental + 2nd + 4th (Rhodes character)
+            unisonWidth: 0.5
+        }
     };
 
     // ============================================================
@@ -1316,131 +1562,509 @@
     }
 
     // ============================================================
-    // AUDIO SYNTHESIZER
+    // FREEVERB - Algorithmic Reverb (Schroeder/Moorer design)
+    // ============================================================
+
+    class Freeverb {
+        constructor(audioCtx) {
+            this.ctx = audioCtx;
+            this.input = audioCtx.createGain();
+            this.output = audioCtx.createGain();
+            this.wetGain = audioCtx.createGain();
+            this.dryGain = audioCtx.createGain();
+
+            // Reverb parameters
+            this.roomSize = 0.7;
+            this.damping = 0.5;
+            this.wetLevel = 0.35;
+
+            this.wetGain.gain.value = this.wetLevel;
+            this.dryGain.gain.value = 1 - this.wetLevel;
+
+            // Comb filter delay times (in seconds) - tuned for rich sound
+            const combTunings = [1557, 1617, 1491, 1422, 1277, 1356, 1188, 1116].map(t => t / 44100);
+            // Allpass filter delay times
+            const allpassTunings = [556, 441, 341, 225].map(t => t / 44100);
+
+            // Create parallel comb filters
+            this.combFilters = combTunings.map(delayTime => {
+                return this.createCombFilter(delayTime);
+            });
+
+            // Create series allpass filters
+            this.allpassFilters = allpassTunings.map(delayTime => {
+                return this.createAllpassFilter(delayTime);
+            });
+
+            // Merge node for comb outputs
+            const combMerge = audioCtx.createGain();
+            combMerge.gain.value = 0.25; // Scale down combined combs
+
+            // Connect comb filters in parallel
+            this.combFilters.forEach(comb => {
+                this.input.connect(comb.input);
+                comb.output.connect(combMerge);
+            });
+
+            // Connect allpass filters in series
+            let prevNode = combMerge;
+            this.allpassFilters.forEach(allpass => {
+                prevNode.connect(allpass.input);
+                prevNode = allpass.output;
+            });
+
+            // Final output routing
+            prevNode.connect(this.wetGain);
+            this.input.connect(this.dryGain);
+            this.wetGain.connect(this.output);
+            this.dryGain.connect(this.output);
+
+            this.updateParameters();
+        }
+
+        createCombFilter(delayTime) {
+            const delay = this.ctx.createDelay(1);
+            const feedback = this.ctx.createGain();
+            const filter = this.ctx.createBiquadFilter();
+
+            delay.delayTime.value = delayTime;
+            filter.type = 'lowpass';
+            filter.frequency.value = 5000;
+
+            delay.connect(filter);
+            filter.connect(feedback);
+            feedback.connect(delay);
+
+            return {
+                input: delay,
+                output: delay,
+                feedback: feedback,
+                filter: filter,
+                delayTime: delayTime
+            };
+        }
+
+        createAllpassFilter(delayTime) {
+            const delay = this.ctx.createDelay(1);
+            const feedback = this.ctx.createGain();
+            const feedforward = this.ctx.createGain();
+            const output = this.ctx.createGain();
+
+            delay.delayTime.value = delayTime;
+            feedback.gain.value = 0.5;
+            feedforward.gain.value = -0.5;
+
+            delay.connect(feedback);
+            feedback.connect(delay);
+            delay.connect(output);
+
+            const input = this.ctx.createGain();
+            input.connect(delay);
+            input.connect(feedforward);
+            feedforward.connect(output);
+
+            return { input, output };
+        }
+
+        updateParameters() {
+            const feedbackLevel = this.roomSize * 0.85 + 0.1;
+            const dampFreq = (1 - this.damping) * 10000 + 1000;
+
+            this.combFilters.forEach(comb => {
+                comb.feedback.gain.value = feedbackLevel;
+                comb.filter.frequency.value = dampFreq;
+            });
+        }
+
+        setRoomSize(value) {
+            this.roomSize = Math.max(0, Math.min(1, value));
+            this.updateParameters();
+        }
+
+        setDamping(value) {
+            this.damping = Math.max(0, Math.min(1, value));
+            this.updateParameters();
+        }
+
+        setWetLevel(value) {
+            this.wetLevel = Math.max(0, Math.min(1, value));
+            this.wetGain.gain.value = this.wetLevel;
+            this.dryGain.gain.value = 1 - this.wetLevel * 0.5;
+        }
+    }
+
+    // ============================================================
+    // AUDIO SYNTHESIZER - Professional Quality
     // ============================================================
 
     class VoiceLeadingSynth {
         constructor(audioCtx) {
             this.ctx = audioCtx;
-            this.oscillators = [];
-            this.gains = [];
-            this.filters = [];
 
+            // Voice arrays - each voice has dual oscillators
+            this.voices = [];     // [{osc1, osc2, gain, filter, filterEnv}]
+            this.gains = [];      // Individual voice gains (for compatibility)
+
+            // Voice control arrays: [Bajo, Tenor, Alto, Soprano]
+            this.voiceMutes = [false, false, false, false];
+            this.voiceVolumes = [0.8, 0.8, 0.8, 0.8];
+
+            // Stereo panning positions: [Bajo, Tenor, Alto, Soprano]
+            // Spread across stereo field: left → right
+            this.panPositions = [-0.5, -0.15, 0.15, 0.5];
+
+            // Filter settings per voice register (Bajo, Tenor, Alto, Soprano)
+            this.filterSettings = [
+                { freq: 800,  Q: 0.7, envAmount: 400  },   // Bajo: cálido
+                { freq: 1500, Q: 0.8, envAmount: 600  },   // Tenor: medio
+                { freq: 2500, Q: 0.9, envAmount: 800  },   // Alto: brillante
+                { freq: 4000, Q: 1.0, envAmount: 1200 }    // Soprano: muy brillante
+            ];
+
+            // Detune amounts for unison (cents)
+            this.unisonDetune = [3, 5, 7, 10]; // Más detune en agudos
+
+            // Master output chain
             this.masterGain = audioCtx.createGain();
-            this.masterGain.gain.value = 0.3;
+            this.masterGain.gain.value = 0.25;
 
-            // Simple reverb via delay
-            this.delay = audioCtx.createDelay();
-            this.delay.delayTime.value = 0.1;
-            this.delayGain = audioCtx.createGain();
-            this.delayGain.gain.value = 0.2;
+            // Create Freeverb
+            this.reverb = new Freeverb(audioCtx);
+            this.reverb.setRoomSize(0.75);
+            this.reverb.setDamping(0.4);
+            this.reverb.setWetLevel(0.3);
 
-            this.masterGain.connect(this.delay);
-            this.delay.connect(this.delayGain);
-            this.delayGain.connect(audioCtx.destination);
-            this.masterGain.connect(audioCtx.destination);
+            // Soft saturation/warmth
+            this.saturator = this.createSaturator();
 
-            // Create 4 voice oscillators
+            // Early reflections (short delays with stereo spread)
+            this.earlyReflections = this.createEarlyReflections();
+
+            // Master compressor for glue and cohesion
+            this.compressor = audioCtx.createDynamicsCompressor();
+            this.compressor.threshold.value = -18;  // Start compressing at -18dB
+            this.compressor.knee.value = 12;        // Soft knee for musical compression
+            this.compressor.ratio.value = 3;        // Gentle 3:1 ratio
+            this.compressor.attack.value = 0.015;   // 15ms attack - preserve transients
+            this.compressor.release.value = 0.25;   // 250ms release - smooth
+
+            // Connect master chain:
+            // masterGain → saturator → earlyReflections → reverb → compressor → destination
+            this.masterGain.connect(this.saturator);
+            this.saturator.connect(this.earlyReflections.input);
+            this.earlyReflections.output.connect(this.reverb.input);
+            this.reverb.output.connect(this.compressor);
+            this.compressor.connect(audioCtx.destination);
+
+            // Create 4 voices with dual oscillators
             for (let i = 0; i < 4; i++) {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                const filter = audioCtx.createBiquadFilter();
-
-                filter.type = 'lowpass';
-                filter.frequency.value = 2000;
-
-                osc.connect(filter);
-                filter.connect(gain);
-                gain.connect(this.masterGain);
-
-                osc.start();
-                gain.gain.value = 0;
-
-                this.oscillators.push(osc);
-                this.gains.push(gain);
-                this.filters.push(filter);
+                const voice = this.createVoice(i);
+                this.voices.push(voice);
+                this.gains.push(voice.gain);
             }
+        }
+
+        createSaturator() {
+            // Subtle waveshaper for analog warmth
+            const waveshaper = this.ctx.createWaveShaper();
+            const samples = 44100;
+            const curve = new Float32Array(samples);
+
+            for (let i = 0; i < samples; i++) {
+                const x = (i * 2) / samples - 1;
+                // Soft clipping curve
+                curve[i] = Math.tanh(x * 1.2) * 0.9;
+            }
+
+            waveshaper.curve = curve;
+            waveshaper.oversample = '2x';
+            return waveshaper;
+        }
+
+        createEarlyReflections() {
+            // Early reflections simulate first bounces off walls
+            // Creates sense of space before main reverb
+            const input = this.ctx.createGain();
+            const output = this.ctx.createGain();
+            const dryGain = this.ctx.createGain();
+            dryGain.gain.value = 0.85;
+
+            // 4 early reflection taps with different delays and panning
+            const taps = [
+                { delay: 0.011, pan: -0.7, gain: 0.15 },  // Left wall
+                { delay: 0.019, pan: 0.7,  gain: 0.12 },  // Right wall
+                { delay: 0.027, pan: -0.3, gain: 0.08 },  // Back left
+                { delay: 0.037, pan: 0.3,  gain: 0.06 }   // Back right
+            ];
+
+            // Create tap chain
+            taps.forEach(tap => {
+                const delay = this.ctx.createDelay(0.1);
+                delay.delayTime.value = tap.delay;
+
+                const panner = this.ctx.createStereoPanner();
+                panner.pan.value = tap.pan;
+
+                const gain = this.ctx.createGain();
+                gain.gain.value = tap.gain;
+
+                // High shelf filter to darken reflections (simulates absorption)
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 6000;
+
+                input.connect(delay);
+                delay.connect(filter);
+                filter.connect(panner);
+                panner.connect(gain);
+                gain.connect(output);
+            });
+
+            // Dry path
+            input.connect(dryGain);
+            dryGain.connect(output);
+
+            return { input, output };
+        }
+
+        createVoice(index) {
+            const settings = this.filterSettings[index];
+            const detune = this.unisonDetune[index];
+
+            // Vibrato settings per voice (más en agudos)
+            const vibratoSettings = [
+                { rate: 4.5, depth: 8 },   // Bajo: sutil
+                { rate: 5.0, depth: 12 },  // Tenor
+                { rate: 5.5, depth: 18 },  // Alto
+                { rate: 6.0, depth: 25 }   // Soprano: expresivo
+            ][index];
+
+            // Dual oscillators for unison/chorus effect
+            const osc1 = this.ctx.createOscillator();
+            const osc2 = this.ctx.createOscillator();
+
+            // Detune osc2 for chorus effect
+            osc1.detune.value = -detune / 2;
+            osc2.detune.value = detune / 2;
+
+            // LFO for vibrato
+            const lfo = this.ctx.createOscillator();
+            const lfoGain = this.ctx.createGain();
+            lfo.type = 'sine';
+            lfo.frequency.value = vibratoSettings.rate;
+            lfoGain.gain.value = 0; // Starts silent, activated on long notes
+
+            // Connect LFO to both oscillators' detune
+            lfo.connect(lfoGain);
+            lfoGain.connect(osc1.detune);
+            lfoGain.connect(osc2.detune);
+            lfo.start();
+
+            // Individual osc gains for mixing
+            const osc1Gain = this.ctx.createGain();
+            const osc2Gain = this.ctx.createGain();
+            osc1Gain.gain.value = 0.6;
+            osc2Gain.gain.value = 0.4;
+
+            // Merge oscillators
+            const oscMerge = this.ctx.createGain();
+            osc1.connect(osc1Gain);
+            osc2.connect(osc2Gain);
+            osc1Gain.connect(oscMerge);
+            osc2Gain.connect(oscMerge);
+
+            // Filter with resonance
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = settings.freq;
+            filter.Q.value = settings.Q;
+
+            // Voice output gain
+            const gain = this.ctx.createGain();
+            gain.gain.value = 0;
+
+            // Stereo panner for spatial positioning
+            const panner = this.ctx.createStereoPanner();
+            panner.pan.value = this.panPositions[index];
+
+            // Connect voice chain: oscs → filter → gain → panner → master
+            oscMerge.connect(filter);
+            filter.connect(gain);
+            gain.connect(panner);
+            panner.connect(this.masterGain);
+
+            // Start oscillators
+            osc1.start();
+            osc2.start();
+
+            return {
+                osc1, osc2,
+                osc1Gain, osc2Gain,
+                lfo, lfoGain,
+                vibratoDepth: vibratoSettings.depth,
+                baseVibratoDepth: vibratoSettings.depth,
+                filter,
+                gain,
+                panner,
+                settings,
+                baseDetune: detune
+            };
         }
 
         transitionTo(newVoicing, duration, articulation, bassPattern = null) {
             const now = this.ctx.currentTime;
-            const glideTime = Math.min(duration * 0.3, 0.1);
+            const glideTime = Math.min(duration * 0.3, 0.08);
+
+            // Micro-timing offsets (humanización - voces no atacan exactamente juntas)
+            const microTimingRange = 0.012; // hasta 12ms de variación
+            const offsets = [0, 1, 2, 3].map(() => Math.random() * microTimingRange);
 
             // Voces superiores (Tenor, Alto, Soprano) - índices 1, 2, 3
             for (let i = 1; i < newVoicing.length; i++) {
+                const voice = this.voices[i];
                 const freq = this.midiToFreq(newVoicing[i]);
-                const gain = this.gains[i];
-                const osc = this.oscillators[i];
+                const offset = offsets[i]; // Micro-timing offset
 
-                osc.frequency.linearRampToValueAtTime(freq, now + glideTime);
+                // Dual oscillators - ambos siguen la frecuencia
+                voice.osc1.frequency.linearRampToValueAtTime(freq, now + offset + glideTime);
+                voice.osc2.frequency.linearRampToValueAtTime(freq, now + offset + glideTime);
 
-                // Micro-detune humanizador: más detune en voces agudas
-                const detuneRange = [1, 2, 3, 4][i]; // Tenor ±2, Alto ±3, Soprano ±4 cents
-                const detune = (Math.random() - 0.5) * detuneRange * 2;
-                osc.detune.linearRampToValueAtTime(detune, now + glideTime);
+                // Humanización: variación sutil del detune
+                const baseDetune = voice.baseDetune;
+                const variation = (Math.random() - 0.5) * 4;
+                voice.osc1.detune.linearRampToValueAtTime(-baseDetune / 2 + variation, now + offset + glideTime);
+                voice.osc2.detune.linearRampToValueAtTime(baseDetune / 2 + variation, now + offset + glideTime);
 
+                // Vibrato: entra gradualmente después del ataque
+                const vibratoDelay = Math.min(duration * 0.3, 0.15); // Espera antes de vibrato
+                const vibratoRampTime = duration * 0.2;
+                voice.lfoGain.gain.cancelScheduledValues(now);
+                voice.lfoGain.gain.setValueAtTime(0, now + offset);
+                voice.lfoGain.gain.setValueAtTime(0, now + offset + vibratoDelay);
+                voice.lfoGain.gain.linearRampToValueAtTime(voice.vibratoDepth, now + offset + vibratoDelay + vibratoRampTime);
+                // Fade out vibrato antes del release
+                voice.lfoGain.gain.setValueAtTime(voice.vibratoDepth, now + duration - articulation.releaseTime * 1.5);
+                voice.lfoGain.gain.linearRampToValueAtTime(0, now + duration);
+
+                // Filter envelope - brillo en el ataque, decae suavemente
+                const filter = voice.filter;
+                const settings = voice.settings;
+                filter.frequency.cancelScheduledValues(now);
+                filter.frequency.setValueAtTime(settings.freq * 0.8, now + offset);
+                filter.frequency.linearRampToValueAtTime(settings.freq + settings.envAmount, now + offset + articulation.attackTime);
+                filter.frequency.exponentialRampToValueAtTime(settings.freq, now + offset + articulation.attackTime + articulation.decayTime * 3);
+
+                // Aplicar mute y volumen individual
+                const volumeMultiplier = this.voiceMutes[i] ? 0 : this.voiceVolumes[i];
+                const velocity = articulation.velocity * volumeMultiplier;
+                const sustain = articulation.sustainLevel * volumeMultiplier;
+
+                const gain = voice.gain;
                 gain.gain.cancelScheduledValues(now);
-                gain.gain.setValueAtTime(gain.gain.value, now);
-                gain.gain.linearRampToValueAtTime(articulation.velocity, now + articulation.attackTime);
-                gain.gain.linearRampToValueAtTime(articulation.sustainLevel, now + articulation.attackTime + articulation.decayTime);
-                gain.gain.setValueAtTime(articulation.sustainLevel, now + duration - articulation.releaseTime);
-                gain.gain.linearRampToValueAtTime(0.05, now + duration);
+                gain.gain.setValueAtTime(0.01, now + offset);
+                gain.gain.linearRampToValueAtTime(velocity, now + offset + articulation.attackTime);
+                gain.gain.linearRampToValueAtTime(sustain, now + offset + articulation.attackTime + articulation.decayTime);
+                gain.gain.setValueAtTime(sustain, now + duration - articulation.releaseTime);
+                gain.gain.linearRampToValueAtTime(0.01, now + duration);
             }
 
             // Bajo - con patrón si se proporciona
             if (bassPattern && bassPattern.length > 1) {
                 this.playBassPattern(bassPattern, duration, articulation);
             } else {
-                // Bajo sostenido (comportamiento original)
-                const bassFreq = this.midiToFreq(newVoicing[0]);
-                const bassGain = this.gains[0];
-                const bassOsc = this.oscillators[0];
-
-                bassOsc.frequency.linearRampToValueAtTime(bassFreq, now + glideTime);
-
-                // Micro-detune bajo (mínimo, ±1 cent)
-                const bassDetune = (Math.random() - 0.5) * 2;
-                bassOsc.detune.linearRampToValueAtTime(bassDetune, now + glideTime);
-
-                bassGain.gain.cancelScheduledValues(now);
-                bassGain.gain.setValueAtTime(bassGain.gain.value, now);
-                bassGain.gain.linearRampToValueAtTime(articulation.velocity, now + articulation.attackTime);
-                bassGain.gain.linearRampToValueAtTime(articulation.sustainLevel, now + articulation.attackTime + articulation.decayTime);
-                bassGain.gain.setValueAtTime(articulation.sustainLevel, now + duration - articulation.releaseTime);
-                bassGain.gain.linearRampToValueAtTime(0.05, now + duration);
+                this.playBassNote(newVoicing[0], duration, articulation, offsets[0]);
             }
+        }
+
+        playBassNote(midiNote, duration, articulation, offset = 0) {
+            const now = this.ctx.currentTime;
+            const glideTime = 0.06;
+            const voice = this.voices[0];
+            const freq = this.midiToFreq(midiNote);
+
+            // Dual oscillators
+            voice.osc1.frequency.linearRampToValueAtTime(freq, now + offset + glideTime);
+            voice.osc2.frequency.linearRampToValueAtTime(freq, now + offset + glideTime);
+
+            // Vibrato sutil para bajo (solo en notas largas)
+            const vibratoDelay = Math.min(duration * 0.4, 0.2);
+            voice.lfoGain.gain.cancelScheduledValues(now);
+            voice.lfoGain.gain.setValueAtTime(0, now + offset);
+            voice.lfoGain.gain.setValueAtTime(0, now + offset + vibratoDelay);
+            voice.lfoGain.gain.linearRampToValueAtTime(voice.vibratoDepth * 0.5, now + offset + vibratoDelay + duration * 0.15);
+            voice.lfoGain.gain.linearRampToValueAtTime(0, now + duration);
+
+            // Filter envelope para bajo
+            const filter = voice.filter;
+            const settings = voice.settings;
+            filter.frequency.cancelScheduledValues(now);
+            filter.frequency.setValueAtTime(settings.freq * 0.7, now + offset);
+            filter.frequency.linearRampToValueAtTime(settings.freq + settings.envAmount * 0.5, now + offset + articulation.attackTime);
+            filter.frequency.exponentialRampToValueAtTime(settings.freq, now + offset + articulation.attackTime + articulation.decayTime * 2);
+
+            // Aplicar mute y volumen
+            const volumeMultiplier = this.voiceMutes[0] ? 0 : this.voiceVolumes[0];
+            const velocity = articulation.velocity * volumeMultiplier;
+            const sustain = articulation.sustainLevel * volumeMultiplier;
+
+            const gain = voice.gain;
+            gain.gain.cancelScheduledValues(now);
+            gain.gain.setValueAtTime(0.01, now + offset);
+            gain.gain.linearRampToValueAtTime(velocity, now + offset + articulation.attackTime);
+            gain.gain.linearRampToValueAtTime(sustain, now + offset + articulation.attackTime + articulation.decayTime);
+            gain.gain.setValueAtTime(sustain, now + duration - articulation.releaseTime);
+            gain.gain.linearRampToValueAtTime(0.01, now + duration);
         }
 
         playBassPattern(pattern, totalDuration, articulation) {
             const now = this.ctx.currentTime;
             const noteDuration = totalDuration / pattern.length;
-            const bassGain = this.gains[0];
-            const bassOsc = this.oscillators[0];
+            const voice = this.voices[0];
+            const volumeMultiplier = this.voiceMutes[0] ? 0 : this.voiceVolumes[0];
 
             // Cancelar eventos previos
-            bassGain.gain.cancelScheduledValues(now);
-            bassOsc.frequency.cancelScheduledValues(now);
+            voice.gain.gain.cancelScheduledValues(now);
+            voice.osc1.frequency.cancelScheduledValues(now);
+            voice.osc2.frequency.cancelScheduledValues(now);
 
             pattern.forEach((note, i) => {
                 const noteStart = now + (i * noteDuration);
                 const freq = this.midiToFreq(note);
 
-                // Transición de frecuencia rápida
-                if (i === 0) {
-                    bassOsc.frequency.setValueAtTime(freq, noteStart);
-                } else {
-                    bassOsc.frequency.setValueAtTime(freq, noteStart);
-                }
+                // Ambos osciladores
+                voice.osc1.frequency.setValueAtTime(freq, noteStart);
+                voice.osc2.frequency.setValueAtTime(freq, noteStart);
 
-                // Envolvente para cada nota del patrón
-                const attackTime = Math.min(0.02, noteDuration * 0.1);
-                const releaseTime = Math.min(0.03, noteDuration * 0.15);
+                // Envolvente para cada nota
+                const attackTime = Math.min(0.015, noteDuration * 0.1);
+                const releaseTime = Math.min(0.025, noteDuration * 0.15);
 
-                bassGain.gain.setValueAtTime(0.05, noteStart);
-                bassGain.gain.linearRampToValueAtTime(articulation.velocity * 0.8, noteStart + attackTime);
-                bassGain.gain.setValueAtTime(articulation.velocity * 0.6, noteStart + noteDuration - releaseTime);
-                bassGain.gain.linearRampToValueAtTime(0.05, noteStart + noteDuration);
+                const vel = articulation.velocity * 0.8 * volumeMultiplier;
+                voice.gain.gain.setValueAtTime(0.02, noteStart);
+                voice.gain.gain.linearRampToValueAtTime(vel, noteStart + attackTime);
+                voice.gain.gain.setValueAtTime(vel * 0.75, noteStart + noteDuration - releaseTime);
+                voice.gain.gain.linearRampToValueAtTime(0.02, noteStart + noteDuration);
             });
+        }
+
+        setVoiceVolume(voiceIndex, value) {
+            if (voiceIndex >= 0 && voiceIndex < 4) {
+                this.voiceVolumes[voiceIndex] = Math.max(0, Math.min(1, value));
+            }
+        }
+
+        toggleMute(voiceIndex) {
+            if (voiceIndex >= 0 && voiceIndex < 4) {
+                this.voiceMutes[voiceIndex] = !this.voiceMutes[voiceIndex];
+                return this.voiceMutes[voiceIndex];
+            }
+            return false;
+        }
+
+        setMute(voiceIndex, muted) {
+            if (voiceIndex >= 0 && voiceIndex < 4) {
+                this.voiceMutes[voiceIndex] = muted;
+            }
         }
 
         midiToFreq(midi) {
@@ -1448,14 +2072,74 @@
         }
 
         setWaveform(type) {
-            this.oscillators.forEach(osc => osc.type = type);
+            this.voices.forEach(voice => {
+                voice.osc1.type = type;
+                voice.osc2.type = type;
+            });
+        }
+
+        applyStyle(styleName) {
+            const style = STYLES[styleName];
+            if (!style) return;
+
+            this.currentStyle = styleName;
+
+            // Waveform
+            this.setWaveform(style.waveform);
+
+            // Reverb
+            this.reverb.setWetLevel(style.reverbMix);
+            this.reverb.setRoomSize(style.reverbSize);
+
+            // Por cada voz, ajustar parámetros
+            this.voices.forEach((voice, i) => {
+                // Ajustar filtro base
+                const baseFreq = this.filterSettings[i].freq;
+                voice.filter.frequency.value = baseFreq * style.filterMult;
+
+                // Ajustar vibrato depth
+                voice.vibratoDepth = voice.baseVibratoDepth * style.vibratoMult;
+
+                // Ajustar unison width (detune entre osc1 y osc2)
+                const baseDetune = this.unisonDetune[i];
+                const newDetune = baseDetune * style.unisonWidth;
+                voice.osc1.detune.value = -newDetune / 2;
+                voice.osc2.detune.value = newDetune / 2;
+
+                // Ajustar mezcla de osciladores según armónicos del estilo
+                if (style.harmonics) {
+                    // osc1 = fundamental, osc2 = segundo armónico (o refuerzo)
+                    const h = style.harmonics;
+                    voice.osc1Gain.gain.value = 0.5 * (h[0] || 1);
+                    voice.osc2Gain.gain.value = 0.5 * (h[1] || 0.3);
+                }
+            });
+
+            // Guardar multiplicadores para uso en transitionTo
+            this.styleParams = {
+                filterMult: style.filterMult,
+                vibratoMult: style.vibratoMult,
+                attackMult: style.attackMult
+            };
+        }
+
+        getStyleParams() {
+            return this.styleParams || { filterMult: 1, vibratoMult: 1, attackMult: 1 };
+        }
+
+        setReverbMix(value) {
+            this.reverb.setWetLevel(value);
+        }
+
+        setReverbSize(value) {
+            this.reverb.setRoomSize(value);
         }
 
         stop() {
             const now = this.ctx.currentTime;
-            this.gains.forEach(g => {
-                g.gain.cancelScheduledValues(now);
-                g.gain.linearRampToValueAtTime(0, now + 0.1);
+            this.voices.forEach(voice => {
+                voice.gain.gain.cancelScheduledValues(now);
+                voice.gain.gain.linearRampToValueAtTime(0, now + 0.15);
             });
         }
     }
@@ -2005,6 +2689,11 @@
             this.recordedChunks = [];
             this.recordingDestination = null;
 
+            // Voice trail history
+            this.voicingHistory = [];
+            this.trailCanvas = null;
+            this.trailCtx = null;
+
             this.init();
         }
 
@@ -2030,6 +2719,11 @@
                 this.viz.resize(container.clientWidth, container.clientHeight);
             });
 
+            // Initialize voice trail canvas
+            this.trailCanvas = document.getElementById('voiceTrail');
+            this.trailCtx = this.trailCanvas.getContext('2d');
+            this.resizeTrailCanvas();
+
             // Initial display
             this.updateDisplay();
             this.updateBassViz();
@@ -2039,11 +2733,25 @@
             this.updateChaosLevel();
         }
 
+        resizeTrailCanvas() {
+            const container = this.trailCanvas.parentElement;
+            this.trailCanvas.width = container.clientWidth - 20;
+            this.trailCanvas.height = 80;
+        }
+
         initAudio() {
             if (!this.audioCtx) {
                 this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 this.synth = new VoiceLeadingSynth(this.audioCtx);
-                this.synth.setWaveform(STYLES[this.style].waveform);
+                this.synth.applyStyle(this.style);
+
+                // Sync mute/volume state from UI
+                for (let i = 0; i < 4; i++) {
+                    const fader = document.getElementById(`fader-${i}`);
+                    const muteBtn = document.getElementById(`mute-${i}`);
+                    this.synth.setVoiceVolume(i, parseInt(fader.value) / 100);
+                    this.synth.setMute(i, muteBtn.classList.contains('muted'));
+                }
             }
             if (this.audioCtx.state === 'suspended') {
                 this.audioCtx.resume();
@@ -2110,7 +2818,7 @@
                     this.rhythm.setStyle(this.style);
                     this.voiceLeader.setStyle(this.style);
                     if (this.synth) {
-                        this.synth.setWaveform(STYLES[this.style].waveform);
+                        this.synth.applyStyle(this.style);
                     }
                 });
             });
@@ -2178,6 +2886,40 @@
                 this.updateEntropy();
                 this.updateChaosLevel();
             });
+
+            // Matrix toggle
+            document.getElementById('matrixHeader').addEventListener('click', () => {
+                const matrix = document.getElementById('matrixDisplay');
+                const chevron = document.getElementById('matrixChevron');
+                matrix.classList.toggle('collapsed');
+                chevron.classList.toggle('matrix-chevron-rotated');
+            });
+
+            // Voice Mixer Controls
+            for (let i = 0; i < 4; i++) {
+                // Faders
+                const fader = document.getElementById(`fader-${i}`);
+                const faderFill = document.getElementById(`faderFill-${i}`);
+                fader.addEventListener('input', (e) => {
+                    const value = parseInt(e.target.value);
+                    faderFill.style.height = `${value}%`;
+                    if (this.synth) {
+                        this.synth.setVoiceVolume(i, value / 100);
+                    }
+                });
+
+                // Mute buttons
+                const muteBtn = document.getElementById(`mute-${i}`);
+                muteBtn.addEventListener('click', () => {
+                    if (this.synth) {
+                        const muted = this.synth.toggleMute(i);
+                        muteBtn.classList.toggle('muted', muted);
+                    } else {
+                        // Toggle visual even without synth
+                        muteBtn.classList.toggle('muted');
+                    }
+                });
+            }
         }
 
         togglePlay() {
@@ -2370,18 +3112,89 @@
         }
 
         updateVoiceDisplay(voices) {
-            const display = document.getElementById('voiceDisplay');
-            const notes = display.querySelectorAll('.voice-note');
-            const voiceNames = ['bass', 'tenor', 'alto', 'soprano'];
+            const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
             voices.forEach((note, i) => {
-                const noteEl = notes[i];
-                const range = this.voiceLeader.voiceRanges[voiceNames[i]];
-                const normalized = (note - range.min) / (range.max - range.min);
-                noteEl.style.bottom = `${10 + normalized * 80}%`;
-                noteEl.style.width = '60px';
-                noteEl.style.left = `${i * 25}%`;
+                // Update note display
+                const noteName = noteNames[note % 12];
+                const octave = Math.floor(note / 12) - 1;
+                document.getElementById(`note-${i}`).textContent = `${noteName}${octave}`;
+
+                // Flash LED
+                const led = document.getElementById(`led-${i}`);
+                led.classList.add('active');
+                setTimeout(() => led.classList.remove('active'), 200);
             });
+
+            // Add to history for trail visualization
+            this.voicingHistory.push([...voices]);
+            if (this.voicingHistory.length > 12) {
+                this.voicingHistory.shift();
+            }
+
+            // Update trail
+            this.updateVoiceTrail();
+        }
+
+        updateVoiceTrail() {
+            const ctx = this.trailCtx;
+            const canvas = this.trailCanvas;
+            const w = canvas.width;
+            const h = canvas.height;
+
+            // Clear
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, w, h);
+
+            if (this.voicingHistory.length < 2) return;
+
+            const voiceColors = ['#f97316', '#22c55e', '#3b82f6', '#a855f7']; // B, T, A, S
+            const voiceNames = ['bass', 'tenor', 'alto', 'soprano'];
+            const stepWidth = w / 11; // 12 puntos, 11 espacios
+
+            // Draw each voice line
+            for (let v = 0; v < 4; v++) {
+                const range = this.voiceLeader.voiceRanges[voiceNames[v]];
+                const color = voiceColors[v];
+
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                this.voicingHistory.forEach((voicing, i) => {
+                    const note = voicing[v];
+                    const normalized = (note - range.min) / (range.max - range.min);
+                    const x = i * stepWidth + stepWidth / 2;
+                    const y = h - (normalized * (h - 16) + 8); // Padding 8px top/bottom
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+
+                ctx.stroke();
+
+                // Draw dots
+                ctx.fillStyle = color;
+                this.voicingHistory.forEach((voicing, i) => {
+                    const note = voicing[v];
+                    const normalized = (note - range.min) / (range.max - range.min);
+                    const x = i * stepWidth + stepWidth / 2;
+                    const y = h - (normalized * (h - 16) + 8);
+
+                    const radius = i === this.voicingHistory.length - 1 ? 5 : 3;
+                    const alpha = 0.4 + (i / this.voicingHistory.length) * 0.6;
+
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                ctx.globalAlpha = 1;
+            }
         }
 
         updateCadenceDisplay(cadence) {
