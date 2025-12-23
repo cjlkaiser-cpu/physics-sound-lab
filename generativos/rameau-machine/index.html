@@ -646,6 +646,160 @@
             transform: scale(1.2);
             text-shadow: 0 0 20px rgba(168, 85, 247, 0.8);
         }
+
+        /* Theory Modal */
+        .theory-modal {
+            max-width: 720px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            background: #1e293b;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .theory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .theory-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: #f1f5f9;
+        }
+
+        .theory-close {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .theory-close:hover {
+            color: #f1f5f9;
+            background: #334155;
+        }
+
+        .theory-content {
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .theory-section {
+            margin-bottom: 1.75rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .theory-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .theory-section h3 {
+            color: #a78bfa;
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .theory-section h4 {
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            margin: 1rem 0 0.5rem 0;
+        }
+
+        .theory-section p {
+            color: #94a3b8;
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .theory-section ul {
+            margin-left: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .theory-section li {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .theory-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.75rem 0;
+            font-size: 0.8rem;
+        }
+
+        .theory-table th,
+        .theory-table td {
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+            border: 1px solid #334155;
+        }
+
+        .theory-table th {
+            background: #0f172a;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .theory-table td {
+            color: #94a3b8;
+        }
+
+        .theory-table .func-T { color: #22c55e; font-weight: 500; }
+        .theory-table .func-S { color: #3b82f6; font-weight: 500; }
+        .theory-table .func-D { color: #ef4444; font-weight: 500; }
+        .theory-table .func-note { color: #fbbf24; }
+
+        .theory-note {
+            background: #0f172a;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            border-left: 3px solid #a78bfa;
+            color: #cbd5e1;
+        }
+
+        .theory-quote {
+            font-style: italic;
+            color: #94a3b8;
+            border-left: 3px solid #475569;
+            padding-left: 1rem;
+            margin: 1rem 0;
+        }
+
+        .theory-diagram {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        .theory-source {
+            opacity: 0.7;
+            font-style: italic;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col">
@@ -656,10 +810,11 @@
             <span class="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">Armonia Funcional</span>
         </div>
         <div class="flex items-center gap-4">
-            <button id="helpBtn" class="text-slate-400 hover:text-white transition-colors">
+            <button id="helpBtn" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1.5" title="Teoria">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                 </svg>
+                <span class="text-xs">Teoria</span>
             </button>
             <button id="menuBtn" class="text-slate-400 hover:text-white transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1031,28 +1186,297 @@
         <div class="bass-line-viz w-48" id="bassViz"></div>
     </footer>
 
-    <!-- Help Modal -->
-    <div id="helpModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
-        <div class="bg-slate-800 rounded-xl p-6 max-w-lg mx-4 max-h-[80vh] overflow-y-auto">
-            <h2 class="text-xl font-semibold mb-4">Rameau Machine</h2>
-            <div class="text-sm text-slate-300 space-y-4">
-                <p><strong>Concepto:</strong> Un sistema generativo basado en la teoria de armonia funcional de Jean-Philippe Rameau (1722).</p>
-                <p><strong>Funciones armonicas:</strong></p>
-                <ul class="list-disc list-inside ml-2 space-y-1">
-                    <li><span class="text-green-400">Tonica (T)</span>: Centro, estabilidad (I, vi, iii)</li>
-                    <li><span class="text-blue-400">Subdominante (S)</span>: Alejarse (IV, ii)</li>
-                    <li><span class="text-red-400">Dominante (D)</span>: Tension, retorno (V, vii)</li>
-                </ul>
-                <p><strong>Gravedad tonal:</strong> La tension acumulada atrae hacia la resolucion en la tonica.</p>
-                <p><strong>Modos:</strong></p>
-                <ul class="list-disc list-inside ml-2 space-y-1">
-                    <li><strong>Autonomo:</strong> El sistema genera progresiones automaticamente</li>
-                    <li><strong>Guiado:</strong> Haz clic en los acordes para dirigir la progresion</li>
-                </ul>
+    <!-- Theory Modal -->
+    <div id="helpModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden" style="backdrop-filter: blur(4px);">
+        <div class="theory-modal mx-4">
+            <div class="theory-header">
+                <h2>Armonia Funcional</h2>
+                <button id="closeHelp" class="theory-close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
-            <button id="closeHelp" class="mt-6 w-full py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors">
-                Entendido
-            </button>
+            <div class="theory-content">
+                <!-- §1 Introduccion -->
+                <section class="theory-section">
+                    <h3>§1. Que es la Armonia Funcional</h3>
+                    <p>La armonia funcional es un sistema para entender <strong>por que</strong> los acordes se mueven como lo hacen. En lugar de memorizar progresiones, comprendemos la <em>funcion</em> de cada acorde dentro de la tonalidad.</p>
+                    <p>Jean-Philippe Rameau (1683-1764) revoluciono la teoria musical con su <em>Traite de l'harmonie</em> (1722), donde establecio que los acordes tienen funciones especificas que generan tension y resolucion.</p>
+                    <div class="theory-quote">
+                        "La melodia nace de la armonia." — Jean-Philippe Rameau
+                    </div>
+                </section>
+
+                <!-- §2 Las Tres Funciones -->
+                <section class="theory-section">
+                    <h3>§2. Las Tres Funciones: T - S - D</h3>
+                    <p>Todo acorde cumple una de tres funciones:</p>
+                    <table class="theory-table">
+                        <tr>
+                            <th>Funcion</th>
+                            <th>Acordes</th>
+                            <th>Sensacion</th>
+                        </tr>
+                        <tr>
+                            <td class="func-T">Tonica (T)</td>
+                            <td>I, vi, iii</td>
+                            <td>Reposo, llegada, estabilidad</td>
+                        </tr>
+                        <tr>
+                            <td class="func-S">Subdominante (S)</td>
+                            <td>IV, ii</td>
+                            <td>Alejamiento, movimiento, preparacion</td>
+                        </tr>
+                        <tr>
+                            <td class="func-D">Dominante (D)</td>
+                            <td>V, vii°</td>
+                            <td>Tension, urgencia de resolver</td>
+                        </tr>
+                    </table>
+                    <div class="theory-diagram">
+T (reposo) → S (alejarse) → D (tension) → T (resolucion)<br><br>
+    I  ────→   IV  ────→   V  ────→   I
+                    </div>
+                </section>
+
+                <!-- §3 Acordes en Mayor -->
+                <section class="theory-section">
+                    <h3>§3. Los Siete Acordes de la Escala Mayor</h3>
+                    <p>En Do mayor, los acordes diatonicos son:</p>
+                    <table class="theory-table">
+                        <tr>
+                            <th>Grado</th>
+                            <th>Acorde</th>
+                            <th>Cualidad</th>
+                            <th>Funcion</th>
+                        </tr>
+                        <tr><td>I</td><td>C</td><td>Mayor</td><td class="func-T">Tonica</td></tr>
+                        <tr><td>ii</td><td>Dm</td><td>Menor</td><td class="func-S">Subdominante</td></tr>
+                        <tr><td>iii</td><td>Em</td><td>Menor</td><td class="func-T">Tonica (debil)</td></tr>
+                        <tr><td>IV</td><td>F</td><td>Mayor</td><td class="func-S">Subdominante</td></tr>
+                        <tr><td>V</td><td>G</td><td>Mayor</td><td class="func-D">Dominante</td></tr>
+                        <tr><td>vi</td><td>Am</td><td>Menor</td><td class="func-T">Tonica (relativo)</td></tr>
+                        <tr><td>vii°</td><td>Bdim</td><td>Disminuido</td><td class="func-D">Dominante</td></tr>
+                    </table>
+                </section>
+
+                <!-- §4 Tension y Gravedad -->
+                <section class="theory-section">
+                    <h3>§4. Tension y Gravedad Tonal</h3>
+                    <p>Cada acorde tiene un nivel de <strong>tension</strong> que determina su "urgencia" por resolver:</p>
+                    <ul>
+                        <li><strong>Tension baja (0-0.3):</strong> Acordes de tonica. Estables, pueden mantenerse.</li>
+                        <li><strong>Tension media (0.4-0.6):</strong> Acordes de subdominante. Crean movimiento.</li>
+                        <li><strong>Tension alta (0.7-1.0):</strong> Acordes de dominante. Exigen resolucion.</li>
+                    </ul>
+                    <p>La <strong>gravedad tonal</strong> simula como los acordes de alta tension son "atraidos" hacia la tonica, como un objeto cayendo.</p>
+                    <div class="theory-note">
+                        En el visualizador: cuanto mas se llena la barra de tension, mas probable es que el siguiente acorde sea de tonica.
+                    </div>
+                </section>
+
+                <!-- §5 Cadencias -->
+                <section class="theory-section">
+                    <h3>§5. Cadencias</h3>
+                    <p>Las <strong>cadencias</strong> son formulas de cierre que marcan puntos de descanso:</p>
+                    <table class="theory-table">
+                        <tr>
+                            <th>Cadencia</th>
+                            <th>Movimiento</th>
+                            <th>Efecto</th>
+                        </tr>
+                        <tr>
+                            <td style="background:#166534; color:#bbf7d0;">Autentica</td>
+                            <td>V → I</td>
+                            <td>Conclusion definitiva</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#1e40af; color:#bfdbfe;">Plagal</td>
+                            <td>IV → I</td>
+                            <td>Cierre suave ("Amen")</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#854d0e; color:#fef08a;">Semicadencia</td>
+                            <td>* → V</td>
+                            <td>Pausa expectante</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#9f1239; color:#fecdd3;">Rota (Deceptiva)</td>
+                            <td>V → vi</td>
+                            <td>Sorpresa, continuacion</td>
+                        </tr>
+                    </table>
+                </section>
+
+                <!-- §6 Matriz de Transiciones -->
+                <section class="theory-section">
+                    <h3>§6. Matriz de Transiciones</h3>
+                    <p>La matriz muestra la <strong>probabilidad</strong> de que un acorde vaya a otro. Basada en el analisis de miles de obras del repertorio clasico:</p>
+                    <ul>
+                        <li><strong>V → I (70%):</strong> La resolucion mas fuerte y comun</li>
+                        <li><strong>IV → V (50%):</strong> Preparacion clasica de la dominante</li>
+                        <li><strong>I → IV (25%):</strong> Apertura tipica hacia la subdominante</li>
+                        <li><strong>vi → ii (25%):</strong> Circulo de quintas descendente</li>
+                    </ul>
+                    <div class="theory-note">
+                        En el panel derecho puedes desplegar la matriz completa. Las celdas mas brillantes indican transiciones mas probables.
+                    </div>
+                </section>
+
+                <!-- §7 Modulacion -->
+                <section class="theory-section">
+                    <h3>§7. Modulacion</h3>
+                    <p>La <strong>modulacion</strong> es el cambio de una tonalidad a otra. En Rameau Machine, el sistema modula automaticamente a <strong>tonalidades relacionadas</strong>:</p>
+                    <table class="theory-table">
+                        <tr>
+                            <th>Relacion</th>
+                            <th>Desde Do Mayor</th>
+                            <th>Razon</th>
+                        </tr>
+                        <tr>
+                            <td>Dominante</td>
+                            <td>Sol Mayor</td>
+                            <td>Una quinta ascendente (V)</td>
+                        </tr>
+                        <tr>
+                            <td>Subdominante</td>
+                            <td>Fa Mayor</td>
+                            <td>Una quinta descendente (IV)</td>
+                        </tr>
+                        <tr>
+                            <td>Relativo menor</td>
+                            <td>La menor</td>
+                            <td>Comparte armadura (vi)</td>
+                        </tr>
+                        <tr>
+                            <td>Relativo mayor*</td>
+                            <td>Mi bemol Mayor</td>
+                            <td>Desde modo menor</td>
+                        </tr>
+                    </table>
+                    <h4>El Circulo de Quintas</h4>
+                    <div class="theory-diagram">
+        Fa ← Do → Sol<br>
+         ↓         ↓<br>
+     re menor   mi menor<br><br>
+Movimiento por quintas = modulaciones naturales
+                    </div>
+                    <div class="theory-note">
+                        El boton "Modular" en el panel derecho te permite forzar una modulacion manual. Observa como la visualizacion y los acordes se adaptan a la nueva tonalidad.
+                    </div>
+                </section>
+
+                <!-- §8 Conduccion de Voces -->
+                <section class="theory-section">
+                    <h3>§8. Conduccion de Voces (SATB)</h3>
+                    <p>El sintetizador usa cuatro voces, como un coro:</p>
+                    <table class="theory-table">
+                        <tr>
+                            <th>Voz</th>
+                            <th>Rango</th>
+                            <th>Rol</th>
+                        </tr>
+                        <tr>
+                            <td style="color:#a855f7;">Soprano (S)</td>
+                            <td>C4 - G5</td>
+                            <td>Melodia, linea superior</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#3b82f6;">Alto (A)</td>
+                            <td>G3 - D5</td>
+                            <td>Armonia interna</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#22c55e;">Tenor (T)</td>
+                            <td>C3 - G4</td>
+                            <td>Armonia interna</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#f97316;">Bajo (B)</td>
+                            <td>E2 - C4</td>
+                            <td>Fundamental, soporte</td>
+                        </tr>
+                    </table>
+                    <h4>Principios de Conduccion</h4>
+                    <ul>
+                        <li><strong>Movimiento minimo:</strong> Cada voz busca la nota mas cercana del siguiente acorde</li>
+                        <li><strong>Evitar paralelas:</strong> Octavas y quintas paralelas debilitan la independencia</li>
+                        <li><strong>Resolver sensibles:</strong> La septima sube al grado I, el tritono resuelve</li>
+                    </ul>
+                </section>
+
+                <!-- §9 Estilos -->
+                <section class="theory-section">
+                    <h3>§9. Estilos Historicos</h3>
+                    <p>Cada estilo aplica reglas diferentes de conduccion:</p>
+                    <table class="theory-table">
+                        <tr>
+                            <th>Estilo</th>
+                            <th>Paralelas</th>
+                            <th>Saltos</th>
+                            <th>Timbre</th>
+                        </tr>
+                        <tr>
+                            <td>Barroco</td>
+                            <td>Estricto</td>
+                            <td>Pequeños</td>
+                            <td>Organo, claro</td>
+                        </tr>
+                        <tr>
+                            <td>Clasico</td>
+                            <td>Estricto</td>
+                            <td>Moderados</td>
+                            <td>Cuerdas suaves</td>
+                        </tr>
+                        <tr>
+                            <td>Romantico</td>
+                            <td>Flexible</td>
+                            <td>Amplios</td>
+                            <td>Cuerdas ricas</td>
+                        </tr>
+                        <tr>
+                            <td>Jazz</td>
+                            <td>Libre</td>
+                            <td>Libres</td>
+                            <td>Electrico, brillante</td>
+                        </tr>
+                    </table>
+                </section>
+
+                <!-- §10 Modo Menor -->
+                <section class="theory-section">
+                    <h3>§10. Modo Menor</h3>
+                    <p>El modo menor utiliza la <strong>escala menor armonica</strong> para mantener una dominante fuerte:</p>
+                    <table class="theory-table">
+                        <tr>
+                            <th>Grado</th>
+                            <th>Acorde</th>
+                            <th>Funcion</th>
+                        </tr>
+                        <tr><td>i</td><td>Am</td><td class="func-T">Tonica</td></tr>
+                        <tr><td>ii°</td><td>Bdim</td><td class="func-S">Subdominante</td></tr>
+                        <tr><td>III</td><td>C</td><td class="func-T">Tonica (relativo)</td></tr>
+                        <tr><td>iv</td><td>Dm</td><td class="func-S">Subdominante</td></tr>
+                        <tr><td>V</td><td>E (¡Mayor!)</td><td class="func-D">Dominante</td></tr>
+                        <tr><td>VI</td><td>F</td><td class="func-T">Tonica</td></tr>
+                        <tr><td>vii°</td><td>G#dim</td><td class="func-D">Dominante</td></tr>
+                    </table>
+                    <div class="theory-note">
+                        El V grado es mayor incluso en menor (E en vez de Em) porque contiene la <strong>sensible</strong> (G#) que resuelve a la tonica.
+                    </div>
+                </section>
+
+                <!-- Fuentes -->
+                <section class="theory-section" style="opacity: 0.7;">
+                    <h3>Referencias</h3>
+                    <p class="theory-source">
+                        Rameau, J.-P. (1722). <em>Traite de l'harmonie reduite a ses principes naturels</em><br>
+                        Riemann, H. (1893). <em>Vereinfachte Harmonielehre</em><br>
+                        Piston, W. (1941). <em>Harmony</em>
+                    </p>
+                </section>
+            </div>
         </div>
     </div>
 
