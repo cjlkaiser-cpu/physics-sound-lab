@@ -53,6 +53,94 @@
             backdrop-filter: blur(10px);
         }
 
+        .audio-panel {
+            background: rgba(15, 23, 42, 0.95);
+            border-right: 1px solid rgba(148, 163, 184, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Audio Knob */
+        .audio-knob-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .audio-knob {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 2px solid #334155;
+            position: relative;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .audio-knob:hover {
+            border-color: #6366f1;
+        }
+
+        .audio-knob::after {
+            content: '';
+            position: absolute;
+            width: 3px;
+            height: 12px;
+            background: #94a3b8;
+            top: 6px;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(var(--rotation, 0deg));
+            border-radius: 2px;
+        }
+
+        .audio-knob.active::after {
+            background: #6366f1;
+        }
+
+        .audio-knob-label {
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .audio-knob-value {
+            font-size: 11px;
+            color: #94a3b8;
+            font-family: monospace;
+        }
+
+        .knob-row {
+            display: flex;
+            justify-content: space-around;
+            gap: 8px;
+            padding: 8px 0;
+        }
+
+        /* Vertical Slider for Audio */
+        .audio-slider-v {
+            writing-mode: vertical-lr;
+            direction: rtl;
+            height: 80px;
+            width: 6px;
+            -webkit-appearance: none;
+            background: #1e293b;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .audio-slider-v::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
         .slider-container {
             position: relative;
         }
@@ -583,14 +671,142 @@
 
     <!-- Main Content -->
     <main class="flex-1 flex overflow-hidden">
+        <!-- Audio Panel (Left) -->
+        <aside class="audio-panel w-64 flex flex-col">
+            <div class="p-3 space-y-4 overflow-y-auto flex-1">
+                <!-- Master -->
+                <section>
+                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 text-center">Master</h3>
+                    <div class="flex justify-center">
+                        <div class="audio-knob-container">
+                            <div class="audio-knob" id="knobMaster" data-value="70" style="--rotation: 90deg"></div>
+                            <span class="audio-knob-value" id="masterValue">70%</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Reverb & Filter -->
+                <section>
+                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 text-center">Espacio</h3>
+                    <div class="knob-row">
+                        <div class="audio-knob-container">
+                            <div class="audio-knob" id="knobReverb" data-value="30" style="--rotation: -36deg"></div>
+                            <span class="audio-knob-label">Reverb</span>
+                            <span class="audio-knob-value" id="reverbValue">30%</span>
+                        </div>
+                        <div class="audio-knob-container">
+                            <div class="audio-knob" id="knobFilter" data-value="80" style="--rotation: 108deg"></div>
+                            <span class="audio-knob-label">Brillo</span>
+                            <span class="audio-knob-value" id="filterValue">80%</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Detune & Vibrato -->
+                <section>
+                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 text-center">Color</h3>
+                    <div class="knob-row">
+                        <div class="audio-knob-container">
+                            <div class="audio-knob" id="knobDetune" data-value="50" style="--rotation: 0deg"></div>
+                            <span class="audio-knob-label">Detune</span>
+                            <span class="audio-knob-value" id="detuneValue">50%</span>
+                        </div>
+                        <div class="audio-knob-container">
+                            <div class="audio-knob" id="knobVibrato" data-value="30" style="--rotation: -36deg"></div>
+                            <span class="audio-knob-label">Vibrato</span>
+                            <span class="audio-knob-value" id="vibratoValue">30%</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Attack & Release -->
+                <section>
+                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 text-center">Envolvente</h3>
+                    <div class="knob-row">
+                        <div class="audio-knob-container">
+                            <div class="audio-knob" id="knobAttack" data-value="20" style="--rotation: -72deg"></div>
+                            <span class="audio-knob-label">Attack</span>
+                            <span class="audio-knob-value" id="attackValue">20%</span>
+                        </div>
+                        <div class="audio-knob-container">
+                            <div class="audio-knob" id="knobRelease" data-value="40" style="--rotation: -18deg"></div>
+                            <span class="audio-knob-label">Release</span>
+                            <span class="audio-knob-value" id="releaseValue">40%</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Voice Mixer -->
+                <section>
+                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 text-center">Voces</h3>
+                    <div class="voice-mixer" id="voiceMixer">
+                        <!-- Bajo -->
+                        <div class="voice-channel" data-voice="0">
+                            <span class="voice-label">B</span>
+                            <div class="voice-led" id="led-0"></div>
+                            <div class="voice-fader-container">
+                                <div class="voice-fader-fill" id="faderFill-0" style="height: 80%"></div>
+                                <input type="range" class="voice-fader" id="fader-0" min="0" max="100" value="80">
+                            </div>
+                            <button class="voice-mute" id="mute-0">M</button>
+                            <span class="voice-note-display" id="note-0">--</span>
+                        </div>
+                        <!-- Tenor -->
+                        <div class="voice-channel" data-voice="1">
+                            <span class="voice-label">T</span>
+                            <div class="voice-led" id="led-1"></div>
+                            <div class="voice-fader-container">
+                                <div class="voice-fader-fill" id="faderFill-1" style="height: 80%"></div>
+                                <input type="range" class="voice-fader" id="fader-1" min="0" max="100" value="80">
+                            </div>
+                            <button class="voice-mute" id="mute-1">M</button>
+                            <span class="voice-note-display" id="note-1">--</span>
+                        </div>
+                        <!-- Alto -->
+                        <div class="voice-channel" data-voice="2">
+                            <span class="voice-label">A</span>
+                            <div class="voice-led" id="led-2"></div>
+                            <div class="voice-fader-container">
+                                <div class="voice-fader-fill" id="faderFill-2" style="height: 80%"></div>
+                                <input type="range" class="voice-fader" id="fader-2" min="0" max="100" value="80">
+                            </div>
+                            <button class="voice-mute" id="mute-2">M</button>
+                            <span class="voice-note-display" id="note-2">--</span>
+                        </div>
+                        <!-- Soprano -->
+                        <div class="voice-channel" data-voice="3">
+                            <span class="voice-label">S</span>
+                            <div class="voice-led" id="led-3"></div>
+                            <div class="voice-fader-container">
+                                <div class="voice-fader-fill" id="faderFill-3" style="height: 80%"></div>
+                                <input type="range" class="voice-fader" id="fader-3" min="0" max="100" value="80">
+                            </div>
+                            <button class="voice-mute" id="mute-3">M</button>
+                            <span class="voice-note-display" id="note-3">--</span>
+                        </div>
+                    </div>
+                    <!-- Voice Trail Visualization -->
+                    <div class="voice-trail-container mt-2">
+                        <canvas id="voiceTrail"></canvas>
+                        <div class="voice-trail-labels">
+                            <span style="color: #a855f7">S</span>
+                            <span style="color: #3b82f6">A</span>
+                            <span style="color: #22c55e">T</span>
+                            <span style="color: #f97316">B</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </aside>
+
         <!-- Visualization Area -->
         <div class="flex-1 relative" id="vizContainer">
             <svg id="mainSvg" class="w-full h-full"></svg>
             <div id="particles" class="absolute inset-0 pointer-events-none"></div>
         </div>
 
-        <!-- Control Panel -->
-        <aside class="control-panel w-72 flex flex-col">
+        <!-- Control Panel (Right) -->
+        <aside class="control-panel w-64 flex flex-col">
             <div class="p-4 space-y-5 overflow-y-auto flex-1">
                 <!-- Tonalidad -->
                 <section>
@@ -768,66 +984,6 @@
                     </div>
                 </section>
 
-                <!-- Voice Mixer -->
-                <section>
-                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Voces</h3>
-                    <div class="voice-mixer" id="voiceMixer">
-                        <!-- Bajo -->
-                        <div class="voice-channel" data-voice="0">
-                            <span class="voice-label">Bajo</span>
-                            <div class="voice-led" id="led-0"></div>
-                            <div class="voice-fader-container">
-                                <div class="voice-fader-fill" id="faderFill-0" style="height: 80%"></div>
-                                <input type="range" class="voice-fader" id="fader-0" min="0" max="100" value="80">
-                            </div>
-                            <button class="voice-mute" id="mute-0">M</button>
-                            <span class="voice-note-display" id="note-0">--</span>
-                        </div>
-                        <!-- Tenor -->
-                        <div class="voice-channel" data-voice="1">
-                            <span class="voice-label">Tenor</span>
-                            <div class="voice-led" id="led-1"></div>
-                            <div class="voice-fader-container">
-                                <div class="voice-fader-fill" id="faderFill-1" style="height: 80%"></div>
-                                <input type="range" class="voice-fader" id="fader-1" min="0" max="100" value="80">
-                            </div>
-                            <button class="voice-mute" id="mute-1">M</button>
-                            <span class="voice-note-display" id="note-1">--</span>
-                        </div>
-                        <!-- Alto -->
-                        <div class="voice-channel" data-voice="2">
-                            <span class="voice-label">Alto</span>
-                            <div class="voice-led" id="led-2"></div>
-                            <div class="voice-fader-container">
-                                <div class="voice-fader-fill" id="faderFill-2" style="height: 80%"></div>
-                                <input type="range" class="voice-fader" id="fader-2" min="0" max="100" value="80">
-                            </div>
-                            <button class="voice-mute" id="mute-2">M</button>
-                            <span class="voice-note-display" id="note-2">--</span>
-                        </div>
-                        <!-- Soprano -->
-                        <div class="voice-channel" data-voice="3">
-                            <span class="voice-label">Soprano</span>
-                            <div class="voice-led" id="led-3"></div>
-                            <div class="voice-fader-container">
-                                <div class="voice-fader-fill" id="faderFill-3" style="height: 80%"></div>
-                                <input type="range" class="voice-fader" id="fader-3" min="0" max="100" value="80">
-                            </div>
-                            <button class="voice-mute" id="mute-3">M</button>
-                            <span class="voice-note-display" id="note-3">--</span>
-                        </div>
-                    </div>
-                    <!-- Voice Trail Visualization -->
-                    <div class="voice-trail-container">
-                        <canvas id="voiceTrail"></canvas>
-                        <div class="voice-trail-labels">
-                            <span style="color: #a855f7">S</span>
-                            <span style="color: #3b82f6">A</span>
-                            <span style="color: #22c55e">T</span>
-                            <span style="color: #f97316">B</span>
-                        </div>
-                    </div>
-                </section>
             </div>
 
             <!-- Transport Controls -->
@@ -2340,6 +2496,57 @@
             this.reverb.setRoomSize(value);
         }
 
+        // === Controles de usuario ===
+
+        setMasterVolume(value) {
+            // value: 0-100
+            const gain = (value / 100) * 0.4; // Max 0.4 para no saturar
+            this.masterGain.gain.linearRampToValueAtTime(gain, this.ctx.currentTime + 0.05);
+        }
+
+        setFilterBrightness(value) {
+            // value: 0-100, ajusta los filtros de todas las voces
+            const mult = 0.3 + (value / 100) * 1.4; // 0.3x a 1.7x del base
+            this.voices.forEach((voice, i) => {
+                const baseFreq = this.filterSettings[i].freq;
+                voice.filter.frequency.linearRampToValueAtTime(
+                    baseFreq * mult,
+                    this.ctx.currentTime + 0.1
+                );
+            });
+        }
+
+        setDetuneAmount(value) {
+            // value: 0-100
+            const mult = value / 50; // 0x a 2x del detune base
+            this.voices.forEach((voice, i) => {
+                const baseDetune = this.unisonDetune[i];
+                voice.osc1.detune.linearRampToValueAtTime(-baseDetune * mult / 2, this.ctx.currentTime + 0.1);
+                voice.osc2.detune.linearRampToValueAtTime(baseDetune * mult / 2, this.ctx.currentTime + 0.1);
+            });
+        }
+
+        setVibratoDepth(value) {
+            // value: 0-100
+            const depth = (value / 100) * 12; // 0 a 12 cents max
+            this.voices.forEach(voice => {
+                if (voice.vibrato) {
+                    voice.vibrato.depth = depth;
+                    voice.vibratoGain.gain.value = depth;
+                }
+            });
+        }
+
+        setAttack(value) {
+            // value: 0-100, multiplier para attack
+            this.attackMultiplier = 0.2 + (value / 100) * 1.8; // 0.2x a 2x
+        }
+
+        setRelease(value) {
+            // value: 0-100, multiplier para release
+            this.releaseMultiplier = 0.3 + (value / 100) * 2.7; // 0.3x a 3x
+        }
+
         stop() {
             const now = this.ctx.currentTime;
             this.voices.forEach(voice => {
@@ -3154,6 +3361,85 @@
                     }
                 });
             }
+
+            // Audio Knob Controls
+            this.setupKnob('knobMaster', 'masterValue', (value) => {
+                if (this.synth) this.synth.setMasterVolume(value);
+            });
+
+            this.setupKnob('knobReverb', 'reverbValue', (value) => {
+                if (this.synth) this.synth.setReverbMix(value / 100);
+            });
+
+            this.setupKnob('knobFilter', 'filterValue', (value) => {
+                if (this.synth) this.synth.setFilterBrightness(value);
+            });
+
+            this.setupKnob('knobDetune', 'detuneValue', (value) => {
+                if (this.synth) this.synth.setDetuneAmount(value);
+            });
+
+            this.setupKnob('knobVibrato', 'vibratoValue', (value) => {
+                if (this.synth) this.synth.setVibratoDepth(value);
+            });
+
+            this.setupKnob('knobAttack', 'attackValue', (value) => {
+                if (this.synth) this.synth.setAttack(value);
+            });
+
+            this.setupKnob('knobRelease', 'releaseValue', (value) => {
+                if (this.synth) this.synth.setRelease(value);
+            });
+        }
+
+        setupKnob(knobId, valueId, callback) {
+            const knob = document.getElementById(knobId);
+            const valueDisplay = document.getElementById(valueId);
+            if (!knob) return;
+
+            let isDragging = false;
+            let startY = 0;
+            let startValue = parseInt(knob.dataset.value) || 50;
+
+            const updateKnob = (value) => {
+                value = Math.max(0, Math.min(100, value));
+                knob.dataset.value = value;
+                // Rotation: -135deg (0%) to +135deg (100%)
+                const rotation = -135 + (value / 100) * 270;
+                knob.style.setProperty('--rotation', `${rotation}deg`);
+                if (valueDisplay) valueDisplay.textContent = `${Math.round(value)}%`;
+                callback(value);
+            };
+
+            knob.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startY = e.clientY;
+                startValue = parseInt(knob.dataset.value) || 50;
+                knob.classList.add('active');
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const deltaY = startY - e.clientY;
+                const newValue = startValue + deltaY * 0.5;
+                updateKnob(newValue);
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    knob.classList.remove('active');
+                }
+            });
+
+            // Double click to reset
+            knob.addEventListener('dblclick', () => {
+                updateKnob(50);
+            });
+
+            // Initialize
+            updateKnob(startValue);
         }
 
         togglePlay() {
