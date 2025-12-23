@@ -521,6 +521,43 @@
             background: #22c55e;
             animation: resolution-burst 0.5s ease-out forwards;
         }
+
+        /* Modulación */
+        .modulation-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            animation: modulation-pulse 0.5s ease;
+        }
+
+        .modulation-badge.preparing {
+            background: rgba(168, 85, 247, 0.3);
+            color: #c4b5fd;
+            border: 1px solid #a855f7;
+        }
+
+        .modulation-badge.complete {
+            background: rgba(34, 197, 94, 0.3);
+            color: #86efac;
+            border: 1px solid #22c55e;
+        }
+
+        @keyframes modulation-pulse {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        #currentKeyDisplay {
+            transition: all 0.3s ease;
+        }
+
+        #currentKeyDisplay.key-changed {
+            color: #a855f7;
+            transform: scale(1.2);
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.8);
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col">
@@ -557,7 +594,13 @@
             <div class="p-4 space-y-5 overflow-y-auto flex-1">
                 <!-- Tonalidad -->
                 <section>
-                    <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Tonalidad</h3>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider">Tonalidad</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl font-bold text-white" id="currentKeyDisplay">C</span>
+                            <span id="modulationBadge" class="modulation-badge" style="display: none;"></span>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-6 gap-1" id="keySelector">
                         <button class="key-btn active" data-key="C">C</button>
                         <button class="key-btn" data-key="G">G</button>
@@ -581,6 +624,21 @@
                         </label>
                         <span class="text-xs text-slate-500">Menor</span>
                     </div>
+                    <!-- Toggle Modulación Automática -->
+                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-700">
+                        <span class="text-xs text-slate-400">Modulación Auto</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="modulationToggle" class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
+                    <!-- Botón Modulación Manual -->
+                    <button id="modulateBtn" class="w-full mt-2 px-3 py-2 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/50 rounded-lg text-purple-300 text-xs font-medium transition-all flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                        </svg>
+                        Modular
+                    </button>
                 </section>
 
                 <!-- Tempo -->
@@ -1165,6 +1223,12 @@
             this.gravity = 0.5;        // 0 = caos, 1 = estricto
             this.chaosNoise = 0;       // Ruido temporal inyectado
             this.chaosDecayRate = 0.7; // Decae 30% por acorde
+
+            // Modulación automática
+            this.modulationEnabled = false;
+            this.chordsSinceModulation = 0;
+            this.modulationThreshold = 10;      // Mínimo acordes antes de modular
+            this.modulationProbability = 0.15;  // Probabilidad base por acorde (después del threshold)
         }
 
         setMode(mode) {
@@ -1441,6 +1505,147 @@
                 }
             }
             return null;
+        }
+
+        // ==================== MODULACIÓN ====================
+
+        setModulationEnabled(enabled) {
+            this.modulationEnabled = enabled;
+            if (enabled) {
+                this.chordsSinceModulation = 0;
+            }
+        }
+
+        // Tonalidades cercanas en el círculo de quintas
+        getRelatedKeys() {
+            const circleOfFifths = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
+            const currentIndex = circleOfFifths.indexOf(this.key);
+
+            // Si no encontramos la tonalidad exacta, buscar enarmónico
+            let idx = currentIndex;
+            if (idx === -1) {
+                // Buscar enarmónicos
+                const enharmonics = { 'C#': 'Db', 'Gb': 'F#', 'D#': 'Eb', 'G#': 'Ab', 'A#': 'Bb' };
+                const searchKey = enharmonics[this.key] || this.key;
+                idx = circleOfFifths.indexOf(searchKey);
+                if (idx === -1) idx = 0; // Fallback a C
+            }
+
+            const len = circleOfFifths.length;
+            return {
+                dominant: circleOfFifths[(idx + 1) % len],      // +1 quinta (ej: C → G)
+                subdominant: circleOfFifths[(idx - 1 + len) % len], // -1 quinta (ej: C → F)
+                // Relativo menor/mayor depende del modo actual
+                relative: this.mode === 'major'
+                    ? circleOfFifths[(idx + 3) % len]  // Relativo menor está 3 posiciones adelante
+                    : circleOfFifths[(idx - 3 + len) % len]  // Relativo mayor está 3 atrás
+            };
+        }
+
+        // Determinar si es buen momento para modular
+        shouldModulate() {
+            if (!this.modulationEnabled) return false;
+            if (this.chordsSinceModulation < this.modulationThreshold) return false;
+
+            // Solo modular desde tónica (momento de estabilidad)
+            const tonic = this.getTonic();
+            if (this.position !== tonic) return false;
+
+            // Probabilidad aumenta con el tiempo sin modular
+            const extraChords = this.chordsSinceModulation - this.modulationThreshold;
+            const probability = this.modulationProbability + (extraChords * 0.02);
+
+            return Math.random() < probability;
+        }
+
+        // Elegir tonalidad destino
+        chooseModulationTarget() {
+            const related = this.getRelatedKeys();
+            const options = [
+                { key: related.dominant, weight: 0.45, name: 'dominante' },
+                { key: related.subdominant, weight: 0.35, name: 'subdominante' },
+                { key: related.relative, weight: 0.20, name: 'relativo' }
+            ];
+
+            const r = Math.random();
+            let cumulative = 0;
+            for (const opt of options) {
+                cumulative += opt.weight;
+                if (r < cumulative) {
+                    return { key: opt.key, relation: opt.name };
+                }
+            }
+            return { key: options[0].key, relation: options[0].name };
+        }
+
+        // Forzar modulación manual
+        forceModulation() {
+            try {
+                const target = this.chooseModulationTarget();
+                const oldKey = this.key;
+                const newKey = target.key;
+                const relation = target.relation;
+
+                // Cambiar tonalidad
+                this.setKey(newKey);
+
+                // Resetear estado
+                this.position = this.getTonic();
+                this.tension = 0;
+                this.chordsSinceModulation = 0;
+
+                // Resetear historial para nueva tonalidad
+                this.history = [this.getTonic()];
+
+                return {
+                    type: 'complete',
+                    from: oldKey,
+                    to: newKey,
+                    relation: relation
+                };
+            } catch (err) {
+                console.error('Error en forceModulation:', err);
+                return null;
+            }
+        }
+
+        // Verificar y ejecutar modulación si corresponde
+        checkModulation() {
+            try {
+                this.chordsSinceModulation++;
+
+                // Verificar si debemos modular (estamos en tónica, pasó el threshold, etc.)
+                if (!this.shouldModulate()) {
+                    return null;
+                }
+
+                // Elegir tonalidad destino y modular directamente
+                const target = this.chooseModulationTarget();
+                const oldKey = this.key;
+                const newKey = target.key;
+                const relation = target.relation;
+
+                // Cambiar tonalidad
+                this.setKey(newKey);
+
+                // Resetear estado
+                this.position = this.getTonic();
+                this.tension = 0;
+                this.chordsSinceModulation = 0;
+
+                // Resetear historial para nueva tonalidad
+                this.history = [this.getTonic()];
+
+                return {
+                    type: 'complete',
+                    from: oldKey,
+                    to: newKey,
+                    relation: relation
+                };
+            } catch (err) {
+                console.error('Error en checkModulation:', err);
+                return null;
+            }
         }
     }
 
@@ -2785,6 +2990,17 @@
                     btn.classList.add('active');
                     this.key = btn.dataset.key;
                     this.tonalGravity.setKey(this.key);
+
+                    // Resetear contador de modulación al cambiar manualmente
+                    this.tonalGravity.chordsSinceModulation = 0;
+
+                    // Ocultar badge de modulación
+                    const badge = document.getElementById('modulationBadge');
+                    if (badge) badge.style.display = 'none';
+
+                    // Actualizar display de tonalidad actual
+                    const keyDisplay = document.getElementById('currentKeyDisplay');
+                    if (keyDisplay) keyDisplay.textContent = this.key;
                 });
             });
 
@@ -2809,6 +3025,24 @@
                 // Actualizar matriz y displays
                 this.updateMatrix();
                 this.updateProbabilities();
+            });
+
+            // Modulación automática toggle
+            document.getElementById('modulationToggle').addEventListener('change', (e) => {
+                this.tonalGravity.setModulationEnabled(e.target.checked);
+                console.log('Modulación automática:', e.target.checked ? 'ON' : 'OFF');
+            });
+
+            // Botón modulación manual
+            document.getElementById('modulateBtn').addEventListener('click', () => {
+                const event = this.tonalGravity.forceModulation();
+                if (event) {
+                    this.handleModulationEvent(event);
+                    // Si está sonando, tocar el nuevo I
+                    if (this.isPlaying) {
+                        this.playChord(this.tonalGravity.position, false);
+                    }
+                }
             });
 
             // Style
@@ -2983,6 +3217,12 @@
             const result = this.tonalGravity.step();
             this.playChord(result.chord, false);
 
+            // Verificar modulación después de cada acorde
+            const modulationEvent = this.tonalGravity.checkModulation();
+            if (modulationEvent) {
+                this.handleModulationEvent(modulationEvent);
+            }
+
             const chordsDict = this.tonalGravity.getChords();
             const context = {
                 tensionLevel: result.tension,
@@ -2994,6 +3234,47 @@
             this.nextStepTimeout = setTimeout(() => {
                 this.scheduleNextStep();
             }, duration * 1000);
+        }
+
+        handleModulationEvent(event) {
+            try {
+                const keyDisplay = document.getElementById('currentKeyDisplay');
+                const modulationBadge = document.getElementById('modulationBadge');
+
+                // Modulación completada - actualizar UI
+                if (keyDisplay) {
+                    keyDisplay.textContent = event.to;
+                    keyDisplay.classList.add('key-changed');
+                    setTimeout(() => keyDisplay.classList.remove('key-changed'), 500);
+                }
+                if (modulationBadge) {
+                    modulationBadge.textContent = `${event.from} → ${event.to}`;
+                    modulationBadge.className = 'modulation-badge complete';
+                    modulationBadge.style.display = 'inline-block';
+                    setTimeout(() => {
+                        modulationBadge.style.display = 'none';
+                    }, 2500);
+                }
+
+                // Actualizar botón de tonalidad activo
+                this.updateKeyButtons(event.to);
+                this.key = event.to;
+
+                // Actualizar el synth con la nueva tonalidad
+                if (this.synth) {
+                    this.synth.setKey(this.tonalGravity.keyPitch);
+                }
+
+                console.log(`¡Modulación! ${event.from} → ${event.to} (${event.relation})`);
+            } catch (err) {
+                console.error('Error en modulación:', err);
+            }
+        }
+
+        updateKeyButtons(newKey) {
+            document.querySelectorAll('.key-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.key === newKey);
+            });
         }
 
         playChord(chord, isManual) {
