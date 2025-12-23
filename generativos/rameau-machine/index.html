@@ -1158,9 +1158,14 @@
                         <circle cx="12" cy="12" r="6"/>
                     </svg>
                 </button>
-                <button id="exportBtn" class="w-10 h-10 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors" title="Exportar progresion">
+                <button id="exportBtn" class="w-10 h-10 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors" title="Exportar texto">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                    </svg>
+                </button>
+                <button id="exportXMLBtn" class="w-10 h-10 rounded-full bg-slate-700 hover:bg-indigo-600 flex items-center justify-center transition-colors" title="Exportar MusicXML (SATB)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
                     </svg>
                 </button>
             </div>
@@ -3530,6 +3535,9 @@ Movimiento por quintas = modulaciones naturales
             this.trailCanvas = null;
             this.trailCtx = null;
 
+            // Export history (stores chord + SATB voicing)
+            this.exportHistory = [];
+
             this.init();
         }
 
@@ -3721,9 +3729,14 @@ Movimiento por quintas = modulaciones naturales
                 this.toggleRecording();
             });
 
-            // Export button
+            // Export button (text)
             document.getElementById('exportBtn').addEventListener('click', () => {
                 this.exportProgression();
+            });
+
+            // Export MusicXML button
+            document.getElementById('exportXMLBtn').addEventListener('click', () => {
+                this.exportMusicXML();
             });
 
             // Gravity slider
@@ -4050,6 +4063,15 @@ Movimiento por quintas = modulaciones naturales
             // Play audio
             if (voiceResult) {
                 this.synth.transitionTo(voiceResult.to, duration, articulation, bassPattern);
+
+                // Store for MusicXML export
+                this.exportHistory.push({
+                    chord: chord,
+                    voices: [...voiceResult.to], // [bass, tenor, alto, soprano]
+                    key: this.key,
+                    mode: this.mode,
+                    duration: duration
+                });
             }
 
             // Update visualization
@@ -4428,6 +4450,221 @@ Movimiento por quintas = modulaciones naturales
             a.download = `rameau-progresion-${key}-${Date.now()}.md`;
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        // ========== MUSICXML EXPORT ==========
+        exportMusicXML() {
+            if (this.exportHistory.length === 0) {
+                alert('No hay acordes para exportar. Reproduce algunos acordes primero.');
+                return;
+            }
+
+            const xml = this.generateMusicXML();
+            const blob = new Blob([xml], { type: 'application/vnd.recordare.musicxml+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rameau-${this.key}-${this.mode}-${Date.now()}.musicxml`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        generateMusicXML() {
+            const history = this.exportHistory;
+            const divisions = 1; // 1 division per quarter note
+            const beats = 4;
+            const beatType = 4;
+
+            // Helper: MIDI to MusicXML pitch
+            const midiToPitch = (midi) => {
+                const noteNames = ['C', 'C', 'D', 'D', 'E', 'F', 'F', 'G', 'G', 'A', 'A', 'B'];
+                const alterations = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
+                const pc = midi % 12;
+                const octave = Math.floor(midi / 12) - 1;
+                return {
+                    step: noteNames[pc],
+                    alter: alterations[pc],
+                    octave: octave
+                };
+            };
+
+            // Helper: Get chord root and kind for harmony element
+            const getChordHarmony = (chordName, keyPitch) => {
+                const chordsDict = this.tonalGravity.getChords();
+                const chord = chordsDict[chordName];
+                if (!chord) return null;
+
+                const rootPC = (chord.root + keyPitch) % 12;
+
+                // Use flats for flat keys, sharps for sharp keys
+                const keyFifths = this.getKeyFifths();
+                const useFlats = keyFifths < 0;
+
+                // Sharp names: C, C#, D, D#, E, F, F#, G, G#, A, A#, B
+                // Flat names:  C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B
+                const sharpNames = ['C', 'C', 'D', 'D', 'E', 'F', 'F', 'G', 'G', 'A', 'A', 'B'];
+                const sharpAlters = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
+                const flatNames = ['C', 'D', 'D', 'E', 'E', 'F', 'G', 'G', 'A', 'A', 'B', 'B'];
+                const flatAlters = [0, -1, 0, -1, 0, 0, -1, 0, -1, 0, -1, 0];
+
+                const rootNames = useFlats ? flatNames : sharpNames;
+                const rootAlters = useFlats ? flatAlters : sharpAlters;
+
+                // MusicXML kind values
+                let kind = 'major';
+                let kindText = ''; // Additional text for display
+                if (chord.quality === 'minor') {
+                    kind = 'minor';
+                    kindText = 'm';
+                } else if (chord.quality === 'dim') {
+                    kind = 'diminished';
+                    kindText = 'dim';
+                } else if (chord.quality === 'dom7') {
+                    kind = 'dominant';
+                    kindText = '7';
+                }
+
+                return {
+                    root: rootNames[rootPC],
+                    alter: rootAlters[rootPC],
+                    kind: kind,
+                    kindText: kindText,
+                    symbol: chordName // Roman numeral
+                };
+            };
+
+            // Voice names and clefs
+            const voices = [
+                { id: 'P1', name: 'Soprano', abbr: 'S', clef: { sign: 'G', line: 2 } },
+                { id: 'P2', name: 'Alto', abbr: 'A', clef: { sign: 'G', line: 2 } },
+                { id: 'P3', name: 'Tenor', abbr: 'T', clef: { sign: 'G', line: 2, octaveChange: -1 } },
+                { id: 'P4', name: 'Bajo', abbr: 'B', clef: { sign: 'F', line: 4 } }
+            ];
+
+            // Map export history voices: [bass, tenor, alto, soprano] -> we need [soprano, alto, tenor, bass]
+            const voiceIndices = [3, 2, 1, 0]; // soprano=3, alto=2, tenor=1, bass=0
+
+            let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <work>
+    <work-title>Rameau Machine - ${this.key} ${this.mode === 'minor' ? 'menor' : 'Mayor'}</work-title>
+  </work>
+  <identification>
+    <creator type="composer">Rameau Machine</creator>
+    <encoding>
+      <software>Rameau Machine - Armonia Funcional Generativa</software>
+      <encoding-date>${new Date().toISOString().split('T')[0]}</encoding-date>
+    </encoding>
+  </identification>
+  <part-list>
+`;
+
+            // Part list
+            voices.forEach(v => {
+                xml += `    <score-part id="${v.id}">
+      <part-name>${v.name}</part-name>
+      <part-abbreviation>${v.abbr}</part-abbreviation>
+    </score-part>
+`;
+            });
+
+            xml += `  </part-list>
+`;
+
+            // Generate parts
+            voices.forEach((voice, vIdx) => {
+                const sourceIdx = voiceIndices[vIdx];
+                xml += `  <part id="${voice.id}">
+`;
+
+                history.forEach((entry, mIdx) => {
+                    const midi = entry.voices[sourceIdx];
+                    const pitch = midiToPitch(midi);
+                    const isFirstMeasure = mIdx === 0;
+
+                    xml += `    <measure number="${mIdx + 1}">
+`;
+
+                    // Attributes only in first measure
+                    if (isFirstMeasure) {
+                        xml += `      <attributes>
+        <divisions>${divisions}</divisions>
+        <key>
+          <fifths>${this.getKeyFifths()}</fifths>
+          <mode>${this.mode === 'minor' ? 'minor' : 'major'}</mode>
+        </key>
+        <time>
+          <beats>${beats}</beats>
+          <beat-type>${beatType}</beat-type>
+        </time>
+        <clef>
+          <sign>${voice.clef.sign}</sign>
+          <line>${voice.clef.line}</line>
+${voice.clef.octaveChange ? `          <clef-octave-change>${voice.clef.octaveChange}</clef-octave-change>\n` : ''}        </clef>
+      </attributes>
+`;
+                    }
+
+                    // Add chord symbol (harmony) to Soprano part only
+                    if (vIdx === 0) {
+                        const harmony = getChordHarmony(entry.chord, this.tonalGravity.keyPitch);
+                        if (harmony) {
+                            // Build chord name with alteration
+                            const alterText = harmony.alter === 1 ? '♯' : (harmony.alter === -1 ? '♭' : '');
+                            const chordDisplay = `${harmony.root}${alterText}${harmony.kindText}`;
+
+                            xml += `      <harmony print-frame="no">
+        <root>
+          <root-step>${harmony.root}</root-step>
+${harmony.alter !== 0 ? `          <root-alter>${harmony.alter}</root-alter>\n` : ''}        </root>
+        <kind text="${harmony.kindText}">${harmony.kind}</kind>
+      </harmony>
+      <direction placement="above">
+        <direction-type>
+          <words default-y="40" font-size="10" font-style="italic">${harmony.symbol}</words>
+        </direction-type>
+      </direction>
+`;
+                        }
+                    }
+
+                    // Note (whole note = 4 beats)
+                    xml += `      <note>
+        <pitch>
+          <step>${pitch.step}</step>
+${pitch.alter !== 0 ? `          <alter>${pitch.alter}</alter>\n` : ''}          <octave>${pitch.octave}</octave>
+        </pitch>
+        <duration>${divisions * 4}</duration>
+        <type>whole</type>
+      </note>
+`;
+
+                    xml += `    </measure>
+`;
+                });
+
+                xml += `  </part>
+`;
+            });
+
+            xml += `</score-partwise>`;
+
+            return xml;
+        }
+
+        getKeyFifths() {
+            // Circle of fifths position for MusicXML
+            const keyFifths = {
+                'C': 0, 'G': 1, 'D': 2, 'A': 3, 'E': 4, 'B': 5, 'F#': 6, 'Gb': -6,
+                'F': -1, 'Bb': -2, 'Eb': -3, 'Ab': -4, 'Db': -5, 'Cb': -7,
+                'C#': 7
+            };
+            return keyFifths[this.key] || 0;
+        }
+
+        clearExportHistory() {
+            this.exportHistory = [];
         }
     }
 
