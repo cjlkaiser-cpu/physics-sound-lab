@@ -1,0 +1,37 @@
+[package]
+name = "sympathetic-12"
+version = "1.0.0"
+authors = ["Carlos Lorente Kaiser"]
+edition = "2021"
+description = "Physical modeling synthesizer with 12 sympathetically resonating strings"
+repository = "https://github.com/cjlkaiser-cpu/EigenLab"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["console_error_panic_hook"]
+
+[dependencies]
+wasm-bindgen = "0.2.92"
+js-sys = "0.3.69"
+
+# Better error messages in debug mode
+console_error_panic_hook = { version = "0.1.7", optional = true }
+
+# For random number generation
+getrandom = { version = "0.2", features = ["js"] }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.42"
+
+[profile.release]
+# Optimize for size and speed
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O4", "--enable-simd"]

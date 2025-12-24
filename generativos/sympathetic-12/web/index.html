@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sympathetic 12 | Physical Modeling Synthesizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #030712;
+            --bg-secondary: #0f172a;
+            --bg-tertiary: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #a855f7;
+            --accent-glow: rgba(168, 85, 247, 0.3);
+            --border: rgba(148, 163, 184, 0.1);
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #app {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Main visualization area */
+        #main-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .title-section h1 {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .title-section h1 span {
+            color: var(--accent);
+        }
+
+        .title-section .subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* String canvas */
+        #string-container {
+            flex: 1;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #string-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        /* Bottom panels */
+        #bottom-panels {
+            display: flex;
+            gap: 15px;
+            height: 150px;
+        }
+
+        .bottom-panel {
+            flex: 1;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title {
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .panel-canvas {
+            flex: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Controls sidebar */
+        #controls {
+            width: 280px;
+            min-width: 200px;
+            flex-shrink: 0;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 1200px) {
+            #controls {
+                width: 220px;
+                min-width: 180px;
+                padding: 12px;
+            }
+        }
+
+        .control-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn:hover {
+            background: rgba(168, 85, 247, 0.1);
+            border-color: var(--accent);
+        }
+
+        .btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .btn.primary:hover {
+            background: #9333ea;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        /* Preset buttons */
+        .preset-btn {
+            padding: 10px 14px;
+            font-size: 11px;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        /* Sliders */
+        .slider-group {
+            margin-bottom: 14px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 6px;
+        }
+
+        .slider-label {
+            color: var(--text-secondary);
+        }
+
+        .slider-value {
+            color: var(--accent);
+            font-family: 'SF Mono', Consolas, monospace;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* Octave selector */
+        .octave-selector {
+            display: flex;
+            gap: 4px;
+        }
+
+        .octave-btn {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Keyboard shortcuts */
+        .keyboard-hint {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+
+        .keyboard-hint-title {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .key-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .key {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: 'SF Mono', Consolas, monospace;
+            color: var(--text-secondary);
+        }
+
+        .key.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* Info panel */
+        .info-panel {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            padding: 4px 0;
+        }
+
+        .info-label {
+            color: var(--text-muted);
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-family: 'SF Mono', Consolas, monospace;
+        }
+
+        /* Start overlay */
+        #start-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(3, 7, 18, 0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            cursor: pointer;
+        }
+
+        #start-overlay h2 {
+            font-size: 48px;
+            font-weight: 300;
+            letter-spacing: -2px;
+            margin-bottom: 10px;
+        }
+
+        #start-overlay h2 span {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        #start-overlay .tagline {
+            font-size: 16px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+
+        #start-overlay .description {
+            max-width: 500px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 50px;
+        }
+
+        .start-btn {
+            padding: 16px 48px;
+            font-size: 16px;
+            font-weight: 500;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px var(--accent-glow);
+        }
+
+        /* String representation in overlay */
+        .string-preview {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 40px;
+        }
+
+        .preview-string {
+            width: 3px;
+            height: 80px;
+            background: linear-gradient(to bottom, var(--accent), transparent);
+            border-radius: 2px;
+            animation: stringPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes stringPulse {
+            0%, 100% { opacity: 0.3; transform: scaleY(1); }
+            50% { opacity: 1; transform: scaleY(1.1); }
+        }
+
+        .preview-string:nth-child(1) { animation-delay: 0.0s; background: linear-gradient(to bottom, #ef4444, transparent); }
+        .preview-string:nth-child(2) { animation-delay: 0.1s; background: linear-gradient(to bottom, #f97316, transparent); }
+        .preview-string:nth-child(3) { animation-delay: 0.2s; background: linear-gradient(to bottom, #eab308, transparent); }
+        .preview-string:nth-child(4) { animation-delay: 0.3s; background: linear-gradient(to bottom, #84cc16, transparent); }
+        .preview-string:nth-child(5) { animation-delay: 0.4s; background: linear-gradient(to bottom, #22c55e, transparent); }
+        .preview-string:nth-child(6) { animation-delay: 0.5s; background: linear-gradient(to bottom, #14b8a6, transparent); }
+        .preview-string:nth-child(7) { animation-delay: 0.6s; background: linear-gradient(to bottom, #06b6d4, transparent); }
+        .preview-string:nth-child(8) { animation-delay: 0.7s; background: linear-gradient(to bottom, #3b82f6, transparent); }
+        .preview-string:nth-child(9) { animation-delay: 0.8s; background: linear-gradient(to bottom, #6366f1, transparent); }
+        .preview-string:nth-child(10) { animation-delay: 0.9s; background: linear-gradient(to bottom, #8b5cf6, transparent); }
+        .preview-string:nth-child(11) { animation-delay: 1.0s; background: linear-gradient(to bottom, #a855f7, transparent); }
+        .preview-string:nth-child(12) { animation-delay: 1.1s; background: linear-gradient(to bottom, #ec4899, transparent); }
+
+        /* Loading */
+        .loading {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Start Overlay -->
+    <div id="start-overlay">
+        <div class="string-preview">
+            <div class="preview-string"></div>
+            <div class="preview-string"></div>
+            <div class="preview-string"></div>
+            <div class="preview-string"></div>
+            <div class="preview-string"></div>
+            <div class="preview-string"></div>
+            <div class="preview-string"></div>
+            <div class="preview-string"></div>
+            <div class="preview-string"></div>
+            <div class="preview-string"></div>
+            <div class="preview-string"></div>
+            <div class="preview-string"></div>
+        </div>
+        <h2>Sympathetic <span>12</span></h2>
+        <p class="tagline">Physical Modeling Synthesizer</p>
+        <p class="description">
+            12 cuerdas virtuales modeladas fisicamente con resonancia simpatica.
+            Cada cuerda representa una pitch class (C-B). Cuando una vibra,
+            las demas resuenan segun sus relaciones intervelicas.
+        </p>
+        <button class="start-btn" id="start-btn">Comenzar</button>
+        <p class="loading hidden" id="loading">Cargando motor WASM...</p>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" class="hidden">
+        <div id="main-panel">
+            <header>
+                <div class="title-section">
+                    <h1>Sympathetic <span>12</span></h1>
+                    <p class="subtitle">Physical Modeling Synthesizer &bull; Rust/WASM</p>
+                </div>
+                <div class="header-controls">
+                    <button class="btn" id="btn-damp-all">Dampen All</button>
+                </div>
+            </header>
+
+            <div id="string-container">
+                <canvas id="string-canvas"></canvas>
+            </div>
+
+            <div id="bottom-panels">
+                <div class="bottom-panel">
+                    <div class="panel-title">Spectrum</div>
+                    <canvas class="panel-canvas" id="spectrum-canvas"></canvas>
+                </div>
+                <div class="bottom-panel">
+                    <div class="panel-title">Sympathetic Matrix</div>
+                    <canvas class="panel-canvas" id="matrix-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="controls">
+            <!-- Presets -->
+            <div class="control-section">
+                <div class="section-title">Presets</div>
+                <div class="btn-group">
+                    <button class="btn preset-btn active" data-preset="harp">Harp</button>
+                    <button class="btn preset-btn" data-preset="piano">Piano</button>
+                    <button class="btn preset-btn" data-preset="guitar">Guitar</button>
+                    <button class="btn preset-btn" data-preset="sitar">Sitar</button>
+                    <button class="btn preset-btn" data-preset="bell">Bell</button>
+                    <button class="btn preset-btn" data-preset="pad">Pad</button>
+                </div>
+            </div>
+
+            <!-- Octave -->
+            <div class="control-section">
+                <div class="section-title">Base Octave</div>
+                <div class="octave-selector">
+                    <button class="btn octave-btn" data-octave="2">2</button>
+                    <button class="btn octave-btn active" data-octave="3">3</button>
+                    <button class="btn octave-btn" data-octave="4">4</button>
+                    <button class="btn octave-btn" data-octave="5">5</button>
+                </div>
+            </div>
+
+            <!-- String Parameters -->
+            <div class="control-section">
+                <div class="section-title">String</div>
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">Damping</span>
+                        <span class="slider-value" id="damping-value">0.998</span>
+                    </div>
+                    <input type="range" id="damping-slider" min="0.99" max="0.9999" step="0.0001" value="0.998">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">Brightness</span>
+                        <span class="slider-value" id="brightness-value">0.50</span>
+                    </div>
+                    <input type="range" id="brightness-slider" min="0" max="1" step="0.01" value="0.5">
+                </div>
+            </div>
+
+            <!-- Sympathetic Resonance -->
+            <div class="control-section">
+                <div class="section-title">Sympathetic Resonance</div>
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">Amount</span>
+                        <span class="slider-value" id="sympathy-value">0.30</span>
+                    </div>
+                    <input type="range" id="sympathy-slider" min="0" max="1" step="0.01" value="0.3">
+                </div>
+            </div>
+
+            <!-- Reverb -->
+            <div class="control-section">
+                <div class="section-title">Reverb</div>
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">Mix</span>
+                        <span class="slider-value" id="reverb-mix-value">0.25</span>
+                    </div>
+                    <input type="range" id="reverb-mix-slider" min="0" max="1" step="0.01" value="0.25">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">Room Size</span>
+                        <span class="slider-value" id="reverb-size-value">0.50</span>
+                    </div>
+                    <input type="range" id="reverb-size-slider" min="0" max="1" step="0.01" value="0.5">
+                </div>
+            </div>
+
+            <!-- Master -->
+            <div class="control-section">
+                <div class="section-title">Master</div>
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">Volume</span>
+                        <span class="slider-value" id="volume-value">0.70</span>
+                    </div>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7">
+                </div>
+            </div>
+
+            <!-- Keyboard -->
+            <div class="control-section">
+                <div class="section-title">Keyboard</div>
+                <div class="keyboard-hint">
+                    <div class="keyboard-hint-title">Use keyboard to pluck strings</div>
+                    <div class="key-row">
+                        <div class="key" data-pc="1">W</div>
+                        <div class="key" data-pc="3">E</div>
+                        <div class="key" data-pc="6">T</div>
+                        <div class="key" data-pc="8">Y</div>
+                        <div class="key" data-pc="10">U</div>
+                    </div>
+                    <div class="key-row">
+                        <div class="key" data-pc="0">A</div>
+                        <div class="key" data-pc="2">S</div>
+                        <div class="key" data-pc="4">D</div>
+                        <div class="key" data-pc="5">F</div>
+                        <div class="key" data-pc="7">G</div>
+                        <div class="key" data-pc="9">H</div>
+                        <div class="key" data-pc="11">J</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="control-section">
+                <div class="section-title">Info</div>
+                <div class="info-panel">
+                    <div class="info-row">
+                        <span class="info-label">Active Voices</span>
+                        <span class="info-value" id="info-voices">0</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Engine</span>
+                        <span class="info-value">Rust/WASM</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Sample Rate</span>
+                        <span class="info-value">44100 Hz</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/audio-processor.js?v=3"></script>
+    <script src="js/visualization.js?v=3"></script>
+    <script type="module">
+        import init, { Sympathetic12 } from './pkg/sympathetic_12.js?v=13';
+
+        // ====================================================================
+        // Application State
+        // ====================================================================
+
+        const state = {
+            audioProcessor: null,
+            stringViz: null,
+            matrixViz: null,
+            spectrumViz: null,
+            activeKeys: new Set()
+        };
+
+        // Keyboard mapping: key -> pitch class
+        const keyMap = {
+            'a': 0, 'w': 1, 's': 2, 'e': 3, 'd': 4, 'f': 5,
+            't': 6, 'g': 7, 'y': 8, 'h': 9, 'u': 10, 'j': 11
+        };
+
+        // ====================================================================
+        // Initialization
+        // ====================================================================
+
+        async function initializeApp() {
+            const startBtn = document.getElementById('start-btn');
+            const loading = document.getElementById('loading');
+            const overlay = document.getElementById('start-overlay');
+            const app = document.getElementById('app');
+
+            startBtn.classList.add('hidden');
+            loading.classList.remove('hidden');
+
+            try {
+                // Load WASM module
+                await init();
+
+                // Create audio processor
+                state.audioProcessor = new AudioProcessor();
+                await state.audioProcessor.init({ Sympathetic12 });
+
+                // Create visualizations
+                state.stringViz = new StringVisualization(document.getElementById('string-canvas'));
+                state.stringViz.setAudioProcessor(state.audioProcessor);
+
+                state.matrixViz = new MatrixVisualization(document.getElementById('matrix-canvas'));
+                state.matrixViz.setAudioProcessor(state.audioProcessor);
+
+                state.spectrumViz = new SpectrumVisualization(document.getElementById('spectrum-canvas'));
+                state.spectrumViz.setAudioProcessor(state.audioProcessor);
+
+                // Setup UI
+                setupUI();
+                setupKeyboard();
+
+                // Show app FIRST (so canvas has dimensions)
+                overlay.classList.add('hidden');
+                app.classList.remove('hidden');
+
+                // Now resize canvases (after app is visible)
+                resizeAll();
+                window.addEventListener('resize', resizeAll);
+
+                // Start audio and visualization
+                state.audioProcessor.start();
+                state.stringViz.start();
+
+                // Animation loop for other visualizations
+                animationLoop();
+
+                // Apply default preset
+                state.audioProcessor.presetHarp();
+
+                // Expose for debugging
+                window.synth = state.audioProcessor.synth;
+                window.audio = state.audioProcessor;
+
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+                loading.textContent = 'Error loading: ' + error.message;
+            }
+        }
+
+        function resizeAll() {
+            state.stringViz?.resize();
+            state.matrixViz?.resize();
+            state.spectrumViz?.resize();
+        }
+
+        function animationLoop() {
+            // Update spectrum and matrix
+            state.spectrumViz?.draw();
+            state.matrixViz?.draw();
+
+            // Update info
+            const voiceCount = state.audioProcessor?.getActiveVoiceCount() || 0;
+            document.getElementById('info-voices').textContent = voiceCount;
+
+            requestAnimationFrame(animationLoop);
+        }
+
+        // ====================================================================
+        // UI Setup
+        // ====================================================================
+
+        function setupUI() {
+            // Presets
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    const preset = btn.dataset.preset;
+                    switch (preset) {
+                        case 'piano': state.audioProcessor.presetPiano(); break;
+                        case 'harp': state.audioProcessor.presetHarp(); break;
+                        case 'guitar': state.audioProcessor.presetGuitar(); break;
+                        case 'sitar': state.audioProcessor.presetSitar(); break;
+                        case 'bell': state.audioProcessor.presetBell(); break;
+                        case 'pad': state.audioProcessor.presetPad(); break;
+                    }
+
+                    // Update matrix visualization
+                    state.matrixViz.matrix = state.audioProcessor.getSympathyMatrix();
+                });
+            });
+
+            // Octave selector
+            document.querySelectorAll('.octave-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.octave-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.audioProcessor.setBaseOctave(parseInt(btn.dataset.octave));
+                });
+            });
+
+            // Sliders
+            setupSlider('damping', 'damping-value', (v) => {
+                state.audioProcessor.setGlobalDamping(v);
+            }, 4);
+
+            setupSlider('brightness', 'brightness-value', (v) => {
+                state.audioProcessor.setGlobalBrightness(v);
+            });
+
+            setupSlider('sympathy', 'sympathy-value', (v) => {
+                state.audioProcessor.setSympathyAmount(v);
+            });
+
+            setupSlider('reverb-mix', 'reverb-mix-value', (v) => {
+                state.audioProcessor.setReverbMix(v);
+            });
+
+            setupSlider('reverb-size', 'reverb-size-value', (v) => {
+                state.audioProcessor.setReverbSize(v);
+            });
+
+            setupSlider('volume', 'volume-value', (v) => {
+                state.audioProcessor.setMasterVolume(v);
+            });
+
+            // Damp all button
+            document.getElementById('btn-damp-all').addEventListener('click', () => {
+                state.audioProcessor.dampAll(0.8);
+            });
+        }
+
+        function setupSlider(id, valueId, callback, decimals = 2) {
+            const slider = document.getElementById(id + '-slider');
+            const valueEl = document.getElementById(valueId);
+
+            slider.addEventListener('input', () => {
+                const value = parseFloat(slider.value);
+                valueEl.textContent = value.toFixed(decimals);
+                callback(value);
+            });
+        }
+
+        // ====================================================================
+        // Keyboard
+        // ====================================================================
+
+        function setupKeyboard() {
+            document.addEventListener('keydown', (e) => {
+                const key = e.key.toLowerCase();
+                if (keyMap.hasOwnProperty(key) && !state.activeKeys.has(key)) {
+                    state.activeKeys.add(key);
+                    const pc = keyMap[key];
+
+                    // Visual feedback
+                    const keyEl = document.querySelector(`.key[data-pc="${pc}"]`);
+                    if (keyEl) keyEl.classList.add('active');
+
+                    // Play
+                    const velocity = 0.5 + Math.random() * 0.3;
+                    const position = 0.3 + Math.random() * 0.4;
+                    state.audioProcessor.pluck(pc, velocity, position);
+                }
+
+                // Space to damp all
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    state.audioProcessor.dampAll(0.5);
+                }
+            });
+
+            document.addEventListener('keyup', (e) => {
+                const key = e.key.toLowerCase();
+                state.activeKeys.delete(key);
+
+                if (keyMap.hasOwnProperty(key)) {
+                    const pc = keyMap[key];
+                    const keyEl = document.querySelector(`.key[data-pc="${pc}"]`);
+                    if (keyEl) keyEl.classList.remove('active');
+                }
+            });
+        }
+
+        // ====================================================================
+        // Start
+        // ====================================================================
+
+        document.getElementById('start-btn').addEventListener('click', initializeApp);
+        document.getElementById('start-overlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) initializeApp();
+        });
+    </script>
+</body>
+</html>

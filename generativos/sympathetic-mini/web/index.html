@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sympathetic Mini - Debug Version</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --panel: #12121a;
+            --accent: #a855f7;
+            --text: #e2e8f0;
+            --dim: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        h1 {
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--dim);
+            margin-bottom: 2rem;
+        }
+
+        .container {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .panel {
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-width: 300px;
+        }
+
+        .panel h2 {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            color: var(--dim);
+            margin-bottom: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .strings {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .string-btn {
+            width: 60px;
+            height: 80px;
+            border: 2px solid var(--accent);
+            background: transparent;
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1.25rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+
+        .string-btn:hover {
+            background: rgba(168, 85, 247, 0.2);
+        }
+
+        .string-btn:active {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .string-btn .note {
+            font-size: 1.5rem;
+        }
+
+        .string-btn .freq {
+            font-size: 0.625rem;
+            color: var(--dim);
+        }
+
+        .energy-bar {
+            height: 4px;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.05s;
+            border-radius: 2px;
+            margin-top: 0.25rem;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .control-row label {
+            min-width: 120px;
+            color: var(--dim);
+        }
+
+        .control-row input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent);
+        }
+
+        .control-row .value {
+            min-width: 50px;
+            text-align: right;
+            font-family: monospace;
+        }
+
+        #status {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: var(--panel);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        #status .ok { color: #22c55e; }
+        #status .warn { color: #eab308; }
+        #status .err { color: #ef4444; }
+
+        .start-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+
+        .start-btn:hover {
+            opacity: 0.9;
+        }
+
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .debug {
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: var(--dim);
+        }
+    </style>
+</head>
+<body>
+    <h1>Sympathetic Mini</h1>
+    <p class="subtitle">4 cuerdas - C++ / WASM - Debug Version</p>
+
+    <button id="startBtn" class="start-btn">Iniciar Audio</button>
+
+    <div class="container">
+        <div class="panel">
+            <h2>Cuerdas</h2>
+            <div class="strings">
+                <button class="string-btn" data-string="0">
+                    <span class="note">C</span>
+                    <span class="freq">261 Hz</span>
+                    <div class="energy-bar" id="energy0"></div>
+                </button>
+                <button class="string-btn" data-string="1">
+                    <span class="note">E</span>
+                    <span class="freq">330 Hz</span>
+                    <div class="energy-bar" id="energy1"></div>
+                </button>
+                <button class="string-btn" data-string="2">
+                    <span class="note">G</span>
+                    <span class="freq">392 Hz</span>
+                    <div class="energy-bar" id="energy2"></div>
+                </button>
+                <button class="string-btn" data-string="3">
+                    <span class="note">B</span>
+                    <span class="freq">494 Hz</span>
+                    <div class="energy-bar" id="energy3"></div>
+                </button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Controles Básicos</h2>
+            <div class="controls">
+                <div class="control-row">
+                    <label>Resonancia</label>
+                    <input type="range" id="sympathy" min="0" max="100" value="30">
+                    <span class="value" id="sympathyVal">0.30</span>
+                </div>
+                <div class="control-row">
+                    <label>Volumen</label>
+                    <input type="range" id="volume" min="0" max="100" value="70">
+                    <span class="value" id="volumeVal">0.70</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Debug: Parámetros Resonancia</h2>
+            <div class="controls">
+                <div class="control-row">
+                    <label>Gate (umbral)</label>
+                    <input type="range" id="gate" min="0" max="100" value="10">
+                    <span class="value" id="gateVal">0.010</span>
+                </div>
+                <div class="control-row">
+                    <label>Decay</label>
+                    <input type="range" id="decay" min="50" max="999" value="900">
+                    <span class="value" id="decayVal">0.900</span>
+                </div>
+                <div class="control-row">
+                    <label>Scale (fuerza)</label>
+                    <input type="range" id="scale" min="1" max="200" value="30">
+                    <span class="value" id="scaleVal">0.030</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <div class="panel" style="min-width: 500px;">
+            <h2>Visualización</h2>
+            <canvas id="waveform" width="480" height="150" style="background: #000; border-radius: 8px; width: 100%;"></canvas>
+            <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.75rem; color: var(--dim);">
+                <span>Energía cuerdas (C E G B)</span>
+                <span id="peakVal">Peak: 0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="status">
+        <div>Estado: <span id="statusText">Cargando WASM...</span></div>
+        <div class="debug" id="debug"></div>
+    </div>
+
+    <script src="./js/sympathy.js"></script>
+    <script>
+
+        let synth = null;
+        let audioContext = null;
+        let workletNode = null;
+        let isRunning = false;
+
+        // Visualization
+        const canvas = document.getElementById('waveform');
+        const ctx = canvas.getContext('2d');
+        const historyLength = 240;
+        const energyHistory = [[], [], [], []];  // 4 strings
+        const colors = ['#22c55e', '#3b82f6', '#eab308', '#ef4444'];  // C=green, E=blue, G=yellow, B=red
+        let peakValue = 0;
+
+        const statusText = document.getElementById('statusText');
+        const debugEl = document.getElementById('debug');
+        const startBtn = document.getElementById('startBtn');
+
+        function log(msg, type = 'ok') {
+            console.log(msg);
+            debugEl.innerHTML += `<span class="${type}">${msg}</span><br>`;
+            debugEl.scrollTop = debugEl.scrollHeight;
+        }
+
+        function drawVisualization(energies) {
+            // Update history
+            for (let i = 0; i < 4; i++) {
+                energyHistory[i].push(energies.get(i));
+                if (energyHistory[i].length > historyLength) {
+                    energyHistory[i].shift();
+                }
+            }
+
+            // Track peak
+            const currentMax = Math.max(...[0,1,2,3].map(i => energies.get(i)));
+            peakValue = Math.max(peakValue * 0.995, currentMax);
+            document.getElementById('peakVal').textContent = `Peak: ${peakValue.toFixed(3)}`;
+
+            // Change color if peak is dangerous
+            const peakEl = document.getElementById('peakVal');
+            if (peakValue > 0.8) peakEl.style.color = '#ef4444';
+            else if (peakValue > 0.5) peakEl.style.color = '#eab308';
+            else peakEl.style.color = '#64748b';
+
+            // Clear canvas
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw threshold line
+            ctx.strokeStyle = '#333';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height * 0.2);
+            ctx.lineTo(canvas.width, canvas.height * 0.2);
+            ctx.stroke();
+
+            // Draw each string's energy history
+            const h = canvas.height;
+            const w = canvas.width;
+
+            for (let s = 0; s < 4; s++) {
+                ctx.strokeStyle = colors[s];
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                for (let i = 0; i < energyHistory[s].length; i++) {
+                    const x = (i / historyLength) * w;
+                    const y = h - (energyHistory[s][i] * h);
+
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+
+            // Draw current values as bars on right
+            const barWidth = 15;
+            for (let s = 0; s < 4; s++) {
+                const energy = energies.get(s);
+                ctx.fillStyle = colors[s];
+                ctx.fillRect(w - barWidth * (4 - s), h - (energy * h), barWidth - 2, energy * h);
+            }
+        }
+
+        // Initialize WASM
+        async function initWasm() {
+            try {
+                log('Cargando módulo WASM...');
+                const Module = await createSympathyModule();
+                synth = new Module.SympathyMini();
+                log('SympathyMini creado');
+                statusText.textContent = 'WASM cargado. Click "Iniciar Audio"';
+                statusText.className = 'ok';
+                startBtn.disabled = false;
+            } catch (e) {
+                log(`Error WASM: ${e.message}`, 'err');
+                statusText.textContent = 'Error cargando WASM';
+                statusText.className = 'err';
+            }
+        }
+
+        // Initialize Audio
+        async function initAudio() {
+            if (audioContext) return;
+
+            try {
+                audioContext = new AudioContext({ sampleRate: 44100 });
+                log(`AudioContext: ${audioContext.sampleRate} Hz`);
+
+                // Create ScriptProcessor (simpler for debugging than AudioWorklet)
+                const bufferSize = 256;
+                const processor = audioContext.createScriptProcessor(bufferSize, 0, 2);
+
+                processor.onaudioprocess = (e) => {
+                    if (!synth || !isRunning) return;
+
+                    try {
+                        const output = synth.process(bufferSize);
+                        const leftChannel = e.outputBuffer.getChannelData(0);
+                        const rightChannel = e.outputBuffer.getChannelData(1);
+
+                        for (let i = 0; i < bufferSize; i++) {
+                            leftChannel[i] = output.get(i * 2);
+                            rightChannel[i] = output.get(i * 2 + 1);
+                        }
+
+                        // Update energy visualization
+                        const energies = synth.getEnergies();
+                        for (let i = 0; i < 4; i++) {
+                            const bar = document.getElementById(`energy${i}`);
+                            if (bar) {
+                                bar.style.width = `${energies.get(i) * 100}%`;
+                            }
+                        }
+
+                        // Draw waveform graph
+                        drawVisualization(energies);
+                    } catch (e) {
+                        log(`Error proceso: ${e.message}`, 'err');
+                        isRunning = false;
+                    }
+                };
+
+                processor.connect(audioContext.destination);
+                isRunning = true;
+
+                log('Audio iniciado');
+                statusText.textContent = 'Funcionando';
+                statusText.className = 'ok';
+                startBtn.textContent = 'Audio Activo';
+                startBtn.disabled = true;
+
+            } catch (e) {
+                log(`Error audio: ${e.message}`, 'err');
+            }
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', initAudio);
+
+        document.querySelectorAll('.string-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!synth || !isRunning) return;
+                const stringIndex = parseInt(btn.dataset.string);
+                synth.pluck(stringIndex, 0.8);
+                log(`Pluck string ${stringIndex}`);
+            });
+        });
+
+        document.getElementById('sympathy').addEventListener('input', (e) => {
+            const val = e.target.value / 100;
+            document.getElementById('sympathyVal').textContent = val.toFixed(2);
+            if (synth) synth.setSympatheticAmount(val);
+        });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            const val = e.target.value / 100;
+            document.getElementById('volumeVal').textContent = val.toFixed(2);
+            if (synth) synth.setMasterVolume(val);
+        });
+
+        document.getElementById('gate').addEventListener('input', (e) => {
+            const val = e.target.value / 1000;  // 0-0.1
+            document.getElementById('gateVal').textContent = val.toFixed(3);
+            if (synth) synth.setGateThreshold(val);
+        });
+
+        document.getElementById('decay').addEventListener('input', (e) => {
+            const val = e.target.value / 1000;  // 0.5-0.999
+            document.getElementById('decayVal').textContent = val.toFixed(3);
+            if (synth) synth.setExcitationDecay(val);
+        });
+
+        document.getElementById('scale').addEventListener('input', (e) => {
+            const val = e.target.value / 1000;  // 0.001-0.2
+            document.getElementById('scaleVal').textContent = val.toFixed(3);
+            if (synth) synth.setCouplingScale(val);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (!synth || !isRunning) return;
+            const keyMap = { 'a': 0, 's': 1, 'd': 2, 'f': 3 };
+            if (keyMap[e.key] !== undefined) {
+                synth.pluck(keyMap[e.key], 0.8);
+                log(`Key ${e.key} -> string ${keyMap[e.key]}`);
+            }
+        });
+
+        // Start
+        initWasm();
+    </script>
+</body>
+</html>

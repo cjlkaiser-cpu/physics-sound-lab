@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resonancia Simpatica - Physics Sound Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            background: #1f2937;
+            border-radius: 4px;
+            height: 6px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #a855f7;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .math-box {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .glow-text { text-shadow: 0 0 20px rgba(168, 85, 247, 0.5); }
+        .string-1 { color: #22c55e; }
+        .string-2 { color: #3b82f6; }
+        .bridge { color: #a855f7; }
+
+        canvas { background: #000; border-radius: 8px; }
+
+        .preset-btn {
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .preset-btn:hover {
+            border-color: rgba(168, 85, 247, 0.5);
+            background: rgba(168, 85, 247, 0.1);
+        }
+        .preset-btn.active {
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.2);
+        }
+
+        .loading-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; transition: opacity 0.3s;
+        }
+        .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body class="bg-black text-gray-100 min-h-screen">
+    <div id="loading" class="loading-overlay">
+        <div class="text-center">
+            <div class="w-12 h-12 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-purple-400 mono">Cargando motor de fisica...</p>
+        </div>
+    </div>
+
+    <header class="border-b border-gray-900 bg-black/80 backdrop-blur-sm sticky top-0 z-50">
+        <div class="max-w-full mx-auto px-6 py-3">
+            <div class="flex justify-between items-center">
+                <div>
+                    <nav class="text-xs text-gray-600 mb-0.5">
+                        <a href="../../../../_portal/index.html" class="hover:text-purple-400 transition">EigenLab</a>
+                        <span class="mx-1">/</span>
+                        <a href="../../index.html" class="hover:text-purple-400 transition">Physics Sound Lab</a>
+                        <span class="mx-1">/</span>
+                        <span class="text-gray-500">Resonancia Simpatica</span>
+                    </nav>
+                    <h1 class="text-lg font-light">
+                        <span class="text-purple-400 font-medium glow-text">Resonancia Simpatica</span>
+                        <span class="text-gray-600 text-sm ml-2">Puente Rigido</span>
+                    </h1>
+                </div>
+                <div class="flex items-center gap-6 text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-500">t:</span>
+                        <span id="time-display" class="text-purple-400 mono">0.000</span>
+                        <span class="text-gray-600 text-xs">s</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-500">Puente:</span>
+                        <span id="bridge-display" class="bridge mono">0.000</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex h-[calc(100vh-57px)]">
+        <div class="flex-1 p-4 flex flex-col gap-4 overflow-hidden">
+            <!-- String Visualization -->
+            <div class="flex-1 min-h-0">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs text-gray-500 uppercase tracking-wider">Cuerdas Conectadas por Puente</h3>
+                    <div class="flex gap-4 text-xs">
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 bg-green-500 rounded"></span> Cuerda 1 (<span id="freq1-display" class="mono">261.6</span> Hz)</span>
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 bg-purple-500 rounded"></span> Puente</span>
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 bg-blue-500 rounded"></span> Cuerda 2 (<span id="freq2-display" class="mono">392.0</span> Hz)</span>
+                    </div>
+                </div>
+                <canvas id="strings-canvas" class="w-full h-full"></canvas>
+            </div>
+
+            <!-- Energy Graph -->
+            <div class="h-36">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs text-gray-500 uppercase tracking-wider">Energia vs Tiempo</h3>
+                    <div class="flex gap-4 text-xs mono">
+                        <span class="string-1">E1: <span id="energy1-val">0.000</span></span>
+                        <span class="string-2">E2: <span id="energy2-val">0.000</span></span>
+                        <span class="text-yellow-400">Total: <span id="total-energy-val">0.000</span></span>
+                    </div>
+                </div>
+                <canvas id="energy-canvas" class="w-full h-full"></canvas>
+            </div>
+
+            <!-- Bridge Motion -->
+            <div class="h-28">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs text-gray-500 uppercase tracking-wider">Movimiento del Puente</h3>
+                    <div class="flex gap-4 text-xs mono">
+                        <span class="bridge">y: <span id="bridge-y-val">0.000</span></span>
+                        <span class="text-gray-400">F1: <span id="force1-val">0.00</span></span>
+                        <span class="text-gray-400">F2: <span id="force2-val">0.00</span></span>
+                    </div>
+                </div>
+                <canvas id="bridge-canvas" class="w-full h-full"></canvas>
+            </div>
+
+            <!-- FFT Spectrum -->
+            <div class="h-36">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs text-gray-500 uppercase tracking-wider">Espectro FFT</h3>
+                    <div class="flex gap-4 text-xs mono">
+                        <span class="string-1">f₁: <span id="peak1-freq">--</span> Hz</span>
+                        <span class="string-2">f₂: <span id="peak2-freq">--</span> Hz</span>
+                    </div>
+                </div>
+                <canvas id="fft-canvas" class="w-full h-full"></canvas>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <aside class="w-80 border-l border-gray-900 bg-gray-950/50 overflow-y-auto p-4 flex flex-col gap-4">
+            <!-- Physics -->
+            <div class="math-box rounded-lg p-4">
+                <h3 class="text-sm font-medium text-purple-400 mb-2">Modelo Fisico</h3>
+                <div class="mono text-xs text-gray-400 space-y-2">
+                    <p class="text-[10px] text-gray-500">Cuerdas (paralelas):</p>
+                    <p>d²y/dt² = c² d²y/dx²</p>
+                    <p class="text-[10px] text-gray-500 mt-2">Puente rigido (restriccion):</p>
+                    <p>y₁[L] = y₂[L] = y_puente</p>
+                    <p class="text-[10px] text-gray-500 mt-2">Equilibrio de fuerzas:</p>
+                    <p>T₁·∂y₁/∂x + T₂·∂y₂/∂x = 0</p>
+                </div>
+            </div>
+
+            <!-- Presets -->
+            <div>
+                <h3 class="text-xs text-gray-500 uppercase tracking-wider mb-2">Intervalos</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button class="preset-btn active rounded px-3 py-2 text-xs bg-gray-900" data-preset="fifth">5ª Perfecta</button>
+                    <button class="preset-btn rounded px-3 py-2 text-xs bg-gray-900" data-preset="octave">Octava</button>
+                    <button class="preset-btn rounded px-3 py-2 text-xs bg-gray-900" data-preset="unison">Unisono</button>
+                    <button class="preset-btn rounded px-3 py-2 text-xs bg-gray-900" data-preset="tritone">Tritono</button>
+                    <button class="preset-btn rounded px-3 py-2 text-xs bg-gray-900" data-preset="third">3ª Mayor</button>
+                    <button class="preset-btn rounded px-3 py-2 text-xs bg-gray-900" data-preset="fourth">4ª Perfecta</button>
+                </div>
+            </div>
+
+            <!-- Frequencies -->
+            <div>
+                <h3 class="text-xs text-gray-500 uppercase tracking-wider mb-2">Frecuencias</h3>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label class="text-gray-400">Cuerda 1 (Hz)</label>
+                            <span id="freq1-value" class="mono string-1">261.6</span>
+                        </div>
+                        <input type="range" id="freq1-slider" min="100" max="500" step="1" value="262" class="w-full">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label class="text-gray-400">Cuerda 2 (Hz)</label>
+                            <span id="freq2-value" class="mono string-2">392.0</span>
+                        </div>
+                        <input type="range" id="freq2-slider" min="100" max="500" step="1" value="392" class="w-full">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bridge -->
+            <div>
+                <h3 class="text-xs text-gray-500 uppercase tracking-wider mb-2">Puente Rigido</h3>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label class="text-gray-400">Rigidez del acoplamiento</label>
+                            <span id="bridge-stiff-value" class="mono bridge">1.00</span>
+                        </div>
+                        <input type="range" id="bridge-stiff-slider" min="0" max="100" step="1" value="100" class="w-full">
+                        <p class="text-[10px] text-gray-600 mt-1">1.0 = perfectamente rigido</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- String Damping -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <label class="text-gray-400">Amortiguamiento cuerdas</label>
+                    <span id="damping-value" class="mono text-gray-400">0.0005</span>
+                </div>
+                <input type="range" id="damping-slider" min="0" max="100" step="1" value="5" class="w-full">
+            </div>
+
+            <!-- Pluck -->
+            <div>
+                <h3 class="text-xs text-gray-500 uppercase tracking-wider mb-2">Excitar</h3>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label class="text-gray-400">Posicion</label>
+                            <span id="pluck-pos-value" class="mono text-purple-400">0.30</span>
+                        </div>
+                        <input type="range" id="pluck-pos-slider" min="10" max="90" step="1" value="30" class="w-full">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label class="text-gray-400">Amplitud</label>
+                            <span id="pluck-amp-value" class="mono text-purple-400">0.30</span>
+                        </div>
+                        <input type="range" id="pluck-amp-slider" min="5" max="50" step="1" value="30" class="w-full">
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="pluck1-btn" class="flex-1 py-2 px-4 bg-green-500/20 border border-green-500/50 rounded text-green-400 text-sm hover:bg-green-500/30 transition">
+                            Pulsar 1
+                        </button>
+                        <button id="pluck2-btn" class="flex-1 py-2 px-4 bg-blue-500/20 border border-blue-500/50 rounded text-blue-400 text-sm hover:bg-blue-500/30 transition">
+                            Pulsar 2
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control -->
+            <div class="flex gap-2">
+                <button id="pause-btn" class="flex-1 py-2 px-4 bg-gray-800 rounded text-gray-300 text-sm hover:bg-gray-700 transition">Pausar</button>
+                <button id="reset-btn" class="flex-1 py-2 px-4 bg-purple-500/20 border border-purple-500/50 rounded text-purple-400 text-sm hover:bg-purple-500/30 transition">Reset</button>
+            </div>
+
+            <!-- Audio -->
+            <div>
+                <button id="audio-btn" class="w-full py-2 px-4 bg-gray-800 rounded text-gray-300 text-sm hover:bg-gray-700 transition">Audio OFF</button>
+                <p class="text-[10px] text-gray-600 mt-1 text-center">Escucha las cuerdas (stereo)</p>
+            </div>
+
+            <!-- Speed -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <label class="text-gray-400">Velocidad</label>
+                    <span id="speed-value" class="mono text-purple-400">10x</span>
+                </div>
+                <input type="range" id="speed-slider" min="1" max="50" step="1" value="10" class="w-full">
+            </div>
+
+            <!-- Instructions -->
+            <div class="text-xs text-gray-600 mt-auto">
+                <p><span class="text-purple-400">1</span> Pulsar cuerda 1</p>
+                <p><span class="text-purple-400">2</span> Pulsar cuerda 2</p>
+                <p><span class="text-purple-400">Espacio</span> Pausar</p>
+            </div>
+        </aside>
+    </main>
+
+    <script src="physics.js"></script>
+    <script>
+        let sim = null;
+        let paused = false;
+        let speedMultiplier = 10;
+        let pluckPosition = 0.3;
+        let pluckAmplitude = 0.3;
+
+        let stringsCanvas, stringsCtx;
+        let energyCanvas, energyCtx;
+        let bridgeCanvas, bridgeCtx;
+        let fftCanvas, fftCtx;
+
+        let lastTime = 0;
+
+        // FFT analysis
+        const FFT_SIZE = 2048;
+        let sampleBuffer = new Float32Array(FFT_SIZE);
+        let sampleIndex = 0;
+
+        // Audio
+        let audioContext = null;
+        let audioEnabled = false;
+        let masterGain = null;
+
+        async function init() {
+            setupCanvases();
+
+            try {
+                const Module = await createPhysicsModule();
+                sim = new Module.SympatheticStrings();
+                document.getElementById('loading').classList.add('hidden');
+                setupControls();
+                requestAnimationFrame(animate);
+            } catch (error) {
+                console.error('Failed to load:', error);
+                document.getElementById('loading').innerHTML = `<p class="text-red-400">Error: ${error.message}</p>`;
+            }
+        }
+
+        function setupCanvases() {
+            stringsCanvas = document.getElementById('strings-canvas');
+            stringsCtx = stringsCanvas.getContext('2d');
+            energyCanvas = document.getElementById('energy-canvas');
+            energyCtx = energyCanvas.getContext('2d');
+            bridgeCanvas = document.getElementById('bridge-canvas');
+            bridgeCtx = bridgeCanvas.getContext('2d');
+            fftCanvas = document.getElementById('fft-canvas');
+            fftCtx = fftCanvas.getContext('2d');
+
+            function resize() {
+                [stringsCanvas, energyCanvas, bridgeCanvas, fftCanvas].forEach(c => {
+                    c.width = c.offsetWidth;
+                    c.height = c.offsetHeight;
+                });
+            }
+            window.addEventListener('resize', resize);
+            setTimeout(resize, 100);
+        }
+
+        function setupControls() {
+            const presets = {
+                fifth: [261.63, 392.00],
+                octave: [261.63, 523.25],
+                unison: [261.63, 261.63],
+                tritone: [261.63, 369.99],
+                third: [261.63, 329.63],
+                fourth: [261.63, 349.23]
+            };
+
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const [f1, f2] = presets[btn.dataset.preset];
+                    sim.setString1Frequency(f1);
+                    sim.setString2Frequency(f2);
+                    document.getElementById('freq1-slider').value = f1;
+                    document.getElementById('freq2-slider').value = f2;
+                    updateFreqDisplays(f1, f2);
+                    sim.reset();
+                });
+            });
+
+            function updateFreqDisplays(f1, f2) {
+                document.getElementById('freq1-value').textContent = f1.toFixed(1);
+                document.getElementById('freq2-value').textContent = f2.toFixed(1);
+                document.getElementById('freq1-display').textContent = f1.toFixed(1);
+                document.getElementById('freq2-display').textContent = f2.toFixed(1);
+            }
+
+            setupSlider('freq1', val => { sim.setString1Frequency(val); updateFreqDisplays(val, sim.getString2Frequency()); }, v => v.toFixed(1));
+            setupSlider('freq2', val => { sim.setString2Frequency(val); updateFreqDisplays(sim.getString1Frequency(), val); }, v => v.toFixed(1));
+            setupSlider('bridge-stiff', val => sim.setBridgeStiffness(val / 100), v => (v/100).toFixed(2));
+            setupSlider('damping', val => sim.setDamping(val / 100000), v => (v/100000).toFixed(5));
+            setupSlider('pluck-pos', val => { pluckPosition = val / 100; }, v => (v/100).toFixed(2));
+            setupSlider('pluck-amp', val => { pluckAmplitude = val / 100; }, v => (v/100).toFixed(2));
+            setupSlider('speed', val => { speedMultiplier = val; }, v => v + 'x');
+
+            document.getElementById('pluck1-btn').addEventListener('click', () => sim.pluck(0, pluckPosition, pluckAmplitude));
+            document.getElementById('pluck2-btn').addEventListener('click', () => sim.pluck(1, pluckPosition, pluckAmplitude));
+            document.getElementById('pause-btn').addEventListener('click', () => {
+                paused = !paused;
+                document.getElementById('pause-btn').textContent = paused ? 'Reanudar' : 'Pausar';
+            });
+            document.getElementById('reset-btn').addEventListener('click', () => sim.reset());
+
+            document.addEventListener('keydown', e => {
+                if (e.key === '1') sim.pluck(0, pluckPosition, pluckAmplitude);
+                if (e.key === '2') sim.pluck(1, pluckPosition, pluckAmplitude);
+                if (e.key === ' ') { paused = !paused; document.getElementById('pause-btn').textContent = paused ? 'Reanudar' : 'Pausar'; }
+            });
+
+            // Audio button
+            document.getElementById('audio-btn').addEventListener('click', toggleAudio);
+        }
+
+        function toggleAudio() {
+            if (!audioEnabled) {
+                startAudio();
+            } else {
+                stopAudio();
+            }
+        }
+
+        function startAudio() {
+            if (audioContext) return;
+
+            audioContext = new AudioContext({ sampleRate: 44100 });
+            masterGain = audioContext.createGain();
+            masterGain.gain.value = 0.5;
+            masterGain.connect(audioContext.destination);
+
+            const bufferSize = 256;
+            const processor = audioContext.createScriptProcessor(bufferSize, 0, 2);
+
+            processor.onaudioprocess = (e) => {
+                if (!sim || paused) {
+                    e.outputBuffer.getChannelData(0).fill(0);
+                    e.outputBuffer.getChannelData(1).fill(0);
+                    return;
+                }
+
+                const left = e.outputBuffer.getChannelData(0);
+                const right = e.outputBuffer.getChannelData(1);
+
+                // Run physics at 8x audio rate for stability
+                for (let i = 0; i < bufferSize; i++) {
+                    sim.step(8);  // 8 substeps per audio sample
+
+                    // Get string displacements - sample near the middle for best sound
+                    const y1 = sim.getString1Displacement();
+                    const y2 = sim.getString2Displacement();
+                    const pickupPoint = Math.floor(y1.size() * 0.3);  // 30% from fixed end
+
+                    const s1 = y1.get(pickupPoint) * 3.0;  // String 1 sound
+                    const s2 = y2.get(pickupPoint) * 3.0;  // String 2 sound
+
+                    // Mix: both strings to both channels
+                    left[i] = s1 * 0.7 + s2 * 0.3;
+                    right[i] = s1 * 0.3 + s2 * 0.7;
+                }
+            };
+
+            processor.connect(masterGain);
+            audioEnabled = true;
+            document.getElementById('audio-btn').textContent = 'Audio ON';
+            document.getElementById('audio-btn').classList.add('bg-green-500/20', 'border-green-500/50', 'text-green-400');
+            document.getElementById('audio-btn').classList.remove('bg-gray-800', 'text-gray-300');
+        }
+
+        function stopAudio() {
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            audioEnabled = false;
+            document.getElementById('audio-btn').textContent = 'Audio OFF';
+            document.getElementById('audio-btn').classList.remove('bg-green-500/20', 'border-green-500/50', 'text-green-400');
+            document.getElementById('audio-btn').classList.add('bg-gray-800', 'text-gray-300');
+        }
+
+        function setupSlider(name, callback, formatter) {
+            const slider = document.getElementById(`${name}-slider`);
+            const valueEl = document.getElementById(`${name}-value`);
+            slider.addEventListener('input', e => {
+                const val = parseFloat(e.target.value);
+                valueEl.textContent = formatter(val);
+                callback(val);
+            });
+        }
+
+        function animate(time) {
+            // If audio is running, it drives the simulation
+            // Otherwise, run visually
+            if (!paused && !audioEnabled) {
+                sim.step(speedMultiplier);
+            }
+
+            // Collect samples for FFT (run multiple times to fill buffer faster)
+            for (let i = 0; i < 8; i++) {
+                collectSample();
+            }
+
+            updateStats();
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        function updateStats() {
+            document.getElementById('time-display').textContent = sim.getTime().toFixed(3);
+            document.getElementById('bridge-display').textContent = sim.getBridgeY().toFixed(4);
+            document.getElementById('energy1-val').textContent = sim.getEnergy1().toFixed(4);
+            document.getElementById('energy2-val').textContent = sim.getEnergy2().toFixed(4);
+            document.getElementById('total-energy-val').textContent = sim.getTotalEnergy().toFixed(4);
+            document.getElementById('bridge-y-val').textContent = sim.getBridgeY().toFixed(4);
+            document.getElementById('force1-val').textContent = sim.getForce1().toFixed(2);
+            document.getElementById('force2-val').textContent = sim.getForce2().toFixed(2);
+        }
+
+        function draw() {
+            drawStrings();
+            drawEnergy();
+            drawBridge();
+            drawFFT();
+        }
+
+        // Simple FFT implementation (Cooley-Tukey)
+        function fft(real, imag) {
+            const n = real.length;
+            if (n <= 1) return;
+
+            // Bit reversal
+            for (let i = 0, j = 0; i < n; i++) {
+                if (i < j) {
+                    [real[i], real[j]] = [real[j], real[i]];
+                    [imag[i], imag[j]] = [imag[j], imag[i]];
+                }
+                let m = n >> 1;
+                while (m >= 1 && j >= m) {
+                    j -= m;
+                    m >>= 1;
+                }
+                j += m;
+            }
+
+            // Cooley-Tukey FFT
+            for (let len = 2; len <= n; len <<= 1) {
+                const halfLen = len >> 1;
+                const angle = -2 * Math.PI / len;
+                for (let i = 0; i < n; i += len) {
+                    for (let j = 0; j < halfLen; j++) {
+                        const cos = Math.cos(angle * j);
+                        const sin = Math.sin(angle * j);
+                        const tr = real[i + j + halfLen] * cos - imag[i + j + halfLen] * sin;
+                        const ti = real[i + j + halfLen] * sin + imag[i + j + halfLen] * cos;
+                        real[i + j + halfLen] = real[i + j] - tr;
+                        imag[i + j + halfLen] = imag[i + j] - ti;
+                        real[i + j] += tr;
+                        imag[i + j] += ti;
+                    }
+                }
+            }
+        }
+
+        function collectSample() {
+            // Collect samples from string 1 for FFT analysis
+            const y1 = sim.getString1Displacement();
+            const pickupPoint = Math.floor(y1.size() * 0.3);
+            sampleBuffer[sampleIndex] = y1.get(pickupPoint);
+            sampleIndex = (sampleIndex + 1) % FFT_SIZE;
+        }
+
+        function drawStrings() {
+            const ctx = stringsCtx;
+            const w = stringsCanvas.width;
+            const h = stringsCanvas.height;
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, w, h);
+
+            const y1 = sim.getString1Displacement();
+            const y2 = sim.getString2Displacement();
+            const n = y1.size();
+            const bridgeY = sim.getBridgeY();
+
+            const margin = 60;
+            const stringLen = w - margin * 2;
+            const scale = h * 0.25;  // Amplitude scale
+            const string1Y = h * 0.35;  // Vertical position of string 1
+            const string2Y = h * 0.65;  // Vertical position of string 2
+
+            // Draw fixed end (cejilla) - vertical bar on left
+            ctx.fillStyle = '#666';
+            ctx.fillRect(margin - 10, string1Y - 30, 8, string2Y - string1Y + 60);
+
+            // Draw bridge (vertical bar on right) - position affected by vibration
+            const bridgeX = margin + stringLen;
+            ctx.fillStyle = '#a855f7';
+            ctx.fillRect(bridgeX - 4, string1Y - 30 + bridgeY * scale * 0.5, 8, string2Y - string1Y + 60);
+
+            // Bridge position indicator
+            ctx.beginPath();
+            ctx.arc(bridgeX, (string1Y + string2Y) / 2 + bridgeY * scale * 0.5, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw String 1 (top string, green)
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < n; i++) {
+                const x = margin + (i / (n - 1)) * stringLen;
+                const y = string1Y - y1.get(i) * scale;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Draw String 2 (bottom string, blue)
+            ctx.strokeStyle = '#3b82f6';
+            ctx.beginPath();
+            for (let i = 0; i < n; i++) {
+                const x = margin + (i / (n - 1)) * stringLen;
+                const y = string2Y - y2.get(i) * scale;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#666';
+            ctx.font = '11px Inter';
+            ctx.fillText('Cejilla', margin - 25, string1Y - 40);
+            ctx.fillText('(fijo)', margin - 20, string1Y - 28);
+            ctx.fillText('Puente', bridgeX - 20, string1Y - 40);
+            ctx.fillText('(rigido)', bridgeX - 22, string1Y - 28);
+
+            // String labels
+            ctx.fillStyle = '#22c55e';
+            ctx.fillText('Cuerda 1', 10, string1Y + 4);
+            ctx.fillStyle = '#3b82f6';
+            ctx.fillText('Cuerda 2', 10, string2Y + 4);
+
+            // Show bridge displacement
+            ctx.fillStyle = '#a855f7';
+            ctx.font = '10px JetBrains Mono';
+            ctx.fillText(`y=${bridgeY.toFixed(4)}`, bridgeX - 30, string2Y + 40);
+        }
+
+        function drawEnergy() {
+            const ctx = energyCtx;
+            const w = energyCanvas.width;
+            const h = energyCanvas.height;
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, w, h);
+
+            const e1 = sim.getEnergy1History();
+            const e2 = sim.getEnergy2History();
+            const n = e1.size();
+            if (n < 2) return;
+
+            let maxE = 0.001;
+            for (let i = 0; i < n; i++) {
+                maxE = Math.max(maxE, e1.get(i), e2.get(i));
+            }
+
+            // String 1 energy
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < n; i++) {
+                const x = (i / (n - 1)) * w;
+                const y = h - (e1.get(i) / maxE) * h * 0.9 - 5;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // String 2 energy
+            ctx.strokeStyle = '#3b82f6';
+            ctx.beginPath();
+            for (let i = 0; i < n; i++) {
+                const x = (i / (n - 1)) * w;
+                const y = h - (e2.get(i) / maxE) * h * 0.9 - 5;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+
+        function drawBridge() {
+            const ctx = bridgeCtx;
+            const w = bridgeCanvas.width;
+            const h = bridgeCanvas.height;
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, w, h);
+
+            const history = sim.getBridgeHistory();
+            const n = history.size();
+            if (n < 2) return;
+
+            let maxY = 0.001;
+            for (let i = 0; i < n; i++) {
+                maxY = Math.max(maxY, Math.abs(history.get(i)));
+            }
+
+            // Center line
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, h/2);
+            ctx.lineTo(w, h/2);
+            ctx.stroke();
+
+            // Bridge motion
+            ctx.strokeStyle = '#a855f7';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < n; i++) {
+                const x = (i / (n - 1)) * w;
+                const y = h/2 - (history.get(i) / maxY) * h * 0.4;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+
+        function drawFFT() {
+            const ctx = fftCtx;
+            const w = fftCanvas.width;
+            const h = fftCanvas.height;
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, w, h);
+
+            // Copy sample buffer and apply window function (Hanning)
+            const real = new Float32Array(FFT_SIZE);
+            const imag = new Float32Array(FFT_SIZE);
+            for (let i = 0; i < FFT_SIZE; i++) {
+                const idx = (sampleIndex + i) % FFT_SIZE;
+                const window = 0.5 * (1 - Math.cos(2 * Math.PI * i / FFT_SIZE));
+                real[i] = sampleBuffer[idx] * window;
+                imag[i] = 0;
+            }
+
+            // Compute FFT
+            fft(real, imag);
+
+            // Compute magnitude spectrum
+            const magnitude = new Float32Array(FFT_SIZE / 2);
+            let maxMag = 0.001;
+            for (let i = 0; i < FFT_SIZE / 2; i++) {
+                magnitude[i] = Math.sqrt(real[i] * real[i] + imag[i] * imag[i]);
+                if (magnitude[i] > maxMag) maxMag = magnitude[i];
+            }
+
+            // Effective sample rate (with 8x oversampling, physics runs at 352800 Hz)
+            const sampleRate = 44100 * 8;
+            const freqPerBin = sampleRate / FFT_SIZE;
+            const maxFreqToShow = 2000;  // Show up to 2 kHz
+            const maxBin = Math.min(FFT_SIZE / 2, Math.floor(maxFreqToShow / freqPerBin));
+
+            // Find peaks for display
+            let peaks = [];
+            for (let i = 2; i < maxBin - 2; i++) {
+                if (magnitude[i] > magnitude[i-1] && magnitude[i] > magnitude[i+1] &&
+                    magnitude[i] > magnitude[i-2] && magnitude[i] > magnitude[i+2] &&
+                    magnitude[i] > maxMag * 0.1) {
+                    peaks.push({ bin: i, mag: magnitude[i], freq: i * freqPerBin });
+                }
+            }
+            peaks.sort((a, b) => b.mag - a.mag);
+            peaks = peaks.slice(0, 6);  // Top 6 peaks
+
+            // Update peak display
+            if (peaks.length > 0) {
+                document.getElementById('peak1-freq').textContent = peaks[0].freq.toFixed(0);
+            }
+            if (peaks.length > 1) {
+                document.getElementById('peak2-freq').textContent = peaks[1].freq.toFixed(0);
+            }
+
+            // Draw frequency grid lines
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 1;
+            const freqMarkers = [100, 200, 300, 400, 500, 600, 800, 1000, 1500, 2000];
+            ctx.font = '9px JetBrains Mono';
+            ctx.fillStyle = '#444';
+            for (const f of freqMarkers) {
+                const x = (f / maxFreqToShow) * w;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+                if (f % 500 === 0) ctx.fillText(f + '', x + 2, h - 3);
+            }
+
+            // Draw expected harmonics for C4 (261.63 Hz)
+            const fundamental = 261.63;
+            ctx.strokeStyle = '#333';
+            ctx.setLineDash([3, 3]);
+            for (let n = 1; n <= 6; n++) {
+                const x = (fundamental * n / maxFreqToShow) * w;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // Draw spectrum (green for string 1)
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            for (let i = 0; i < maxBin; i++) {
+                const x = (i / maxBin) * w;
+                const y = h - (magnitude[i] / maxMag) * h * 0.9 - 5;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Mark peaks
+            ctx.fillStyle = '#22c55e';
+            for (const peak of peaks) {
+                const x = (peak.freq / maxFreqToShow) * w;
+                const y = h - (peak.mag / maxMag) * h * 0.9 - 5;
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px JetBrains Mono';
+                ctx.fillText(peak.freq.toFixed(0), x + 6, y - 4);
+                ctx.fillStyle = '#22c55e';
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
