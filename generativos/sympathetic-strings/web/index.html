@@ -57,6 +57,128 @@
             z-index: 100; transition: opacity 0.3s;
         }
         .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+        /* Modal */
+        .modal {
+            position: fixed; inset: 0;
+            z-index: 200;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .modal.hidden { display: none; }
+        .modal-backdrop {
+            position: absolute; inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            position: relative;
+            background: #0f172a;
+            border-radius: 12px;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow: hidden;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .modal-close {
+            width: 32px; height: 32px;
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: #94a3b8;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #a855f7;
+            color: white;
+        }
+        .modal-body {
+            padding: 20px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .learn-section { margin-bottom: 20px; }
+        .learn-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #a855f7;
+            margin-bottom: 8px;
+        }
+        .learn-text {
+            font-size: 12px;
+            line-height: 1.7;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+        .learn-diagram {
+            background: #030712;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #64748b;
+            overflow-x: auto;
+            margin-bottom: 12px;
+            white-space: pre;
+        }
+        .learn-equation {
+            background: #1e293b;
+            border-left: 3px solid #a855f7;
+            padding: 12px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: #f8fafc;
+            border-radius: 0 6px 6px 0;
+            margin-bottom: 12px;
+        }
+        .learn-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-bottom: 12px;
+        }
+        .learn-table th, .learn-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .learn-table th {
+            color: #64748b;
+            font-weight: 500;
+            background: #030712;
+        }
+        .learn-table td { color: #94a3b8; }
+        .learn-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 12px 0;
+        }
+        .learn-list li {
+            padding: 4px 0 4px 16px;
+            position: relative;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .learn-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #a855f7;
+        }
+        .highlight { color: #a855f7; font-weight: 500; }
     </style>
 </head>
 <body class="bg-black text-gray-100 min-h-screen">
@@ -93,6 +215,9 @@
                         <span class="text-gray-500">Puente:</span>
                         <span id="bridge-display" class="bridge mono">0.000</span>
                     </div>
+                    <button id="learn-btn" class="px-3 py-1.5 bg-purple-500/20 border border-purple-500/50 rounded text-purple-400 text-xs hover:bg-purple-500/30 transition">
+                        Cómo Funciona
+                    </button>
                 </div>
             </div>
         </div>
@@ -284,6 +409,206 @@
         </aside>
     </main>
 
+    <!-- Modal Educativo -->
+    <div id="learn-modal" class="modal hidden">
+        <div class="modal-backdrop" onclick="closeModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="text-lg font-medium text-purple-400">Cómo Funciona</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Ecuación de Onda -->
+                <div class="learn-section">
+                    <div class="learn-title">Ecuación de Onda (PDE)</div>
+                    <p class="learn-text">
+                        Este simulador resuelve la <span class="highlight">ecuación de onda unidimensional</span>
+                        para cada cuerda. A diferencia de síntesis por tabla de ondas, aquí la física
+                        determina el sonido.
+                    </p>
+                    <div class="learn-equation">∂²y/∂t² = c² · ∂²y/∂x²</div>
+                    <ul class="learn-list">
+                        <li><span class="highlight">y(x,t)</span> = desplazamiento vertical de la cuerda</li>
+                        <li><span class="highlight">c = √(T/μ)</span> = velocidad de propagación</li>
+                        <li><span class="highlight">T</span> = tensión, <span class="highlight">μ</span> = densidad lineal</li>
+                    </ul>
+                    <p class="learn-text">
+                        Discretizamos con <span class="highlight">200 puntos</span> por cuerda usando
+                        diferencias finitas centradas en espacio y tiempo.
+                    </p>
+                    <div class="learn-diagram">Discretización:
+y[i,t+1] = 2·y[i,t] - y[i,t-1] + α²·(y[i+1,t] - 2·y[i,t] + y[i-1,t])
+
+donde α = c·Δt/Δx (número de Courant, debe ser ≤ 1 para estabilidad)</div>
+                </div>
+
+                <!-- Puente Rígido -->
+                <div class="learn-section">
+                    <div class="learn-title">Puente Rígido: El Secreto de la Resonancia</div>
+                    <p class="learn-text">
+                        Las dos cuerdas comparten un punto: el <span class="highlight">puente</span>.
+                        Este punto común es la restricción que permite la transferencia de energía.
+                    </p>
+                    <div class="learn-diagram">       Cuerda 1                    Cuerda 2
+●━━━━━━━━━━━━━━━━━━━━●━━━━━━━━━━━━━━━━━━━━●
+fijo               PUENTE                fijo
+                   (móvil)                    </div>
+                    <div class="learn-equation">y₁[L] = y₂[L] = y_puente</div>
+                    <p class="learn-text">
+                        El <span class="highlight">equilibrio de fuerzas</span> en el puente determina cómo
+                        se distribuye la energía:
+                    </p>
+                    <div class="learn-equation">T₁·∂y₁/∂x + T₂·∂y₂/∂x = 0</div>
+                    <ul class="learn-list">
+                        <li>Si las cuerdas empujan en la misma dirección, el puente se mueve</li>
+                        <li>Si empujan en direcciones opuestas, se cancelan parcialmente</li>
+                        <li>Intervalos consonantes (5ª, octava) tienen más armónicos comunes → más resonancia</li>
+                    </ul>
+                </div>
+
+                <!-- Intervalos Musicales -->
+                <div class="learn-section">
+                    <div class="learn-title">¿Por Qué Importan los Intervalos?</div>
+                    <p class="learn-text">
+                        La <span class="highlight">razón de frecuencias</span> determina cuántos armónicos
+                        comparten las cuerdas, y por tanto, cuánta energía se transfiere.
+                    </p>
+                    <table class="learn-table">
+                        <thead>
+                            <tr>
+                                <th>Intervalo</th>
+                                <th>Razón</th>
+                                <th>f₂ (C4=262 Hz)</th>
+                                <th>Resonancia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Unísono</td>
+                                <td>1:1</td>
+                                <td>262 Hz</td>
+                                <td>Máxima</td>
+                            </tr>
+                            <tr>
+                                <td>Octava</td>
+                                <td>2:1</td>
+                                <td>523 Hz</td>
+                                <td>Muy alta</td>
+                            </tr>
+                            <tr>
+                                <td>5ª Perfecta</td>
+                                <td>3:2</td>
+                                <td>392 Hz</td>
+                                <td>Alta</td>
+                            </tr>
+                            <tr>
+                                <td>4ª Perfecta</td>
+                                <td>4:3</td>
+                                <td>349 Hz</td>
+                                <td>Media-alta</td>
+                            </tr>
+                            <tr>
+                                <td>3ª Mayor</td>
+                                <td>5:4</td>
+                                <td>330 Hz</td>
+                                <td>Media</td>
+                            </tr>
+                            <tr>
+                                <td>Tritono</td>
+                                <td>√2:1</td>
+                                <td>370 Hz</td>
+                                <td>Mínima</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Espectro FFT -->
+                <div class="learn-section">
+                    <div class="learn-title">Espectro FFT</div>
+                    <p class="learn-text">
+                        El gráfico de espectro muestra las frecuencias presentes en el sonido en tiempo real.
+                    </p>
+                    <div class="learn-diagram">Magnitud
+  │
+  │  ┃   ← Fundamental (f₁)
+  │  ┃ ┃   ← 2º armónico (2f₁)
+  │  ┃ ┃ ┃   ← 3º armónico
+  │  ┃ ┃ ┃┃┃
+  └──────────────── Frecuencia</div>
+                    <ul class="learn-list">
+                        <li><span class="highlight">Picos</span> = frecuencias con más energía</li>
+                        <li>Picos de la cuerda pulsada + armónicos</li>
+                        <li>Si hay resonancia, aparecen picos de la otra cuerda</li>
+                    </ul>
+                </div>
+
+                <!-- Comparación con Karplus-Strong -->
+                <div class="learn-section">
+                    <div class="learn-title">PDE vs Karplus-Strong</div>
+                    <p class="learn-text">
+                        Existen dos enfoques principales para simular cuerdas. Este simulador usa PDE,
+                        mientras que <span class="highlight">sympathetic-12</span> usa Karplus-Strong.
+                    </p>
+                    <table class="learn-table">
+                        <thead>
+                            <tr>
+                                <th>Aspecto</th>
+                                <th>PDE (este)</th>
+                                <th>Karplus-Strong</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Modelo</td>
+                                <td>Ecuación de onda física</td>
+                                <td>Delay line + filtro</td>
+                            </tr>
+                            <tr>
+                                <td>Puntos/cuerda</td>
+                                <td>200 (espacial)</td>
+                                <td>~300 (temporal)</td>
+                            </tr>
+                            <tr>
+                                <td>Costo CPU</td>
+                                <td>Alto</td>
+                                <td>Bajo</td>
+                            </tr>
+                            <tr>
+                                <td>Física</td>
+                                <td>Explícita (ver onda)</td>
+                                <td>Implícita (solo audio)</td>
+                            </tr>
+                            <tr>
+                                <td>Resonancia</td>
+                                <td>Puente compartido</td>
+                                <td>Matriz de acoplamiento</td>
+                            </tr>
+                            <tr>
+                                <td>Ideal para</td>
+                                <td>Visualización, educación</td>
+                                <td>Síntesis musical</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Qué observar -->
+                <div class="learn-section">
+                    <div class="learn-title">Qué Observar</div>
+                    <ul class="learn-list">
+                        <li><span class="highlight">Pulsa cuerda 1</span> y observa cómo la energía se transfiere a cuerda 2</li>
+                        <li>Cambia a <span class="highlight">Unísono</span>: máxima transferencia de energía</li>
+                        <li>Cambia a <span class="highlight">Tritono</span>: mínima resonancia</li>
+                        <li>Observa el <span class="highlight">puente</span>: se mueve cuando ambas cuerdas empujan igual</li>
+                        <li>En el <span class="highlight">FFT</span>: con 5ª perfecta verás picos en 262 y 392 Hz</li>
+                        <li>Reduce la <span class="highlight">rigidez</span> y observa cómo cambia la transferencia</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="physics.js"></script>
     <script>
         let sim = null;
@@ -399,6 +724,9 @@
 
             // Audio button
             document.getElementById('audio-btn').addEventListener('click', toggleAudio);
+
+            // Modal button
+            document.getElementById('learn-btn').addEventListener('click', openModal);
         }
 
         function toggleAudio() {
@@ -408,6 +736,22 @@
                 stopAudio();
             }
         }
+
+        // Modal functions
+        function openModal() {
+            document.getElementById('learn-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('learn-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal();
+        });
 
         function startAudio() {
             if (audioContext) return;
