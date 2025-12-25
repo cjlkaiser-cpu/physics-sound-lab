@@ -373,10 +373,14 @@ impl Sympathetic12 {
         self.strings.iter().map(|s| s.get_frequency()).collect()
     }
 
-    /// Get number of active voices
+    /// Get number of active strings (with energy above threshold)
     #[wasm_bindgen]
     pub fn get_active_voice_count(&self) -> usize {
-        self.voice_pool.active_count()
+        const ENERGY_THRESHOLD: f32 = 0.0001;
+        self.string_energies
+            .iter()
+            .filter(|&&e| e > ENERGY_THRESHOLD)
+            .count()
     }
 
     /// Get delay line visualization data for a string

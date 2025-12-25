@@ -428,6 +428,296 @@
         .hidden {
             display: none !important;
         }
+
+        /* ============================================
+           Educational UI - Help & Learn System
+           ============================================ */
+
+        /* Help button (?) */
+        .help-btn {
+            width: 16px;
+            height: 16px;
+            font-size: 9px;
+            font-weight: 600;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: help;
+            margin-left: 8px;
+            padding: 0;
+            line-height: 14px;
+            transition: all 0.15s ease;
+            vertical-align: middle;
+        }
+
+        .help-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            background: var(--bg-primary);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 12px;
+            max-width: 300px;
+            font-size: 11px;
+            line-height: 1.6;
+            z-index: 500;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: opacity 0.15s, transform 0.15s;
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .tooltip-title {
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .tooltip-equation {
+            font-family: 'SF Mono', Consolas, monospace;
+            background: var(--bg-secondary);
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin: 8px 0;
+            font-size: 10px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .tooltip p {
+            margin: 0 0 6px 0;
+            color: var(--text-secondary);
+        }
+
+        .tooltip p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(3, 7, 18, 0.92);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            position: relative;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 650px;
+            max-height: 85vh;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .modal-close:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .modal-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-primary);
+        }
+
+        .modal-tab {
+            flex: 1;
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .modal-tab:hover {
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+        }
+
+        .modal-tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            background: var(--bg-secondary);
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Modal content styling */
+        .learn-section {
+            margin-bottom: 20px;
+        }
+
+        .learn-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .learn-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .learn-text {
+            font-size: 12px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .learn-diagram {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 11px;
+            line-height: 1.5;
+            color: var(--text-muted);
+            overflow-x: auto;
+            margin-bottom: 12px;
+            white-space: pre;
+        }
+
+        .learn-equation {
+            background: var(--bg-tertiary);
+            border-left: 3px solid var(--accent);
+            padding: 12px 16px;
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+            border-radius: 0 6px 6px 0;
+            margin-bottom: 12px;
+        }
+
+        .learn-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-bottom: 12px;
+        }
+
+        .learn-table th,
+        .learn-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .learn-table th {
+            color: var(--text-muted);
+            font-weight: 500;
+            background: var(--bg-primary);
+        }
+
+        .learn-table td {
+            color: var(--text-secondary);
+        }
+
+        .learn-table td:last-child {
+            font-family: 'SF Mono', Consolas, monospace;
+            color: var(--accent);
+        }
+
+        .learn-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 12px 0;
+        }
+
+        .learn-list li {
+            padding: 4px 0 4px 16px;
+            position: relative;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .learn-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+
+        .highlight {
+            color: var(--accent);
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -467,6 +757,7 @@
                     <p class="subtitle">Physical Modeling Synthesizer &bull; Rust/WASM</p>
                 </div>
                 <div class="header-controls">
+                    <button class="btn" id="btn-learn">Cómo Funciona</button>
                     <button class="btn" id="btn-damp-all">Dampen All</button>
                 </div>
             </header>
@@ -477,11 +768,11 @@
 
             <div id="bottom-panels">
                 <div class="bottom-panel">
-                    <div class="panel-title">Spectrum</div>
+                    <div class="panel-title">Spectrum <button class="help-btn" data-help="spectrum">?</button></div>
                     <canvas class="panel-canvas" id="spectrum-canvas"></canvas>
                 </div>
                 <div class="bottom-panel">
-                    <div class="panel-title">Sympathetic Matrix</div>
+                    <div class="panel-title">Sympathetic Matrix <button class="help-btn" data-help="matrix">?</button></div>
                     <canvas class="panel-canvas" id="matrix-canvas"></canvas>
                 </div>
             </div>
@@ -490,7 +781,7 @@
         <div id="controls">
             <!-- Presets -->
             <div class="control-section">
-                <div class="section-title">Presets</div>
+                <div class="section-title">Presets <button class="help-btn" data-help="presets">?</button></div>
                 <div class="btn-group">
                     <button class="btn preset-btn active" data-preset="harp">Harp</button>
                     <button class="btn preset-btn" data-preset="piano">Piano</button>
@@ -503,7 +794,7 @@
 
             <!-- Octave -->
             <div class="control-section">
-                <div class="section-title">Base Octave</div>
+                <div class="section-title">Base Octave <button class="help-btn" data-help="octave">?</button></div>
                 <div class="octave-selector">
                     <button class="btn octave-btn" data-octave="2">2</button>
                     <button class="btn octave-btn active" data-octave="3">3</button>
@@ -514,13 +805,13 @@
 
             <!-- String Parameters -->
             <div class="control-section">
-                <div class="section-title">String</div>
+                <div class="section-title">String <button class="help-btn" data-help="string">?</button></div>
                 <div class="slider-group">
                     <div class="slider-header">
                         <span class="slider-label">Damping</span>
-                        <span class="slider-value" id="damping-value">0.998</span>
+                        <span class="slider-value" id="damping-value">0.80</span>
                     </div>
-                    <input type="range" id="damping-slider" min="0.99" max="0.9999" step="0.0001" value="0.998">
+                    <input type="range" id="damping-slider" min="0" max="1" step="0.01" value="0.8">
                 </div>
                 <div class="slider-group">
                     <div class="slider-header">
@@ -533,7 +824,7 @@
 
             <!-- Sympathetic Resonance -->
             <div class="control-section">
-                <div class="section-title">Sympathetic Resonance</div>
+                <div class="section-title">Resonance <button class="help-btn" data-help="resonance">?</button></div>
                 <div class="slider-group">
                     <div class="slider-header">
                         <span class="slider-label">Amount</span>
@@ -545,7 +836,7 @@
 
             <!-- Reverb -->
             <div class="control-section">
-                <div class="section-title">Reverb</div>
+                <div class="section-title">Reverb <button class="help-btn" data-help="reverb">?</button></div>
                 <div class="slider-group">
                     <div class="slider-header">
                         <span class="slider-label">Mix</span>
@@ -564,7 +855,7 @@
 
             <!-- Master -->
             <div class="control-section">
-                <div class="section-title">Master</div>
+                <div class="section-title">Master <button class="help-btn" data-help="master">?</button></div>
                 <div class="slider-group">
                     <div class="slider-header">
                         <span class="slider-label">Volume</span>
@@ -600,7 +891,7 @@
 
             <!-- Info -->
             <div class="control-section">
-                <div class="section-title">Info</div>
+                <div class="section-title">Info <button class="help-btn" data-help="info">?</button></div>
                 <div class="info-panel">
                     <div class="info-row">
                         <span class="info-label">Active Voices</span>
@@ -619,11 +910,286 @@
         </div>
     </div>
 
+    <!-- Tooltip Container -->
+    <div id="tooltip" class="tooltip"></div>
+
+    <!-- Learn Modal -->
+    <div id="learn-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Cómo Funciona</h2>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-tabs">
+                <button class="modal-tab active" data-tab="strings">Cuerdas</button>
+                <button class="modal-tab" data-tab="resonance">Resonancia</button>
+                <button class="modal-tab" data-tab="reverb">Reverb</button>
+                <button class="modal-tab" data-tab="spectrum">Spectrum</button>
+                <button class="modal-tab" data-tab="presets">Presets</button>
+            </div>
+            <div class="modal-body">
+                <!-- Tab: Cuerdas -->
+                <div id="tab-strings" class="tab-content active">
+                    <div class="learn-section">
+                        <div class="learn-title">Síntesis Karplus-Strong</div>
+                        <p class="learn-text">
+                            Cada cuerda es una <span class="highlight">delay line</span> con feedback filtrado.
+                            El algoritmo simula físicamente cómo vibra una cuerda real.
+                        </p>
+                        <div class="learn-diagram">Excitation → [Delay L samples] → Output
+                    ↑                    │
+                    └──── Lowpass ←──────┘
+                          × feedback</div>
+                        <div class="learn-equation">y[n] = (y[n-L] + y[n-L-1]) / 2 × g</div>
+                        <ul class="learn-list">
+                            <li><strong>L</strong> = sample_rate / frequency (determina el pitch)</li>
+                            <li><strong>g</strong> ≈ 0.99 (controla el decay)</li>
+                            <li>El <strong>lowpass</strong> simula pérdida de energía en agudos</li>
+                        </ul>
+                    </div>
+                    <div class="learn-section">
+                        <div class="learn-title">12 Cuerdas = 12 Pitch Classes</div>
+                        <p class="learn-text">
+                            Las 12 notas de la escala cromática occidental, cada una con su propia delay line:
+                        </p>
+                        <table class="learn-table">
+                            <tr><th>Nota</th><th>Índice</th><th>Freq (Oct 3)</th></tr>
+                            <tr><td>C</td><td>0</td><td>130.81 Hz</td></tr>
+                            <tr><td>E</td><td>4</td><td>164.81 Hz</td></tr>
+                            <tr><td>G</td><td>7</td><td>196.00 Hz</td></tr>
+                            <tr><td>B</td><td>11</td><td>246.94 Hz</td></tr>
+                        </table>
+                    </div>
+                    <div class="learn-section">
+                        <div class="learn-title">128 Voces (Polifonía)</div>
+                        <p class="learn-text">
+                            Máximo de excitaciones simultáneas. Cada vez que pulsas una cuerda
+                            o la resonancia la activa, consume una voz.
+                        </p>
+                        <ul class="learn-list">
+                            <li><strong>Voice stealing</strong>: cuando se agotan, reutiliza la más antigua</li>
+                            <li>Prioridad: inactivas → releasing → oldest</li>
+                            <li>128 es suficiente para ~10 excitaciones por cuerda</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Tab: Resonancia -->
+                <div id="tab-resonance" class="tab-content">
+                    <div class="learn-section">
+                        <div class="learn-title">Resonancia Simpática</div>
+                        <p class="learn-text">
+                            Cuando una cuerda vibra, transfiere energía a las demás según su
+                            <span class="highlight">relación interválica</span>. Es el mismo fenómeno
+                            que ocurre en un sitar, piano con pedal sostenuto, o arpa.
+                        </p>
+                    </div>
+                    <div class="learn-section">
+                        <div class="learn-title">Matriz de Acoplamiento 12×12</div>
+                        <p class="learn-text">
+                            Los intervalos consonantes (armónicos compartidos) tienen mayor acoplamiento:
+                        </p>
+                        <table class="learn-table">
+                            <tr><th>Intervalo</th><th>Semitonos</th><th>Acoplamiento</th></tr>
+                            <tr><td>Unísono</td><td>0</td><td>0.00</td></tr>
+                            <tr><td>5ª justa</td><td>7</td><td>0.85</td></tr>
+                            <tr><td>4ª justa</td><td>5</td><td>0.80</td></tr>
+                            <tr><td>3ª mayor</td><td>4</td><td>0.60</td></tr>
+                            <tr><td>3ª menor</td><td>3</td><td>0.55</td></tr>
+                            <tr><td>Tritono</td><td>6</td><td>0.20</td></tr>
+                            <tr><td>2ª menor</td><td>1</td><td>0.10</td></tr>
+                        </table>
+                        <p class="learn-text">
+                            Toca Do (C) y observa cómo Sol (G) y Fa (F) empiezan a vibrar sutilmente.
+                        </p>
+                    </div>
+                    <div class="learn-section">
+                        <div class="learn-title">Física del Acoplamiento</div>
+                        <div class="learn-equation">excitation[target] += signal[source] × coupling × scale</div>
+                        <p class="learn-text">
+                            La señal de salida de cada cuerda se inyecta como excitación en las demás,
+                            multiplicada por el coeficiente de acoplamiento. Las frecuencias no resonantes
+                            se atenúan naturalmente en la delay line.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Tab: Reverb -->
+                <div id="tab-reverb" class="tab-content">
+                    <div class="learn-section">
+                        <div class="learn-title">FDN Reverb (Schroeder/Moorer)</div>
+                        <p class="learn-text">
+                            Red de delays con feedback para simular reflexiones en un espacio acústico.
+                            Algoritmo clásico usado en reverbs digitales desde los años 60.
+                        </p>
+                        <div class="learn-diagram">Input → Lowpass → [8 Comb ∥] → [4 Allpass →] → Output
+                            ↓
+                    ┌───────────────┐
+                    │ Comb 1: 1557  │ ─┐
+                    │ Comb 2: 1617  │  │
+                    │ Comb 3: 1491  │  ├→ Σ → Allpass chain
+                    │ ...           │  │
+                    │ Comb 8: 1116  │ ─┘
+                    └───────────────┘
+                    (tiempos en samples)</div>
+                    </div>
+                    <div class="learn-section">
+                        <div class="learn-title">Filtros Comb (Paralelo)</div>
+                        <ul class="learn-list">
+                            <li>8 por canal con delays de tiempos <strong>primos</strong></li>
+                            <li>Evita resonancias en frecuencias específicas</li>
+                            <li>Crea la densidad y "cola" del reverb</li>
+                            <li>Feedback 0.7-0.98 según <strong>room_size</strong></li>
+                        </ul>
+                    </div>
+                    <div class="learn-section">
+                        <div class="learn-title">Filtros Allpass (Serie)</div>
+                        <ul class="learn-list">
+                            <li>4 por canal, delays más cortos</li>
+                            <li>Difunden el sonido sin colorear</li>
+                            <li>Rompen patrones repetitivos de los combs</li>
+                        </ul>
+                    </div>
+                    <div class="learn-section">
+                        <div class="learn-title">Parámetros</div>
+                        <table class="learn-table">
+                            <tr><th>Parámetro</th><th>Efecto</th></tr>
+                            <tr><td>Mix</td><td>Proporción wet/dry</td></tr>
+                            <tr><td>Room Size</td><td>Largo de la cola (feedback)</td></tr>
+                            <tr><td>Damping</td><td>Absorción de agudos</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab: Spectrum -->
+                <div id="tab-spectrum" class="tab-content">
+                    <div class="learn-section">
+                        <div class="learn-title">Analizador de Espectro (FFT)</div>
+                        <p class="learn-text">
+                            Visualización en tiempo real de las frecuencias presentes en el audio.
+                            Usa la <span class="highlight">Transformada Rápida de Fourier</span>.
+                        </p>
+                        <div class="learn-diagram">Señal temporal → FFT → Magnitudes por frecuencia
+
+┌─────────────────────────────────────┐
+│ ▃ ▅ █ ▆ ▂ ▁ ▁ ▂ ▁ ▁ ▁ ▁ ▁ ▁ ▁ ▁ │
+│ 100   500  1k   2k   4k   8k  16k  │ Hz
+└─────────────────────────────────────┘</div>
+                    </div>
+                    <div class="learn-section">
+                        <div class="learn-title">Cómo Leerlo</div>
+                        <ul class="learn-list">
+                            <li><strong>Izquierda</strong> = graves (bajas frecuencias)</li>
+                            <li><strong>Derecha</strong> = agudos (altas frecuencias)</li>
+                            <li><strong>Altura</strong> = intensidad (dB)</li>
+                        </ul>
+                    </div>
+                    <div class="learn-section">
+                        <div class="learn-title">Qué Observar</div>
+                        <p class="learn-text">
+                            Al tocar una cuerda verás:
+                        </p>
+                        <ul class="learn-list">
+                            <li><strong>Pico fundamental</strong>: la nota que tocaste</li>
+                            <li><strong>Armónicos</strong>: picos en múltiplos enteros (2×, 3×, 4×...)</li>
+                            <li><strong>Resonancia simpática</strong>: picos de otras cuerdas vibrando</li>
+                        </ul>
+                        <p class="learn-text">
+                            El patrón de armónicos define el <strong>timbre</strong>: por qué un piano
+                            suena diferente a una guitarra tocando la misma nota.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Tab: Presets -->
+                <div id="tab-presets" class="tab-content">
+                    <div class="learn-section">
+                        <div class="learn-title">Por qué estos valores</div>
+                        <p class="learn-text">
+                            Cada preset emula las características acústicas de un instrumento real
+                            ajustando 4 parámetros clave:
+                        </p>
+                    </div>
+
+                    <div class="learn-section">
+                        <div class="learn-title">Piano</div>
+                        <p class="learn-text">
+                            <strong>Damping bajo (0.51)</strong> — Las cuerdas del piano tienen fieltro que
+                            amortigua rápido. <strong>Sympathy baja (0.2)</strong> — El apagador limita la
+                            resonancia entre cuerdas. <strong>Reverb sutil (15%)</strong> — Sonido directo, de sala pequeña.
+                        </p>
+                    </div>
+
+                    <div class="learn-section">
+                        <div class="learn-title">Harp</div>
+                        <p class="learn-text">
+                            <strong>Damping alto (0.91)</strong> — Cuerdas al aire, vibran libremente.
+                            <strong>Sympathy media (0.5)</strong> — Las cuerdas resuenan entre sí naturalmente.
+                            <strong>Brightness alta (0.8)</strong> — Sonido cristalino, rico en armónicos.
+                        </p>
+                    </div>
+
+                    <div class="learn-section">
+                        <div class="learn-title">Guitar</div>
+                        <p class="learn-text">
+                            <strong>Damping medio (0.71)</strong> — Sustain moderado, decay natural.
+                            <strong>Sympathy mínima (0.1)</strong> — Cuerdas separadas, poca interacción.
+                            <strong>Brightness media (0.5)</strong> — Balance entre cuerpo y brillo.
+                        </p>
+                    </div>
+
+                    <div class="learn-section">
+                        <div class="learn-title">Sitar</div>
+                        <p class="learn-text">
+                            <strong>Sympathy alta (0.7)</strong> — Las cuerdas simpáticas (taraf) son la
+                            esencia del sitar. <strong>Brightness máxima (0.9)</strong> — Sonido nasal,
+                            metálico. El buzzing característico viene de la resonancia cruzada.
+                        </p>
+                    </div>
+
+                    <div class="learn-section">
+                        <div class="learn-title">Bell</div>
+                        <p class="learn-text">
+                            <strong>Damping muy alto (0.96)</strong> — Las campanas resuenan largamente.
+                            <strong>Brightness máxima (0.95)</strong> — Armónicos brillantes.
+                            <strong>Inharmonicidad</strong> — Los parciales no son múltiplos exactos,
+                            creando el timbre metálico característico.
+                        </p>
+                    </div>
+
+                    <div class="learn-section">
+                        <div class="learn-title">Pad</div>
+                        <p class="learn-text">
+                            <strong>Damping máximo (1.0)</strong> — Sustain infinito, el sonido no decae.
+                            <strong>Sympathy máxima (0.9)</strong> — Todas las cuerdas resuenan creando
+                            texturas densas. <strong>Reverb alto (60%)</strong> — Atmósfera envolvente.
+                            <strong>Brightness baja (0.4)</strong> — Sonido suave, sin estridencias.
+                        </p>
+                    </div>
+
+                    <div class="learn-section">
+                        <div class="learn-title">Tabla de Referencia</div>
+                        <table class="learn-table">
+                            <tr><th>Preset</th><th>Sustain</th><th>Brillo</th><th>Simpatía</th><th>Reverb</th></tr>
+                            <tr><td>Piano</td><td>Corto</td><td>Medio</td><td>Baja</td><td>15%</td></tr>
+                            <tr><td>Harp</td><td>Largo</td><td>Alto</td><td>Media</td><td>30%</td></tr>
+                            <tr><td>Guitar</td><td>Medio</td><td>Medio</td><td>Mínima</td><td>20%</td></tr>
+                            <tr><td>Sitar</td><td>Medio</td><td>Muy alto</td><td>Alta</td><td>25%</td></tr>
+                            <tr><td>Bell</td><td>Muy largo</td><td>Máximo</td><td>Media</td><td>40%</td></tr>
+                            <tr><td>Pad</td><td>Infinito</td><td>Bajo</td><td>Máxima</td><td>60%</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="js/audio-processor.js?v=3"></script>
     <script src="js/visualization.js?v=3"></script>
     <script type="module">
-        import init, { Sympathetic12 } from './pkg/sympathetic_12.js?v=13';
+        import init, { Sympathetic12 } from './pkg/sympathetic_12.js?v=17';
 
         // ====================================================================
         // Application State
@@ -677,6 +1243,7 @@
                 // Setup UI
                 setupUI();
                 setupKeyboard();
+                setupEducationalUI();
 
                 // Show app FIRST (so canvas has dimensions)
                 overlay.classList.add('hidden');
@@ -695,6 +1262,7 @@
 
                 // Apply default preset
                 state.audioProcessor.presetHarp();
+                applyPreset('harp');
 
                 // Expose for debugging
                 window.synth = state.audioProcessor.synth;
@@ -728,6 +1296,38 @@
         // UI Setup
         // ====================================================================
 
+        // Preset configurations (damping is 0-1 slider value, not actual)
+        // Actual damping = 0.99 + sliderValue * 0.0099
+        const presetValues = {
+            piano:  { damping: 0.51,  brightness: 0.6,  sympathy: 0.2, reverbMix: 0.15, reverbSize: 0.4 },  // 0.995
+            harp:   { damping: 0.91,  brightness: 0.8,  sympathy: 0.5, reverbMix: 0.3,  reverbSize: 0.6 },  // 0.999
+            guitar: { damping: 0.71,  brightness: 0.5,  sympathy: 0.1, reverbMix: 0.2,  reverbSize: 0.3 },  // 0.997
+            sitar:  { damping: 0.81,  brightness: 0.9,  sympathy: 0.7, reverbMix: 0.25, reverbSize: 0.5 },  // 0.998
+            bell:   { damping: 0.96,  brightness: 0.95, sympathy: 0.4, reverbMix: 0.4,  reverbSize: 0.8 },  // 0.9995
+            pad:    { damping: 1.0,   brightness: 0.4,  sympathy: 0.9, reverbMix: 0.6,  reverbSize: 0.95 }  // 0.9999
+        };
+
+        function updateSlider(id, value, decimals = 2) {
+            const slider = document.getElementById(id + '-slider');
+            const valueEl = document.getElementById(id + '-value');
+            if (slider && valueEl) {
+                slider.value = value;
+                valueEl.textContent = value.toFixed(decimals);
+            }
+        }
+
+        function applyPreset(presetName) {
+            const p = presetValues[presetName];
+            if (!p) return;
+
+            // Update sliders to match preset (all 0-1 range now)
+            updateSlider('damping', p.damping);
+            updateSlider('brightness', p.brightness);
+            updateSlider('sympathy', p.sympathy);
+            updateSlider('reverb-mix', p.reverbMix);
+            updateSlider('reverb-size', p.reverbSize);
+        }
+
         function setupUI() {
             // Presets
             document.querySelectorAll('.preset-btn').forEach(btn => {
@@ -745,6 +1345,9 @@
                         case 'pad': state.audioProcessor.presetPad(); break;
                     }
 
+                    // Sync UI sliders with preset values
+                    applyPreset(preset);
+
                     // Update matrix visualization
                     state.matrixViz.matrix = state.audioProcessor.getSympathyMatrix();
                 });
@@ -760,9 +1363,11 @@
             });
 
             // Sliders
+            // Damping: slider 0-1 maps to actual 0.99-0.9999
             setupSlider('damping', 'damping-value', (v) => {
-                state.audioProcessor.setGlobalDamping(v);
-            }, 4);
+                const realDamping = 0.99 + v * 0.0099;  // 0→0.99, 1→0.9999
+                state.audioProcessor.setGlobalDamping(realDamping);
+            });
 
             setupSlider('brightness', 'brightness-value', (v) => {
                 state.audioProcessor.setGlobalBrightness(v);
@@ -798,6 +1403,160 @@
                 const value = parseFloat(slider.value);
                 valueEl.textContent = value.toFixed(decimals);
                 callback(value);
+            });
+        }
+
+        // ====================================================================
+        // Educational UI (Tooltips & Modal)
+        // ====================================================================
+
+        const tooltipContent = {
+            presets: {
+                title: 'Presets',
+                html: '<p>Configuraciones predefinidas que ajustan damping, brightness, resonancia e inharmonicidad para simular diferentes instrumentos.</p>'
+            },
+            octave: {
+                title: 'Octava Base',
+                html: '<p>Frecuencia fundamental de las 12 cuerdas.</p><div class="tooltip-equation">f = 440 × 2^((n-69)/12)</div><p>Octava 3: C3 = 130.81 Hz<br>Octava 4: C4 = 261.63 Hz</p>'
+            },
+            string: {
+                title: 'Parámetros de Cuerda',
+                html: '<p><strong>Damping:</strong> Control de sustain (0-1). Mayor = sustain más largo.</p><p><strong>Brightness:</strong> Cutoff del lowpass en feedback. Mayor = más armónicos agudos.</p>'
+            },
+            resonance: {
+                title: 'Resonancia Simpática',
+                html: '<p>Cuánta energía transfieren las cuerdas entre sí según su intervalo musical.</p><p>5ª justa → 85% acople<br>2ª menor → 10% acople</p>'
+            },
+            reverb: {
+                title: 'Reverb FDN',
+                html: '<p><strong>Mix:</strong> Proporción wet/dry</p><p><strong>Room Size:</strong> Feedback de combs = largo de cola</p><p>8 combs ∥ + 4 allpass →</p>'
+            },
+            master: {
+                title: 'Volumen Master',
+                html: '<p>Ganancia final de salida. Ajusta el nivel general del audio.</p>'
+            },
+            info: {
+                title: 'Información',
+                html: '<p><strong>Active Voices:</strong> Excitaciones simultáneas (máx 128).</p><p><strong>Engine:</strong> Rust compilado a WebAssembly.</p>'
+            },
+            spectrum: {
+                title: 'Analizador FFT',
+                html: '<p>Transformada de Fourier en tiempo real.</p><p>Izq = graves, Der = agudos<br>Altura = intensidad (dB)</p>'
+            },
+            matrix: {
+                title: 'Matriz Simpática',
+                html: '<p>Visualización 12×12 del acoplamiento entre cuerdas.</p><p>Más brillo = mayor transferencia de energía.</p>'
+            }
+        };
+
+        function setupEducationalUI() {
+            const tooltip = document.getElementById('tooltip');
+            const modal = document.getElementById('learn-modal');
+            let tooltipTimeout;
+
+            // Tooltip handlers
+            document.querySelectorAll('.help-btn').forEach(btn => {
+                btn.addEventListener('mouseenter', (e) => {
+                    const helpId = btn.dataset.help;
+                    const content = tooltipContent[helpId];
+                    if (!content) return;
+
+                    clearTimeout(tooltipTimeout);
+
+                    tooltip.innerHTML = `
+                        <div class="tooltip-title">${content.title}</div>
+                        ${content.html}
+                    `;
+
+                    // Position tooltip
+                    const rect = btn.getBoundingClientRect();
+                    let left = rect.left + rect.width / 2;
+                    let top = rect.bottom + 8;
+
+                    // Keep tooltip in viewport
+                    const tooltipWidth = 280;
+                    if (left + tooltipWidth / 2 > window.innerWidth - 20) {
+                        left = window.innerWidth - tooltipWidth - 20;
+                    }
+                    if (left - tooltipWidth / 2 < 20) {
+                        left = 20;
+                    }
+
+                    tooltip.style.left = `${left}px`;
+                    tooltip.style.top = `${top}px`;
+                    tooltip.classList.add('visible');
+                });
+
+                btn.addEventListener('mouseleave', () => {
+                    tooltipTimeout = setTimeout(() => {
+                        tooltip.classList.remove('visible');
+                    }, 100);
+                });
+
+                // Also handle click for mobile
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const helpId = btn.dataset.help;
+                    const content = tooltipContent[helpId];
+                    if (!content) return;
+
+                    const isVisible = tooltip.classList.contains('visible');
+                    if (isVisible) {
+                        tooltip.classList.remove('visible');
+                    } else {
+                        tooltip.innerHTML = `
+                            <div class="tooltip-title">${content.title}</div>
+                            ${content.html}
+                        `;
+                        const rect = btn.getBoundingClientRect();
+                        tooltip.style.left = `${rect.left}px`;
+                        tooltip.style.top = `${rect.bottom + 8}px`;
+                        tooltip.classList.add('visible');
+                    }
+                });
+            });
+
+            // Close tooltip on click outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('help-btn')) {
+                    tooltip.classList.remove('visible');
+                }
+            });
+
+            // Modal handlers
+            document.getElementById('btn-learn').addEventListener('click', () => {
+                modal.classList.remove('hidden');
+            });
+
+            document.getElementById('modal-close').addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+
+            modal.querySelector('.modal-backdrop').addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+
+            // Tab switching
+            document.querySelectorAll('.modal-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Update active tab
+                    document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    // Show corresponding content
+                    const tabId = tab.dataset.tab;
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(`tab-${tabId}`).classList.add('active');
+                });
+            });
+
+            // Close modal with Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    modal.classList.add('hidden');
+                }
             });
         }
 
