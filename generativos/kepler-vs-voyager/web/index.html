@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kepler vs Voyager | Harmonices Mundi Empiricus</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>KEPLER vs VOYAGER</h1>
+            <p class="subtitle">Harmonices Mundi Empiricus</p>
+            <p class="description">
+                Comparando frecuencias teóricas de Kepler (1619) con ondas electromagnéticas de NASA Voyager (1977-1989)
+            </p>
+        </header>
+
+        <!-- Planet Selector -->
+        <nav class="planet-selector">
+            <button class="planet-btn active" data-planet="jupiter">
+                <span class="planet-symbol">♃</span>
+                <span class="planet-name">Júpiter</span>
+            </button>
+            <button class="planet-btn" data-planet="saturn">
+                <span class="planet-symbol">♄</span>
+                <span class="planet-name">Saturno</span>
+            </button>
+            <button class="planet-btn" data-planet="uranus">
+                <span class="planet-symbol">⛢</span>
+                <span class="planet-name">Urano</span>
+            </button>
+            <button class="planet-btn" data-planet="neptune">
+                <span class="planet-symbol">♆</span>
+                <span class="planet-name">Neptuno</span>
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Spectrum Visualization -->
+            <section class="spectrum-section">
+                <h2>Espectro de Frecuencias</h2>
+                <div class="canvas-container">
+                    <canvas id="spectrum-canvas" width="900" height="400"></canvas>
+                </div>
+                <div class="spectrum-legend">
+                    <div class="legend-item">
+                        <span class="legend-color nasa"></span>
+                        <span>NASA Voyager (PSD)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color kepler"></span>
+                        <span>Kepler (Teoría)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color peaks"></span>
+                        <span>Picos dominantes</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Audio Controls -->
+            <section class="audio-section">
+                <div class="audio-panel kepler-panel">
+                    <h3>📐 Kepler 1619</h3>
+                    <p class="source-type">Teoría Matemática</p>
+                    <p class="frequency-display">
+                        <span id="kepler-freq">96.6</span> Hz
+                    </p>
+                    <p class="method">f ∝ velocidad orbital</p>
+                    <button id="play-kepler" class="play-btn">
+                        <span class="play-icon">▶</span>
+                        Play Kepler
+                    </button>
+                </div>
+
+                <div class="audio-panel compare-panel">
+                    <h3>⚡ Comparar</h3>
+                    <button id="play-ab" class="play-btn ab-btn">
+                        A/B Test
+                    </button>
+                    <p class="ab-info">Alterna entre ambas fuentes</p>
+                </div>
+
+                <div class="audio-panel nasa-panel">
+                    <h3>🛰️ NASA Voyager</h3>
+                    <p class="source-type">Datos Empíricos</p>
+                    <p class="frequency-display">
+                        Pico: <span id="nasa-peak">--</span> Hz
+                    </p>
+                    <p class="method">Ondas de plasma (PWS)</p>
+                    <div class="sample-selector">
+                        <label for="sample-select">Sample:</label>
+                        <select id="sample-select">
+                            <option value="0">1 - Inicio</option>
+                            <option value="1">2</option>
+                            <option value="2">3</option>
+                            <option value="3">4</option>
+                            <option value="4">5 - Final</option>
+                        </select>
+                    </div>
+                    <button id="play-nasa" class="play-btn">
+                        <span class="play-icon">▶</span>
+                        Play Voyager
+                    </button>
+                </div>
+            </section>
+
+            <!-- Analysis Section -->
+            <section class="analysis-section">
+                <h2>Análisis Comparativo</h2>
+                <div class="analysis-grid">
+                    <div class="analysis-card">
+                        <h4>Kepler (Teoría)</h4>
+                        <ul id="kepler-info">
+                            <li>Frecuencia: <strong id="kepler-freq-info">96.6 Hz</strong></li>
+                            <li>Semieje mayor: <strong>5.203 UA</strong></li>
+                            <li>Período orbital: <strong>11.86 años</strong></li>
+                            <li>Velocidad: <strong>2.76 UA/año</strong></li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-card">
+                        <h4>NASA (Empírico)</h4>
+                        <ul id="nasa-info">
+                            <li>Pico principal: <strong id="nasa-peak-info">-- Hz</strong></li>
+                            <li>Centroide espectral: <strong id="nasa-centroid">-- Hz</strong></li>
+                            <li>Fuente: <strong>Voyager PWS</strong></li>
+                            <li>Tipo: <strong>Ondas de plasma</strong></li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-card">
+                        <h4>Comparación</h4>
+                        <ul id="comparison-info">
+                            <li>Diferencia: <strong id="freq-diff">-- Hz</strong></li>
+                            <li>Ratio: <strong id="freq-ratio">--</strong></li>
+                            <li>Intervalo musical: <strong id="musical-interval">--</strong></li>
+                            <li>Correlación: <strong id="correlation">Pendiente</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Explanation Section -->
+            <section class="explanation-section">
+                <h2>¿Por qué son diferentes?</h2>
+                <div class="explanation-content">
+                    <div class="explanation-col">
+                        <h4>Kepler (Cinemática)</h4>
+                        <p>
+                            Johannes Kepler (1619) propuso que los planetas "cantan" mientras orbitan.
+                            La frecuencia se deriva de la <strong>velocidad orbital</strong>:
+                        </p>
+                        <code>v = 2πa / T</code>
+                        <p>
+                            Es un modelo <strong>matemático puro</strong> basado en mecánica celeste.
+                            No hay "sonido" real - es una metáfora armónica.
+                        </p>
+                    </div>
+                    <div class="explanation-col">
+                        <h4>NASA Voyager (Electromagnetismo)</h4>
+                        <p>
+                            Las sondas Voyager capturaron <strong>ondas de plasma electromagnéticas</strong>
+                            con el instrumento PWS (Plasma Wave System).
+                        </p>
+                        <code>f ∝ √(n_e)</code>
+                        <p>
+                            Son vibraciones reales del campo eléctrico en el plasma magnetosférico.
+                            Convertidas a audio porque están en rango audible (20 Hz - 20 kHz).
+                        </p>
+                    </div>
+                </div>
+                <p class="conclusion">
+                    <strong>Conclusión:</strong> Son fenómenos físicamente diferentes.
+                    Cualquier coincidencia sería notable, cualquier diferencia es esperada.
+                </p>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>
+                Datos: <a href="https://space-audio.org/" target="_blank">space-audio.org</a> (Universidad de Iowa) |
+                Proyecto hermano de <a href="../harmonices-mundi/" target="_blank">Harmonices Mundi</a>
+            </p>
+            <p class="license">
+                Audio: CC BY 4.0 | Código: MIT | Carlos Lorente Kaiser 2026
+            </p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/spectrum.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

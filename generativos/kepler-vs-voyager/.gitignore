@@ -1,0 +1,27 @@
+# Audio files (too large for git)
+raw/
+*.flac
+*.wav
+
+# Keep MP3 samples (they're small)
+!web/assets/samples/*.mp3
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Outputs (regenerable)
+outputs/*.png

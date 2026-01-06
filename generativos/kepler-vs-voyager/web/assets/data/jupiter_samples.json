@@ -1,0 +1,42 @@
+{
+  "planet": "jupiter",
+  "sample_duration": 5,
+  "fade_duration": 0.1,
+  "samples": [
+    {
+      "index": 0,
+      "filename": "sample_00.mp3",
+      "start_time": 0.0,
+      "duration": 5,
+      "size_kb": 79.2
+    },
+    {
+      "index": 1,
+      "filename": "sample_01.mp3",
+      "start_time": 448.75,
+      "duration": 5,
+      "size_kb": 79.2
+    },
+    {
+      "index": 2,
+      "filename": "sample_02.mp3",
+      "start_time": 897.5,
+      "duration": 5,
+      "size_kb": 79.2
+    },
+    {
+      "index": 3,
+      "filename": "sample_03.mp3",
+      "start_time": 1346.25,
+      "duration": 5,
+      "size_kb": 79.2
+    },
+    {
+      "index": 4,
+      "filename": "sample_04.mp3",
+      "start_time": 1795.0,
+      "duration": 5,
+      "size_kb": 79.2
+    }
+  ]
+}

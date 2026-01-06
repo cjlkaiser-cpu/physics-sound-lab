@@ -1,0 +1,79 @@
+{
+  "method": "kepler_1619",
+  "base_frequency": 220.0,
+  "reference_planet": "earth",
+  "planets": {
+    "jupiter": {
+      "frequency": 96.5,
+      "orbital": {
+        "a_ua": 5.203,
+        "T_years": 11.862,
+        "velocity": 2.756
+      },
+      "color": "#C88B3A",
+      "symbol": "\u2643"
+    },
+    "saturn": {
+      "frequency": 71.23,
+      "orbital": {
+        "a_ua": 9.537,
+        "T_years": 29.457,
+        "velocity": 2.034
+      },
+      "color": "#FAD5A5",
+      "symbol": "\u2644"
+    },
+    "uranus": {
+      "frequency": 50.26,
+      "orbital": {
+        "a_ua": 19.191,
+        "T_years": 84.011,
+        "velocity": 1.435
+      },
+      "color": "#4FD0E0",
+      "symbol": "\u26e2"
+    },
+    "neptune": {
+      "frequency": 40.14,
+      "orbital": {
+        "a_ua": 30.069,
+        "T_years": 164.79,
+        "velocity": 1.146
+      },
+      "color": "#4166F5",
+      "symbol": "\u2646"
+    }
+  },
+  "ratios": {
+    "jupiter/saturn": {
+      "ratio": 1.3547920462481162,
+      "nearest_interval": "cuarta",
+      "difference": 0.021458712914782962
+    },
+    "jupiter/uranus": {
+      "ratio": 1.9201468978430773,
+      "nearest_interval": "s\u00e9ptima_mayor",
+      "difference": 0.04514689784307735
+    },
+    "jupiter/neptune": {
+      "ratio": 2.403852272802398,
+      "nearest_interval": "octava",
+      "difference": 0.4038522728023981
+    },
+    "saturn/uranus": {
+      "ratio": 1.417300096469139,
+      "nearest_interval": "tritono",
+      "difference": 0.011050096469138904
+    },
+    "saturn/neptune": {
+      "ratio": 1.7743330273155125,
+      "nearest_interval": "s\u00e9ptima_menor",
+      "difference": 0.025666972684487588
+    },
+    "uranus/neptune": {
+      "ratio": 1.2519106092886292,
+      "nearest_interval": "tercera_mayor",
+      "difference": 0.0019106092886291837
+    }
+  }
+}
