@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tonnetz Dual - Dos Voces Caóticas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 { font-size: 1.5rem; margin-bottom: 5px; color: #60a5fa; }
+        .subtitle { color: #666; margin-bottom: 20px; font-size: 0.9rem; }
+        .subtitle span { color: #22c55e; }
+        .subtitle .red { color: #ef4444; }
+
+        #canvas {
+            background: #111118;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .control-group {
+            background: #1a1a24;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .control-group .value {
+            font-size: 0.85rem;
+            color: #60a5fa;
+            float: right;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+            accent-color: #60a5fa;
+        }
+
+        .buttons {
+            grid-column: span 2;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #60a5fa;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: #3b82f6; }
+        button.secondary { background: #333; color: #e0e0e0; }
+        button.secondary:hover { background: #444; }
+        button.active { background: #22c55e; color: #000; }
+
+        .divergence-panel {
+            grid-column: span 2;
+            background: #1a1a24;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .divergence-panel h3 {
+            font-size: 0.85rem;
+            color: #f59e0b;
+            margin-bottom: 10px;
+        }
+
+        .divergence-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            text-align: center;
+        }
+
+        .stat-item .label {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .stat-item .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .stat-item .value.green { color: #22c55e; }
+        .stat-item .value.red { color: #ef4444; }
+        .stat-item .value.yellow { color: #f59e0b; }
+
+        .chord-section {
+            grid-column: span 2;
+            background: #1a1a24;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .chord-section label {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .chord-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chord-btn {
+            background: #333;
+            color: #e0e0e0;
+            border: 2px solid #444;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .chord-btn:hover { border-color: #60a5fa; }
+        .chord-btn.active { background: #60a5fa; color: #000; border-color: #60a5fa; }
+
+        .mode-section {
+            grid-column: span 2;
+            background: #1a1a24;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .mode-section > label {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            background: #333;
+            color: #e0e0e0;
+            border: 2px solid #444;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .mode-btn:hover { border-color: #a78bfa; }
+        .mode-btn.active { background: #a78bfa; color: #000; border-color: #a78bfa; }
+
+        .mode-info {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #111;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #888;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1a24;
+            border-radius: 6px;
+            max-width: 600px;
+            font-size: 0.8rem;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        .info code { color: #f59e0b; }
+
+        .stats { margin-top: 15px; font-size: 0.75rem; color: #666; }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tonnetz Dual</h1>
+    <p class="subtitle">Dos voces que divergen — <span>Voz 1</span> · <span class="red">Voz 2</span></p>
+
+    <canvas id="canvas" width="700" height="520"></canvas>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #22c55e;"></div>
+            <span>Partícula 1 (verde)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #ef4444;"></div>
+            <span>Partícula 2 (roja)</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Fuerza Magnética <span class="value" id="forceVal">150</span></label>
+            <input type="range" id="force" min="50" max="400" value="150">
+        </div>
+
+        <div class="control-group">
+            <label>Fricción <span class="value" id="frictionVal">0.005</span></label>
+            <input type="range" id="friction" min="0" max="50" value="5">
+        </div>
+
+        <div class="control-group">
+            <label>Velocidad Inicial <span class="value" id="velocityVal">12</span></label>
+            <input type="range" id="velocity" min="5" max="150" value="120">
+        </div>
+
+        <div class="control-group">
+            <label>Trail Length <span class="value" id="trailVal">300</span></label>
+            <input type="range" id="trail" min="50" max="800" value="300">
+        </div>
+
+        <div class="divergence-panel">
+            <h3>Divergencia Caótica</h3>
+            <div class="divergence-stats">
+                <div class="stat-item">
+                    <div class="label">Distancia</div>
+                    <div class="value yellow" id="divergenceDist">0.0 px</div>
+                </div>
+                <div class="stat-item">
+                    <div class="label">Acorde Voz 1</div>
+                    <div class="value green" id="chord1">-</div>
+                </div>
+                <div class="stat-item">
+                    <div class="label">Acorde Voz 2</div>
+                    <div class="value red" id="chord2">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button id="resetBtn">Reset Ambas</button>
+            <button id="syncBtn" class="secondary">Sincronizar</button>
+            <button id="pauseBtn" class="secondary">Pausar</button>
+            <button id="fieldBtn" class="secondary">Campo: ON</button>
+            <button id="clearTrailBtn" class="secondary">Limpiar Trails</button>
+        </div>
+
+        <div class="chord-section">
+            <label>Impulsar ambas hacia acorde:</label>
+            <div class="chord-buttons" id="chordButtons"></div>
+        </div>
+
+        <div class="mode-section">
+            <label>Modo Armónico:</label>
+            <div class="mode-buttons">
+                <button class="mode-btn active" data-mode="major">Mayor</button>
+                <button class="mode-btn" data-mode="minor">Menor</button>
+                <button class="mode-btn" data-mode="phrygian">Frigio</button>
+                <button class="mode-btn" data-mode="lydian">Lidio</button>
+                <button class="mode-btn" data-mode="blues">Blues</button>
+            </div>
+            <div class="mode-info" id="modeInfo">Brillante, estable - Do Mayor</div>
+        </div>
+    </div>
+
+    <div class="info">
+        <strong>Caos Determinista Musical</strong><br><br>
+        Dos partículas con condiciones iniciales casi idénticas (Δ = 0.1px) divergen exponencialmente.
+        Aunque siguen las mismas leyes físicas, pronto tocan acordes completamente diferentes.<br><br>
+        <strong>Física:</strong> <code>F = Σ K·(r_i - r) / |r_i - r|² - γ·v</code><br>
+        <strong>Sonido:</strong> Cada voz tiene su propio canal (izq/der en estéreo)
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <script>
+        // === CONFIGURACION ===
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width;
+        const H = canvas.height;
+        const CX = W / 2;
+        const CY = H / 2;
+
+        // === PARAMETROS ===
+        let params = {
+            force: 150,
+            friction: 0.005,
+            initialVelocity: 12,
+            trailLength: 300
+        };
+
+        // === FRECUENCIAS ===
+        const NOTE_FREQ = {
+            'C': 261.63, 'D': 293.66, 'E': 329.63, 'F': 349.23,
+            'G': 392.00, 'A': 440.00, 'B': 493.88,
+            'Bb': 466.16, 'Eb': 311.13, 'Ab': 415.30,
+            'F#': 369.99, 'C#': 277.18, 'G#': 415.30
+        };
+
+        const NOTE_COLORS = {
+            'C': '#ef4444', 'D': '#06b6d4', 'E': '#22c55e', 'F': '#8b5cf6',
+            'G': '#3b82f6', 'A': '#f59e0b', 'B': '#ec4899',
+            'Bb': '#f97316', 'Eb': '#84cc16', 'Ab': '#d946ef',
+            'F#': '#a855f7', 'C#': '#f43f5e', 'G#': '#14b8a6'
+        };
+
+        // === TONNETZ HEXAGONAL ===
+        const HEX_RADIUS = 130;
+        const TRIGGER_RADIUS = 55;
+
+        const nodes = [];
+
+        const hexLayout = [
+            { name: 'E', angle: null, radius: 0 },
+            { name: 'C', angle: -Math.PI/2, radius: 1 },
+            { name: 'G', angle: -Math.PI/6, radius: 1 },
+            { name: 'B', angle: Math.PI/6, radius: 1 },
+            { name: 'D', angle: Math.PI/2, radius: 1 },
+            { name: 'A', angle: 5*Math.PI/6, radius: 1 },
+            { name: 'F', angle: -5*Math.PI/6, radius: 1 },
+        ];
+
+        hexLayout.forEach((item, i) => {
+            const x = item.radius === 0 ? CX : CX + HEX_RADIUS * Math.cos(item.angle);
+            const y = item.radius === 0 ? CY : CY + HEX_RADIUS * Math.sin(item.angle);
+            nodes.push({
+                id: i,
+                name: item.name,
+                x: x,
+                y: y,
+                color: NOTE_COLORS[item.name],
+                freq: NOTE_FREQ[item.name],
+                glow: 0,
+                glow2: 0  // Glow separado para partícula 2
+            });
+        });
+
+        const chords = [
+            { name: 'C',  notes: ['C', 'E', 'G'],  type: 'major' },
+            { name: 'Am', notes: ['A', 'C', 'E'],  type: 'minor' },
+            { name: 'Em', notes: ['E', 'G', 'B'],  type: 'minor' },
+            { name: 'G',  notes: ['G', 'B', 'D'],  type: 'major' },
+            { name: 'Dm', notes: ['D', 'F', 'A'],  type: 'minor' },
+            { name: 'F',  notes: ['F', 'A', 'C'],  type: 'major' },
+        ];
+
+        const trianglesData = chords.map(chord => {
+            const nodeIds = chord.notes.map(note => {
+                const found = nodes.find(n => n.name === note);
+                return found ? found.id : -1;
+            }).filter(id => id !== -1);
+            return { name: chord.name, nodeIds: nodeIds, type: chord.type };
+        });
+
+        // === DOS PARTICULAS ===
+        let particle1 = { x: 0, y: 0, vx: 0, vy: 0, trail: [], color: '#22c55e' };
+        let particle2 = { x: 0, y: 0, vx: 0, vy: 0, trail: [], color: '#ef4444' };
+
+        // === ESTADO ===
+        let paused = false;
+        let lastTime = 0;
+        let audioStarted = false;
+        let isDragging = false;
+        let dragTarget = null;
+        let currentTriangle1 = null;
+        let currentTriangle2 = null;
+        let lastChordTime1 = 0;
+        let lastChordTime2 = 0;
+        const CHORD_COOLDOWN = 200; // ms entre acordes
+
+        // === MODOS ARMONICOS ===
+        const MODES = {
+            major: {
+                name: 'Mayor',
+                description: 'Brillante, estable - Do Mayor',
+                hexNotes: ['E', 'C', 'G', 'B', 'D', 'A', 'F'],
+                chords: [
+                    { name: 'C',  notes: ['C', 'E', 'G'],  type: 'major' },
+                    { name: 'Am', notes: ['A', 'C', 'E'],  type: 'minor' },
+                    { name: 'Em', notes: ['E', 'G', 'B'],  type: 'minor' },
+                    { name: 'G',  notes: ['G', 'B', 'D'],  type: 'major' },
+                    { name: 'Dm', notes: ['D', 'F', 'A'],  type: 'minor' },
+                    { name: 'F',  notes: ['F', 'A', 'C'],  type: 'major' },
+                ]
+            },
+            minor: {
+                name: 'Menor',
+                description: 'Melancólico, oscuro - La menor',
+                hexNotes: ['A', 'F', 'C', 'E', 'G', 'D', 'Bb'],
+                chords: [
+                    { name: 'Am', notes: ['A', 'C', 'E'],  type: 'minor' },
+                    { name: 'Dm', notes: ['D', 'F', 'A'],  type: 'minor' },
+                    { name: 'F',  notes: ['F', 'A', 'C'],  type: 'major' },
+                    { name: 'E',  notes: ['E', 'G', 'Bb'], type: 'dim' },
+                    { name: 'G',  notes: ['G', 'Bb', 'D'], type: 'minor' },
+                    { name: 'C',  notes: ['C', 'E', 'G'],  type: 'major' },
+                ]
+            },
+            phrygian: {
+                name: 'Frigio',
+                description: 'Español, flamenco - Mi frigio',
+                hexNotes: ['E', 'C', 'G', 'Bb', 'D', 'A', 'F'],
+                chords: [
+                    { name: 'Em', notes: ['E', 'G', 'Bb'], type: 'dim' },
+                    { name: 'F',  notes: ['F', 'A', 'C'],  type: 'major' },
+                    { name: 'G',  notes: ['G', 'Bb', 'D'], type: 'minor' },
+                    { name: 'Am', notes: ['A', 'C', 'E'],  type: 'minor' },
+                    { name: 'Bb', notes: ['Bb', 'D', 'F'], type: 'major' },
+                    { name: 'Dm', notes: ['D', 'F', 'A'],  type: 'minor' },
+                ]
+            },
+            lydian: {
+                name: 'Lidio',
+                description: 'Soñador, cinematográfico - Fa lidio',
+                hexNotes: ['A', 'F', 'C', 'E', 'G', 'D', 'B'],
+                chords: [
+                    { name: 'F',  notes: ['F', 'A', 'C'],  type: 'major' },
+                    { name: 'G',  notes: ['G', 'B', 'D'],  type: 'major' },
+                    { name: 'Am', notes: ['A', 'C', 'E'],  type: 'minor' },
+                    { name: 'B°', notes: ['B', 'D', 'F'],  type: 'dim' },
+                    { name: 'C',  notes: ['C', 'E', 'G'],  type: 'major' },
+                    { name: 'Dm', notes: ['D', 'F', 'A'],  type: 'minor' },
+                ]
+            },
+            blues: {
+                name: 'Blues',
+                description: 'Tensión, jazzy - Blues en Do',
+                hexNotes: ['Eb', 'C', 'G', 'Bb', 'D', 'F', 'Ab'],
+                chords: [
+                    { name: 'C7',  notes: ['C', 'Eb', 'G'],  type: 'dom7' },
+                    { name: 'Fm', notes: ['F', 'Ab', 'C'],  type: 'minor' },
+                    { name: 'G7', notes: ['G', 'Bb', 'D'],  type: 'dom7' },
+                    { name: 'Ab', notes: ['Ab', 'C', 'Eb'], type: 'major' },
+                    { name: 'Bb', notes: ['Bb', 'D', 'F'],  type: 'major' },
+                    { name: 'Eb', notes: ['Eb', 'G', 'Bb'], type: 'major' },
+                ]
+            }
+        };
+
+        let currentMode = 'major';
+
+        function setMode(modeName) {
+            const mode = MODES[modeName];
+            if (!mode) return;
+            currentMode = modeName;
+
+            mode.hexNotes.forEach((noteName, i) => {
+                if (nodes[i]) {
+                    nodes[i].name = noteName;
+                    nodes[i].freq = NOTE_FREQ[noteName] || 440;
+                    nodes[i].color = NOTE_COLORS[noteName] || '#888';
+                }
+            });
+
+            chords.length = 0;
+            mode.chords.forEach(c => chords.push({...c}));
+
+            trianglesData.length = 0;
+            chords.forEach(chord => {
+                const nodeIds = chord.notes.map(note => {
+                    const found = nodes.find(n => n.name === note);
+                    return found ? found.id : -1;
+                }).filter(id => id !== -1);
+                trianglesData.push({ name: chord.name, nodeIds: nodeIds, type: chord.type });
+            });
+
+            updateChordButtons();
+            calculateField();
+            document.getElementById('modeInfo').textContent = mode.description;
+        }
+
+        function updateChordButtons() {
+            const container = document.getElementById('chordButtons');
+            container.innerHTML = '';
+            chords.forEach(chord => {
+                const btn = document.createElement('button');
+                btn.className = 'chord-btn';
+                btn.textContent = chord.name;
+                btn.addEventListener('click', async () => {
+                    await initAudio();
+                    impulseToChord(chord.name, particle1);
+                    impulseToChord(chord.name, particle2);
+                    btn.classList.add('active');
+                    setTimeout(() => btn.classList.remove('active'), 200);
+                });
+                container.appendChild(btn);
+            });
+        }
+
+        function impulseToChord(chordName, particle) {
+            const chord = chords.find(c => c.name === chordName);
+            if (!chord) return;
+
+            let cx = 0, cy = 0, count = 0;
+            chord.notes.forEach(noteName => {
+                const node = nodes.find(n => n.name === noteName);
+                if (node) { cx += node.x; cy += node.y; count++; }
+            });
+
+            if (count > 0) {
+                cx /= count; cy /= count;
+                const dx = cx - particle.x;
+                const dy = cy - particle.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const impulse = 8;
+                particle.vx += (dx / dist) * impulse;
+                particle.vy += (dy / dist) * impulse;
+            }
+        }
+
+        // === AUDIO CON ESTÉREO ===
+        let audioCtx = null;
+        let masterGain = null;
+        let panNode1 = null;  // Izquierda
+        let panNode2 = null;  // Derecha
+
+        async function initAudio() {
+            if (audioCtx) {
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                return;
+            }
+
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            await audioCtx.resume();
+
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.35;
+
+            // Panning: voz 1 a la izquierda, voz 2 a la derecha
+            panNode1 = audioCtx.createStereoPanner();
+            panNode1.pan.value = -0.6;
+
+            panNode2 = audioCtx.createStereoPanner();
+            panNode2.pan.value = 0.6;
+
+            // Reverb
+            const convolver = audioCtx.createConvolver();
+            const reverbGain = audioCtx.createGain();
+            reverbGain.gain.value = 0.4;
+
+            const reverbTime = 2.5;
+            const length = audioCtx.sampleRate * reverbTime;
+            const impulse = audioCtx.createBuffer(2, length, audioCtx.sampleRate);
+
+            for (let channel = 0; channel < 2; channel++) {
+                const data = impulse.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    const decay = Math.exp(-i / (audioCtx.sampleRate * 0.8));
+                    const noise = (Math.random() * 2 - 1);
+                    data[i] = noise * decay * 0.5;
+                }
+            }
+            convolver.buffer = impulse;
+
+            const preDelay = audioCtx.createDelay();
+            preDelay.delayTime.value = 0.03;
+
+            const reverbFilter = audioCtx.createBiquadFilter();
+            reverbFilter.type = 'lowpass';
+            reverbFilter.frequency.value = 4000;
+
+            // Routing
+            panNode1.connect(masterGain);
+            panNode2.connect(masterGain);
+            masterGain.connect(audioCtx.destination);
+            masterGain.connect(preDelay);
+            preDelay.connect(convolver);
+            convolver.connect(reverbFilter);
+            reverbFilter.connect(reverbGain);
+            reverbGain.connect(audioCtx.destination);
+
+            audioStarted = true;
+        }
+
+        function playNote(freq, velocity, panNode) {
+            if (!audioCtx || !audioStarted) return;
+
+            const now = audioCtx.currentTime;
+            const attack = 0.06, decay = 0.15, sustain = 0.4, release = 1.0;
+            const totalTime = attack + decay + release;
+
+            const osc1 = audioCtx.createOscillator();
+            osc1.type = 'sine';
+            osc1.frequency.value = freq;
+
+            const osc2 = audioCtx.createOscillator();
+            osc2.type = 'triangle';
+            osc2.frequency.value = freq;
+            osc2.detune.value = 5;
+
+            const oscMix = audioCtx.createGain();
+            const gain1 = audioCtx.createGain();
+            gain1.gain.value = 0.6;
+            const gain2 = audioCtx.createGain();
+            gain2.gain.value = 0.3;
+
+            osc1.connect(gain1);
+            osc2.connect(gain2);
+            gain1.connect(oscMix);
+            gain2.connect(oscMix);
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 1800 + velocity * 2500;
+
+            const env = audioCtx.createGain();
+            const peakGain = velocity * 0.3;
+
+            env.gain.setValueAtTime(0, now);
+            env.gain.linearRampToValueAtTime(peakGain, now + attack);
+            env.gain.linearRampToValueAtTime(peakGain * sustain, now + attack + decay);
+            env.gain.exponentialRampToValueAtTime(0.001, now + totalTime);
+
+            oscMix.connect(filter);
+            filter.connect(env);
+            env.connect(panNode);
+
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + totalTime);
+            osc2.stop(now + totalTime);
+        }
+
+        // === DETECCION DE TRIANGULOS ===
+        function pointInTriangle(px, py, ax, ay, bx, by, cx, cy) {
+            const v0x = cx - ax, v0y = cy - ay;
+            const v1x = bx - ax, v1y = by - ay;
+            const v2x = px - ax, v2y = py - ay;
+
+            const dot00 = v0x * v0x + v0y * v0y;
+            const dot01 = v0x * v1x + v0y * v1y;
+            const dot02 = v0x * v2x + v0y * v2y;
+            const dot11 = v1x * v1x + v1y * v1y;
+            const dot12 = v1x * v2x + v1y * v2y;
+
+            const inv = 1 / (dot00 * dot11 - dot01 * dot01);
+            const u = (dot11 * dot02 - dot01 * dot12) * inv;
+            const v = (dot00 * dot12 - dot01 * dot02) * inv;
+
+            return (u >= 0) && (v >= 0) && (u + v <= 1);
+        }
+
+        function findTriangle(particle) {
+            for (const tri of trianglesData) {
+                if (tri.nodeIds.length !== 3) continue;
+                const n0 = nodes[tri.nodeIds[0]];
+                const n1 = nodes[tri.nodeIds[1]];
+                const n2 = nodes[tri.nodeIds[2]];
+                if (n0 && n1 && n2) {
+                    if (pointInTriangle(particle.x, particle.y, n0.x, n0.y, n1.x, n1.y, n2.x, n2.y)) {
+                        return tri;
+                    }
+                }
+            }
+            return null;
+        }
+
+        function checkTriangles() {
+            const now = performance.now();
+
+            // Decay glow
+            for (const node of nodes) {
+                node.glow *= 0.92;
+                node.glow2 *= 0.92;
+            }
+
+            // Partícula 1
+            const tri1 = findTriangle(particle1);
+            if (tri1 && tri1 !== currentTriangle1 && (now - lastChordTime1) > CHORD_COOLDOWN) {
+                currentTriangle1 = tri1;
+                lastChordTime1 = now;
+
+                for (const nodeId of tri1.nodeIds) {
+                    nodes[nodeId].glow = 1;
+                }
+
+                if (audioStarted && audioCtx && audioCtx.state === 'running') {
+                    const speed = Math.sqrt(particle1.vx * particle1.vx + particle1.vy * particle1.vy);
+                    const velocity = Math.min(1, speed / 10);
+                    const chord = chords.find(c => c.name === tri1.name);
+                    if (chord) {
+                        chord.notes.forEach((noteName, i) => {
+                            setTimeout(() => {
+                                playNote(NOTE_FREQ[noteName], 0.3 + velocity * 0.35, panNode1);
+                            }, i * 25);
+                        });
+                    }
+                }
+                document.getElementById('chord1').textContent = tri1.name;
+            } else if (!tri1) {
+                currentTriangle1 = null;
+            }
+
+            // Partícula 2
+            const tri2 = findTriangle(particle2);
+            if (tri2 && tri2 !== currentTriangle2 && (now - lastChordTime2) > CHORD_COOLDOWN) {
+                currentTriangle2 = tri2;
+                lastChordTime2 = now;
+
+                for (const nodeId of tri2.nodeIds) {
+                    nodes[nodeId].glow2 = 1;
+                }
+
+                if (audioStarted && audioCtx && audioCtx.state === 'running') {
+                    const speed = Math.sqrt(particle2.vx * particle2.vx + particle2.vy * particle2.vy);
+                    const velocity = Math.min(1, speed / 10);
+                    const chord = chords.find(c => c.name === tri2.name);
+                    if (chord) {
+                        chord.notes.forEach((noteName, i) => {
+                            setTimeout(() => {
+                                playNote(NOTE_FREQ[noteName], 0.3 + velocity * 0.35, panNode2);
+                            }, i * 25);
+                        });
+                    }
+                }
+                document.getElementById('chord2').textContent = tri2.name;
+            } else if (!tri2) {
+                currentTriangle2 = null;
+            }
+        }
+
+        // === INICIALIZACION ===
+        function resetParticles() {
+            const startAngle = Math.random() * Math.PI * 2;
+            const startX = CX + HEX_RADIUS * 0.5 * Math.cos(startAngle);
+            const startY = CY + HEX_RADIUS * 0.5 * Math.sin(startAngle);
+
+            const velAngle = startAngle + Math.PI / 2;
+            const vx = params.initialVelocity * 2 * Math.cos(velAngle);
+            const vy = params.initialVelocity * 2 * Math.sin(velAngle);
+
+            // Partícula 1
+            particle1.x = startX;
+            particle1.y = startY;
+            particle1.vx = vx;
+            particle1.vy = vy;
+            particle1.trail = [];
+
+            // Partícula 2: casi idéntica pero con pequeña perturbación
+            particle2.x = startX + 0.1;
+            particle2.y = startY + 0.1;
+            particle2.vx = vx;
+            particle2.vy = vy;
+            particle2.trail = [];
+
+            currentTriangle1 = null;
+            currentTriangle2 = null;
+        }
+
+        function syncParticles() {
+            // Sincronizar partícula 2 con partícula 1
+            particle2.x = particle1.x + 0.1;
+            particle2.y = particle1.y + 0.1;
+            particle2.vx = particle1.vx;
+            particle2.vy = particle1.vy;
+            particle2.trail = [];
+        }
+
+        // === FISICA ===
+        function updatePhysics(dt) {
+            if (paused || isDragging) return;
+
+            const steps = 8;
+            const subDt = dt / steps;
+
+            for (let step = 0; step < steps; step++) {
+                // Actualizar partícula 1
+                updateParticle(particle1, subDt);
+                // Actualizar partícula 2
+                updateParticle(particle2, subDt);
+            }
+
+            // Trails
+            particle1.trail.push({ x: particle1.x, y: particle1.y });
+            if (particle1.trail.length > params.trailLength) particle1.trail.shift();
+
+            particle2.trail.push({ x: particle2.x, y: particle2.y });
+            if (particle2.trail.length > params.trailLength) particle2.trail.shift();
+
+            // Bounds
+            const margin = 20;
+            [particle1, particle2].forEach(p => {
+                if (p.x < margin) { p.x = margin; p.vx *= -0.5; }
+                if (p.x > W - margin) { p.x = W - margin; p.vx *= -0.5; }
+                if (p.y < margin) { p.y = margin; p.vy *= -0.5; }
+                if (p.y > H - margin) { p.y = H - margin; p.vy *= -0.5; }
+            });
+
+            // Actualizar divergencia
+            const dx = particle2.x - particle1.x;
+            const dy = particle2.y - particle1.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            document.getElementById('divergenceDist').textContent = dist.toFixed(1) + ' px';
+        }
+
+        function updateParticle(p, dt) {
+            let fx = 0, fy = 0;
+
+            for (const node of nodes) {
+                const dx = node.x - p.x;
+                const dy = node.y - p.y;
+                const distSq = dx * dx + dy * dy;
+                const dist = Math.sqrt(distSq);
+                const safeDist = Math.max(dist, 20);
+
+                const forceMag = params.force * 1000 / (safeDist * safeDist);
+                fx += forceMag * dx / dist;
+                fy += forceMag * dy / dist;
+            }
+
+            fx -= params.friction * p.vx;
+            fy -= params.friction * p.vy;
+
+            p.vx += fx * dt;
+            p.vy += fy * dt;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+        }
+
+        // === CAMPO DE POTENCIAL ===
+        let fieldImageData = null;
+        let showField = true;
+
+        function calculateField() {
+            const resolution = 15;
+            fieldImageData = ctx.createImageData(W, H);
+
+            for (let y = 0; y < H; y += resolution) {
+                for (let x = 0; x < W; x += resolution) {
+                    let potential = 0;
+                    for (const node of nodes) {
+                        const dx = node.x - x;
+                        const dy = node.y - y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        const safeDist = Math.max(dist, 20);
+                        potential += -1 / safeDist;
+                    }
+
+                    const normalized = Math.min(1, Math.max(0, (-potential - 0.015) / 0.1));
+                    const r = Math.floor(normalized * 100);
+                    const g = Math.floor(normalized * 30);
+                    const b = Math.floor(normalized * 130);
+
+                    for (let py = y; py < Math.min(y + resolution, H); py++) {
+                        for (let px = x; px < Math.min(x + resolution, W); px++) {
+                            const idx = (py * W + px) * 4;
+                            fieldImageData.data[idx] = 17 + r;
+                            fieldImageData.data[idx + 1] = 17 + g;
+                            fieldImageData.data[idx + 2] = 24 + b;
+                            fieldImageData.data[idx + 3] = 255;
+                        }
+                    }
+                }
+            }
+        }
+
+        calculateField();
+
+        // === RENDERIZADO ===
+        function draw() {
+            if (showField && fieldImageData) {
+                ctx.putImageData(fieldImageData, 0, 0);
+            } else {
+                ctx.fillStyle = '#111118';
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            // Hexágono
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let i = 1; i <= 6; i++) {
+                const node = nodes[i];
+                const nextNode = nodes[i === 6 ? 1 : i + 1];
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(nextNode.x, nextNode.y);
+            }
+            ctx.stroke();
+
+            // Líneas del centro
+            ctx.strokeStyle = '#333';
+            const center = nodes[0];
+            for (let i = 1; i <= 6; i++) {
+                ctx.beginPath();
+                ctx.moveTo(center.x, center.y);
+                ctx.lineTo(nodes[i].x, nodes[i].y);
+                ctx.stroke();
+            }
+
+            // Triángulos
+            trianglesData.forEach(tri => {
+                if (tri.nodeIds.length === 3) {
+                    const n0 = nodes[tri.nodeIds[0]];
+                    const n1 = nodes[tri.nodeIds[1]];
+                    const n2 = nodes[tri.nodeIds[2]];
+                    if (n0 && n1 && n2) {
+                        const cx = (n0.x + n1.x + n2.x) / 3;
+                        const cy = (n0.y + n1.y + n2.y) / 3;
+
+                        const isActive1 = currentTriangle1 && currentTriangle1.name === tri.name;
+                        const isActive2 = currentTriangle2 && currentTriangle2.name === tri.name;
+
+                        if (isActive1 || isActive2) {
+                            ctx.beginPath();
+                            ctx.moveTo(n0.x, n0.y);
+                            ctx.lineTo(n1.x, n1.y);
+                            ctx.lineTo(n2.x, n2.y);
+                            ctx.closePath();
+
+                            if (isActive1 && isActive2) {
+                                ctx.fillStyle = 'rgba(251, 191, 36, 0.2)';
+                                ctx.strokeStyle = '#fbbf24';
+                            } else if (isActive1) {
+                                ctx.fillStyle = 'rgba(34, 197, 94, 0.15)';
+                                ctx.strokeStyle = '#22c55e';
+                            } else {
+                                ctx.fillStyle = 'rgba(239, 68, 68, 0.15)';
+                                ctx.strokeStyle = '#ef4444';
+                            }
+                            ctx.fill();
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+
+                            ctx.font = 'bold 14px SF Mono, Consolas, monospace';
+                            ctx.fillStyle = ctx.strokeStyle;
+                        } else {
+                            ctx.font = '11px SF Mono, Consolas, monospace';
+                            ctx.fillStyle = '#555';
+                        }
+
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(tri.name, cx, cy);
+                    }
+                }
+            });
+
+            // Trail partícula 1
+            if (particle1.trail.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(particle1.trail[0].x, particle1.trail[0].y);
+                for (let i = 1; i < particle1.trail.length; i++) {
+                    ctx.lineTo(particle1.trail[i].x, particle1.trail[i].y);
+                }
+                ctx.strokeStyle = '#22c55e';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Trail partícula 2
+            if (particle2.trail.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(particle2.trail[0].x, particle2.trail[0].y);
+                for (let i = 1; i < particle2.trail.length; i++) {
+                    ctx.lineTo(particle2.trail[i].x, particle2.trail[i].y);
+                }
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Nodos
+            for (const node of nodes) {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, TRIGGER_RADIUS, 0, Math.PI * 2);
+                ctx.strokeStyle = node.color + '30';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                const maxGlow = Math.max(node.glow, node.glow2);
+                const glowSize = 40 + maxGlow * 30;
+                const glowOpacity = Math.floor(64 + maxGlow * 191).toString(16).padStart(2, '0');
+                const glowGradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowSize);
+                glowGradient.addColorStop(0, node.color + glowOpacity);
+                glowGradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = glowGradient;
+                ctx.fillRect(node.x - glowSize, node.y - glowSize, glowSize * 2, glowSize * 2);
+
+                const nodeSize = 15 + maxGlow * 8;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, nodeSize, 0, Math.PI * 2);
+                ctx.fillStyle = node.color;
+                ctx.fill();
+
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px SF Mono, Consolas, monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.name, node.x, node.y);
+            }
+
+            // Partícula 1
+            ctx.beginPath();
+            ctx.arc(particle1.x, particle1.y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#22c55e';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Vector velocidad P1
+            const velScale = 8;
+            ctx.beginPath();
+            ctx.moveTo(particle1.x, particle1.y);
+            ctx.lineTo(particle1.x + particle1.vx * velScale, particle1.y + particle1.vy * velScale);
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Partícula 2
+            ctx.beginPath();
+            ctx.arc(particle2.x, particle2.y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#ef4444';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Vector velocidad P2
+            ctx.beginPath();
+            ctx.moveTo(particle2.x, particle2.y);
+            ctx.lineTo(particle2.x + particle2.vx * velScale, particle2.y + particle2.vy * velScale);
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Stats
+            const speed1 = Math.sqrt(particle1.vx * particle1.vx + particle1.vy * particle1.vy);
+            const speed2 = Math.sqrt(particle2.vx * particle2.vx + particle2.vy * particle2.vy);
+            document.getElementById('stats').textContent =
+                `V1: ${speed1.toFixed(2)} | V2: ${speed2.toFixed(2)} | Trails: ${particle1.trail.length}`;
+        }
+
+        // === GAME LOOP ===
+        function loop(time) {
+            const dt = Math.min((time - lastTime) / 1000, 0.05);
+            lastTime = time;
+
+            updatePhysics(dt);
+            checkTriangles();
+            draw();
+
+            requestAnimationFrame(loop);
+        }
+
+        // === CONTROLES ===
+        document.getElementById('force').addEventListener('input', (e) => {
+            params.force = parseFloat(e.target.value);
+            document.getElementById('forceVal').textContent = params.force;
+        });
+
+        document.getElementById('friction').addEventListener('input', (e) => {
+            params.friction = parseFloat(e.target.value) / 1000;
+            document.getElementById('frictionVal').textContent = params.friction.toFixed(3);
+        });
+
+        document.getElementById('velocity').addEventListener('input', (e) => {
+            params.initialVelocity = parseFloat(e.target.value) / 10;
+            document.getElementById('velocityVal').textContent = params.initialVelocity.toFixed(0);
+        });
+
+        document.getElementById('trail').addEventListener('input', (e) => {
+            params.trailLength = parseInt(e.target.value);
+            document.getElementById('trailVal').textContent = params.trailLength;
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', async () => {
+            await initAudio();
+            resetParticles();
+        });
+
+        document.getElementById('syncBtn').addEventListener('click', () => {
+            syncParticles();
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            paused = !paused;
+            document.getElementById('pauseBtn').textContent = paused ? 'Reanudar' : 'Pausar';
+        });
+
+        document.getElementById('clearTrailBtn').addEventListener('click', () => {
+            particle1.trail = [];
+            particle2.trail = [];
+        });
+
+        document.getElementById('fieldBtn').addEventListener('click', () => {
+            showField = !showField;
+            document.getElementById('fieldBtn').textContent = `Campo: ${showField ? 'ON' : 'OFF'}`;
+        });
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                await initAudio();
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                setMode(btn.dataset.mode);
+            });
+        });
+
+        // Mouse
+        canvas.addEventListener('mousedown', async (e) => {
+            await initAudio();
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+
+            // Check si cerca de partícula 1
+            const dx1 = mx - particle1.x;
+            const dy1 = my - particle1.y;
+            if (Math.sqrt(dx1 * dx1 + dy1 * dy1) < 25) {
+                isDragging = true;
+                dragTarget = particle1;
+                particle1.vx = 0;
+                particle1.vy = 0;
+                return;
+            }
+
+            // Check si cerca de partícula 2
+            const dx2 = mx - particle2.x;
+            const dy2 = my - particle2.y;
+            if (Math.sqrt(dx2 * dx2 + dy2 * dy2) < 25) {
+                isDragging = true;
+                dragTarget = particle2;
+                particle2.vx = 0;
+                particle2.vy = 0;
+                return;
+            }
+
+            // Teletransportar ambas
+            particle1.x = mx;
+            particle1.y = my;
+            particle1.vx = 0;
+            particle1.vy = 0;
+            particle1.trail = [];
+
+            particle2.x = mx + 0.1;
+            particle2.y = my + 0.1;
+            particle2.vx = 0;
+            particle2.vy = 0;
+            particle2.trail = [];
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging || !dragTarget) return;
+            const rect = canvas.getBoundingClientRect();
+            dragTarget.x = e.clientX - rect.left;
+            dragTarget.y = e.clientY - rect.top;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            dragTarget = null;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+            dragTarget = null;
+        });
+
+        // === INICIO ===
+        updateChordButtons();
+        resetParticles();
+        requestAnimationFrame(loop);
+    </script>
+</body>
+</html>

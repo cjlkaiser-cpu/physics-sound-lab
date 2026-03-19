@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tonnetz Grid - Teselacion Real</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 { font-size: 1.5rem; margin-bottom: 10px; color: #22c55e; }
+        .subtitle { color: #666; margin-bottom: 20px; font-size: 0.9rem; }
+        .subtitle code { color: #f59e0b; }
+
+        #canvas {
+            background: #111118;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .control-group {
+            background: #1a1a24;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .control-group .value {
+            font-size: 0.85rem;
+            color: #22c55e;
+            float: right;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+            accent-color: #22c55e;
+        }
+
+        .buttons {
+            grid-column: span 2;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #22c55e;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: #16a34a; }
+        button.secondary { background: #333; color: #e0e0e0; }
+        button.secondary:hover { background: #444; }
+
+        .theory-box {
+            grid-column: span 2;
+            background: #1a1a24;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #22c55e;
+        }
+
+        .theory-box h3 {
+            color: #22c55e;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .theory-box p {
+            font-size: 0.8rem;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        .plr-display {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .plr-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+        }
+
+        .plr-badge {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+
+        .plr-badge.p { background: #ef4444; color: white; }
+        .plr-badge.l { background: #f59e0b; color: white; }
+        .plr-badge.r { background: #3b82f6; color: white; }
+
+        .stats { margin-top: 15px; font-size: 0.75rem; color: #666; }
+
+        .legend {
+            grid-column: span 2;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            padding: 10px;
+            background: #1a1a24;
+            border-radius: 6px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tonnetz Grid Real</h1>
+    <p class="subtitle">Teselacion Triangular Perfecta | <code>24 Triadas</code> | P, L, R Verificables</p>
+
+    <canvas id="canvas" width="900" height="550"></canvas>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Fuerza Magnetica <span class="value" id="forceVal">100</span></label>
+            <input type="range" id="force" min="30" max="250" value="100">
+        </div>
+
+        <div class="control-group">
+            <label>Friccion <span class="value" id="frictionVal">0.003</span></label>
+            <input type="range" id="friction" min="0" max="30" value="3">
+        </div>
+
+        <div class="control-group">
+            <label>Velocidad Inicial <span class="value" id="velocityVal">8</span></label>
+            <input type="range" id="velocity" min="3" max="120" value="80">
+        </div>
+
+        <div class="control-group">
+            <label>Trail Length <span class="value" id="trailVal">500</span></label>
+            <input type="range" id="trail" min="50" max="1200" value="500">
+        </div>
+
+        <div class="buttons">
+            <button id="resetBtn">Reset Particula</button>
+            <button id="pauseBtn" class="secondary">Pausar</button>
+            <button id="fieldBtn" class="secondary">Campo: ON</button>
+            <button id="clearTrailBtn" class="secondary">Limpiar Trail</button>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(59, 130, 246, 0.4); border: 2px solid #3b82f6;"></div>
+                <span>Mayor (▽ apunta abajo)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(34, 197, 94, 0.4); border: 2px solid #22c55e;"></div>
+                <span>Menor (△ apunta arriba)</span>
+            </div>
+        </div>
+
+        <div class="theory-box">
+            <h3>Tonnetz Real - Teselacion Perfecta</h3>
+            <p>
+                Los triangulos <strong>no se solapan</strong>. Cada triangulo adyacente comparte exactamente
+                <strong>2 vertices</strong> (2 notas comunes). Moverse entre triangulos adyacentes
+                corresponde a una transformacion Neo-Riemanniana:
+            </p>
+            <div class="plr-display">
+                <div class="plr-item">
+                    <span class="plr-badge p">P</span>
+                    <span>Parallel: C ↔ Cm (cambia 3ra)</span>
+                </div>
+                <div class="plr-item">
+                    <span class="plr-badge l">L</span>
+                    <span>Leading-tone: C ↔ Em (cambia raiz)</span>
+                </div>
+                <div class="plr-item">
+                    <span class="plr-badge r">R</span>
+                    <span>Relative: C ↔ Am (cambia 5ta)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <script>
+        // === CONFIGURACION ===
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width;
+        const H = canvas.height;
+
+        // === PARAMETROS ===
+        let params = {
+            force: 100,
+            friction: 0.003,
+            initialVelocity: 8,
+            trailLength: 500
+        };
+
+        // === FRECUENCIAS CROMATICAS ===
+        const NOTE_FREQ = {
+            'C': 261.63, 'C#': 277.18, 'D': 293.66, 'Eb': 311.13,
+            'E': 329.63, 'F': 349.23, 'F#': 369.99, 'G': 392.00,
+            'Ab': 415.30, 'A': 440.00, 'Bb': 466.16, 'B': 493.88
+        };
+
+        const NOTE_COLORS = {
+            'C': '#ef4444', 'C#': '#f43f5e', 'D': '#06b6d4', 'Eb': '#84cc16',
+            'E': '#22c55e', 'F': '#8b5cf6', 'F#': '#a855f7', 'G': '#3b82f6',
+            'Ab': '#d946ef', 'A': '#f59e0b', 'Bb': '#f97316', 'B': '#ec4899'
+        };
+
+        // === TONNETZ GRID LAYOUT ===
+        // Teselacion triangular real: 4 filas x 5 columnas
+        // Filas pares: sin offset | Filas impares: offset +dx/2
+        // Triangulos apuntando abajo = Mayor | Apuntando arriba = Menor
+
+        const COLS = 5;
+        const ROWS = 4;
+        const DX = 140;  // Espaciado horizontal
+        const DY = 100;  // Espaciado vertical
+        const OFFSET_X = 120;  // Margen izquierdo
+        const OFFSET_Y = 100;  // Margen superior
+
+        // Notas por fila (siguiendo la estructura del Tonnetz)
+        // Horizontal = quintas, Diagonal = terceras
+        const ROW_NOTES = [
+            ['A', 'E', 'B', 'F#', 'C#'],   // Row 0 (bottom)
+            ['C', 'G', 'D', 'A', 'E'],      // Row 1 (offset)
+            ['Ab', 'Eb', 'Bb', 'F', 'C'],   // Row 2
+            ['B', 'F#', 'C#', 'Ab', 'Eb']   // Row 3 (offset, top)
+        ];
+
+        const nodes = [];
+        let nodeId = 0;
+
+        // Crear nodos
+        for (let row = 0; row < ROWS; row++) {
+            for (let col = 0; col < COLS; col++) {
+                const isOffset = row % 2 === 1;
+                const x = OFFSET_X + col * DX + (isOffset ? DX / 2 : 0);
+                const y = OFFSET_Y + (ROWS - 1 - row) * DY;  // Invertir Y para que row 0 esté abajo
+                const noteName = ROW_NOTES[row][col];
+
+                nodes.push({
+                    id: nodeId++,
+                    name: noteName,
+                    row: row,
+                    col: col,
+                    x: x,
+                    y: y,
+                    color: NOTE_COLORS[noteName],
+                    freq: NOTE_FREQ[noteName],
+                    glow: 0
+                });
+            }
+        }
+
+        // === GENERAR TRIANGULOS (TRIADAS) ===
+        const triangles = [];
+
+        function getNode(row, col) {
+            return nodes.find(n => n.row === row && n.col === col);
+        }
+
+        // Triangulos entre filas adyacentes
+        for (let row = 0; row < ROWS - 1; row++) {
+            const isLowerOffset = row % 2 === 1;
+            const isUpperOffset = (row + 1) % 2 === 1;
+
+            for (let col = 0; col < COLS - 1; col++) {
+                // Dos nodos en la fila inferior
+                const n1 = getNode(row, col);
+                const n2 = getNode(row, col + 1);
+
+                if (!n1 || !n2) continue;
+
+                // El nodo superior entre ellos
+                let upperCol;
+                if (isLowerOffset) {
+                    // Fila inferior tiene offset, superior no
+                    upperCol = col + 1;  // El nodo superior alineado entre ellos
+                } else {
+                    // Fila inferior sin offset, superior tiene offset
+                    upperCol = col;
+                }
+
+                const nUp = getNode(row + 1, upperCol);
+                if (!nUp) continue;
+
+                // Triangulo apuntando ARRIBA (menor)
+                // Base en fila inferior, apex en fila superior
+                const notesUp = [n1.name, n2.name, nUp.name].sort();
+                triangles.push({
+                    vertices: [n1, n2, nUp],
+                    notes: notesUp,
+                    type: 'minor',
+                    pointing: 'up'
+                });
+
+                // Triangulo apuntando ABAJO (mayor)
+                // Base en fila superior, apex en fila inferior
+                const nUp1 = getNode(row + 1, upperCol);
+                const nUp2 = getNode(row + 1, upperCol + (isLowerOffset ? 0 : 1));
+
+                if (nUp1 && nUp2 && nUp1 !== nUp2) {
+                    // Apex en fila inferior
+                    let lowerCol;
+                    if (isLowerOffset) {
+                        lowerCol = col + 1;
+                    } else {
+                        lowerCol = col + 1;
+                    }
+                    const nDown = getNode(row, lowerCol);
+
+                    if (nDown && nDown !== n1 && nDown !== n2) {
+                        const notesDown = [nUp1.name, nUp2.name, nDown.name].sort();
+                        // Evitar duplicados
+                        const exists = triangles.some(t =>
+                            t.notes.join(',') === notesDown.join(',') && t.type === 'major'
+                        );
+                        if (!exists) {
+                            triangles.push({
+                                vertices: [nUp1, nUp2, nDown],
+                                notes: notesDown,
+                                type: 'major',
+                                pointing: 'down'
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // Generar triangulos de forma mas directa
+        triangles.length = 0;
+
+        for (let row = 0; row < ROWS - 1; row++) {
+            for (let col = 0; col < COLS; col++) {
+                const isLowerOffset = row % 2 === 1;
+
+                // Nodos de la fila actual
+                const nCurrent = getNode(row, col);
+                const nRight = getNode(row, col + 1);
+
+                if (!nCurrent) continue;
+
+                // Triangulo hacia ARRIBA (apunta arriba = menor)
+                if (nRight) {
+                    // Buscar nodo arriba entre current y right
+                    let upperCol = isLowerOffset ? col + 1 : col;
+                    const nAbove = getNode(row + 1, upperCol);
+
+                    if (nAbove) {
+                        triangles.push({
+                            vertices: [nCurrent, nRight, nAbove],
+                            notes: [nCurrent.name, nRight.name, nAbove.name],
+                            type: 'minor',
+                            pointing: 'up',
+                            name: identifyChord([nCurrent.name, nRight.name, nAbove.name], 'minor')
+                        });
+                    }
+                }
+
+                // Triangulo hacia ABAJO (apunta abajo = mayor)
+                // Necesito dos nodos arriba y uno actual como apex
+                if (row > 0) {
+                    const isCurrentOffset = row % 2 === 1;
+                    let leftUpperCol = isCurrentOffset ? col - 1 : col - 1;
+                    let rightUpperCol = isCurrentOffset ? col : col;
+
+                    // Ajuste para filas offset
+                    if (!isCurrentOffset) {
+                        leftUpperCol = col;
+                        rightUpperCol = col + 1;
+                    } else {
+                        leftUpperCol = col - 1;
+                        rightUpperCol = col;
+                    }
+
+                    const nUpperLeft = getNode(row - 1, leftUpperCol);
+                    const nUpperRight = getNode(row - 1, rightUpperCol);
+
+                    // Triangulo con apex abajo... esto se complica
+                }
+            }
+        }
+
+        // Limpiar y regenerar triangulos de forma correcta
+        triangles.length = 0;
+
+        // Enfoque simplificado: iterar por pares de filas y crear triangulos geometricamente
+        for (let row = 0; row < ROWS - 1; row++) {
+            const lowerNodes = nodes.filter(n => n.row === row).sort((a, b) => a.col - b.col);
+            const upperNodes = nodes.filter(n => n.row === row + 1).sort((a, b) => a.col - b.col);
+
+            // Crear triangulos basados en proximidad geometrica
+            for (let i = 0; i < lowerNodes.length - 1; i++) {
+                const n1 = lowerNodes[i];
+                const n2 = lowerNodes[i + 1];
+
+                // Encontrar el nodo superior entre n1 y n2
+                const midX = (n1.x + n2.x) / 2;
+                const upperNode = upperNodes.reduce((closest, node) => {
+                    const distCurrent = Math.abs(node.x - midX);
+                    const distClosest = closest ? Math.abs(closest.x - midX) : Infinity;
+                    return distCurrent < distClosest ? node : closest;
+                }, null);
+
+                if (upperNode && Math.abs(upperNode.x - midX) < DX * 0.6) {
+                    // Triangulo apuntando arriba (menor)
+                    triangles.push({
+                        vertices: [n1, n2, upperNode],
+                        notes: [n1.name, n2.name, upperNode.name],
+                        type: 'minor',
+                        pointing: 'up',
+                        name: identifyChord([n1.name, n2.name, upperNode.name], 'minor')
+                    });
+                }
+            }
+
+            for (let i = 0; i < upperNodes.length - 1; i++) {
+                const n1 = upperNodes[i];
+                const n2 = upperNodes[i + 1];
+
+                // Encontrar el nodo inferior entre n1 y n2
+                const midX = (n1.x + n2.x) / 2;
+                const lowerNode = lowerNodes.reduce((closest, node) => {
+                    const distCurrent = Math.abs(node.x - midX);
+                    const distClosest = closest ? Math.abs(closest.x - midX) : Infinity;
+                    return distCurrent < distClosest ? node : closest;
+                }, null);
+
+                if (lowerNode && Math.abs(lowerNode.x - midX) < DX * 0.6) {
+                    // Triangulo apuntando abajo (mayor)
+                    triangles.push({
+                        vertices: [n1, n2, lowerNode],
+                        notes: [n1.name, n2.name, lowerNode.name],
+                        type: 'major',
+                        pointing: 'down',
+                        name: identifyChord([n1.name, n2.name, lowerNode.name], 'major')
+                    });
+                }
+            }
+        }
+
+        function identifyChord(noteArray, type) {
+            // Identificar el acorde basado en las notas
+            const notes = [...noteArray].sort();
+
+            // Mapa de acordes conocidos
+            const majorChords = {
+                'A,C#,E': 'A', 'Bb,D,F': 'Bb', 'B,Eb,F#': 'B', 'C,E,G': 'C',
+                'C#,F,Ab': 'C#', 'D,F#,A': 'D', 'Eb,G,Bb': 'Eb', 'E,Ab,B': 'E',
+                'F,A,C': 'F', 'F#,Bb,C#': 'F#', 'G,B,D': 'G', 'Ab,C,Eb': 'Ab'
+            };
+
+            const minorChords = {
+                'A,C,E': 'Am', 'Bb,C#,F': 'Bbm', 'B,D,F#': 'Bm', 'C,Eb,G': 'Cm',
+                'C#,E,Ab': 'C#m', 'D,F,A': 'Dm', 'Eb,F#,Bb': 'Ebm', 'E,G,B': 'Em',
+                'F,Ab,C': 'Fm', 'F#,A,C#': 'F#m', 'G,Bb,D': 'Gm', 'Ab,B,Eb': 'Abm'
+            };
+
+            const key = notes.join(',');
+
+            if (type === 'major') {
+                return majorChords[key] || notes.join('-');
+            } else {
+                return minorChords[key] || notes.join('-') + 'm';
+            }
+        }
+
+        // === PARTICULA ===
+        let particle = { x: 0, y: 0, vx: 0, vy: 0, trail: [] };
+
+        // === ESTADO ===
+        let paused = false;
+        let lastTime = 0;
+        let audioStarted = false;
+        let isDragging = false;
+        let currentTriangle = null;
+        let lastTriangleTime = 0;
+        const CHORD_COOLDOWN = 300;
+
+        // === AUDIO ===
+        let audioCtx = null;
+        let masterGain = null;
+
+        async function initAudio() {
+            if (audioCtx) {
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                return;
+            }
+
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            await audioCtx.resume();
+
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.35;
+
+            // Reverb
+            const convolver = audioCtx.createConvolver();
+            const reverbGain = audioCtx.createGain();
+            reverbGain.gain.value = 0.4;
+
+            const reverbTime = 2.5;
+            const length = audioCtx.sampleRate * reverbTime;
+            const impulse = audioCtx.createBuffer(2, length, audioCtx.sampleRate);
+
+            for (let channel = 0; channel < 2; channel++) {
+                const data = impulse.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    const decay = Math.exp(-i / (audioCtx.sampleRate * 0.8));
+                    const noise = (Math.random() * 2 - 1);
+                    data[i] = noise * decay * 0.5;
+                }
+            }
+            convolver.buffer = impulse;
+
+            const preDelay = audioCtx.createDelay();
+            preDelay.delayTime.value = 0.03;
+
+            const reverbFilter = audioCtx.createBiquadFilter();
+            reverbFilter.type = 'lowpass';
+            reverbFilter.frequency.value = 4000;
+
+            masterGain.connect(audioCtx.destination);
+            masterGain.connect(preDelay);
+            preDelay.connect(convolver);
+            convolver.connect(reverbFilter);
+            reverbFilter.connect(reverbGain);
+            reverbGain.connect(audioCtx.destination);
+
+            audioStarted = true;
+        }
+
+        function playNote(freq, velocity = 1) {
+            if (!audioCtx || !audioStarted) return;
+
+            const now = audioCtx.currentTime;
+            const attack = 0.06, decay = 0.15, sustain = 0.4, release = 1.0;
+            const totalTime = attack + decay + release;
+
+            const osc1 = audioCtx.createOscillator();
+            osc1.type = 'sine';
+            osc1.frequency.value = freq;
+
+            const osc2 = audioCtx.createOscillator();
+            osc2.type = 'triangle';
+            osc2.frequency.value = freq;
+            osc2.detune.value = 5;
+
+            const oscMix = audioCtx.createGain();
+            const gain1 = audioCtx.createGain();
+            gain1.gain.value = 0.6;
+            const gain2 = audioCtx.createGain();
+            gain2.gain.value = 0.3;
+
+            osc1.connect(gain1);
+            osc2.connect(gain2);
+            gain1.connect(oscMix);
+            gain2.connect(oscMix);
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 1800 + velocity * 2500;
+
+            const env = audioCtx.createGain();
+            const peakGain = velocity * 0.3;
+
+            env.gain.setValueAtTime(0, now);
+            env.gain.linearRampToValueAtTime(peakGain, now + attack);
+            env.gain.linearRampToValueAtTime(peakGain * sustain, now + attack + decay);
+            env.gain.exponentialRampToValueAtTime(0.001, now + totalTime);
+
+            oscMix.connect(filter);
+            filter.connect(env);
+            env.connect(masterGain);
+
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + totalTime);
+            osc2.stop(now + totalTime);
+        }
+
+        // === GEOMETRIA ===
+        function pointInTriangle(px, py, v0, v1, v2) {
+            const ax = v0.x, ay = v0.y;
+            const bx = v1.x, by = v1.y;
+            const cx = v2.x, cy = v2.y;
+
+            const v0x = cx - ax, v0y = cy - ay;
+            const v1x = bx - ax, v1y = by - ay;
+            const v2x = px - ax, v2y = py - ay;
+
+            const dot00 = v0x * v0x + v0y * v0y;
+            const dot01 = v0x * v1x + v0y * v1y;
+            const dot02 = v0x * v2x + v0y * v2y;
+            const dot11 = v1x * v1x + v1y * v1y;
+            const dot12 = v1x * v2x + v1y * v2y;
+
+            const inv = 1 / (dot00 * dot11 - dot01 * dot01);
+            const u = (dot11 * dot02 - dot01 * dot12) * inv;
+            const v = (dot00 * dot12 - dot01 * dot02) * inv;
+
+            return (u >= 0) && (v >= 0) && (u + v <= 1);
+        }
+
+        function checkTriangle() {
+            const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
+            const now = performance.now();
+
+            // Decay glow
+            for (const node of nodes) {
+                node.glow *= 0.93;
+            }
+
+            // Find triangle
+            let foundTriangle = null;
+
+            for (const tri of triangles) {
+                const [v0, v1, v2] = tri.vertices;
+                if (pointInTriangle(particle.x, particle.y, v0, v1, v2)) {
+                    foundTriangle = tri;
+                    break;
+                }
+            }
+
+            if (foundTriangle && foundTriangle !== currentTriangle &&
+                (now - lastTriangleTime) > CHORD_COOLDOWN) {
+
+                currentTriangle = foundTriangle;
+                lastTriangleTime = now;
+
+                // Glow
+                for (const vertex of foundTriangle.vertices) {
+                    vertex.glow = 1;
+                }
+
+                // Play chord
+                if (audioStarted && audioCtx && audioCtx.state === 'running') {
+                    const velocity = Math.min(1, speed / 6);
+                    foundTriangle.notes.forEach((noteName, i) => {
+                        setTimeout(() => {
+                            playNote(NOTE_FREQ[noteName], 0.35 + velocity * 0.35);
+                        }, i * 20);
+                    });
+                }
+            } else if (!foundTriangle) {
+                currentTriangle = null;
+            }
+        }
+
+        // === FISICA ===
+        function resetParticle() {
+            // Start in middle of grid
+            const centerX = OFFSET_X + (COLS - 1) * DX / 2 + DX / 4;
+            const centerY = OFFSET_Y + (ROWS - 1) * DY / 2;
+
+            particle.x = centerX + (Math.random() - 0.5) * 100;
+            particle.y = centerY + (Math.random() - 0.5) * 80;
+
+            const angle = Math.random() * Math.PI * 2;
+            particle.vx = params.initialVelocity * Math.cos(angle);
+            particle.vy = params.initialVelocity * Math.sin(angle);
+            particle.trail = [];
+        }
+
+        function updatePhysics(dt) {
+            if (paused || isDragging) return;
+
+            const steps = 6;
+            const subDt = dt / steps;
+
+            for (let step = 0; step < steps; step++) {
+                let fx = 0, fy = 0;
+
+                for (const node of nodes) {
+                    const dx = node.x - particle.x;
+                    const dy = node.y - particle.y;
+                    const distSq = dx * dx + dy * dy;
+                    const dist = Math.sqrt(distSq);
+                    const safeDist = Math.max(dist, 25);
+
+                    // Fuerza 1/r^3
+                    const forceMag = params.force * 12000 / (safeDist * safeDist * safeDist);
+                    fx += forceMag * dx / dist;
+                    fy += forceMag * dy / dist;
+                }
+
+                fx -= params.friction * particle.vx;
+                fy -= params.friction * particle.vy;
+
+                particle.vx += fx * subDt;
+                particle.vy += fy * subDt;
+                particle.x += particle.vx * subDt;
+                particle.y += particle.vy * subDt;
+            }
+
+            particle.trail.push({ x: particle.x, y: particle.y });
+            if (particle.trail.length > params.trailLength) {
+                particle.trail.shift();
+            }
+
+            // Bounds
+            const margin = 40;
+            if (particle.x < margin) { particle.x = margin; particle.vx *= -0.5; }
+            if (particle.x > W - margin) { particle.x = W - margin; particle.vx *= -0.5; }
+            if (particle.y < margin) { particle.y = margin; particle.vy *= -0.5; }
+            if (particle.y > H - margin) { particle.y = H - margin; particle.vy *= -0.5; }
+        }
+
+        // === CAMPO ===
+        let fieldImageData = null;
+        let showField = true;
+
+        function calculateField() {
+            const resolution = 10;
+            fieldImageData = ctx.createImageData(W, H);
+
+            for (let y = 0; y < H; y += resolution) {
+                for (let x = 0; x < W; x += resolution) {
+                    let potential = 0;
+                    for (const node of nodes) {
+                        const dx = node.x - x;
+                        const dy = node.y - y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        const safeDist = Math.max(dist, 25);
+                        potential += -1 / (safeDist * safeDist);
+                    }
+
+                    const normalized = Math.min(1, Math.max(0, (-potential - 0.00003) / 0.0003));
+                    const r = Math.floor(normalized * 60);
+                    const g = Math.floor(normalized * 80);
+                    const b = Math.floor(normalized * 50);
+
+                    for (let py = y; py < Math.min(y + resolution, H); py++) {
+                        for (let px = x; px < Math.min(x + resolution, W); px++) {
+                            const idx = (py * W + px) * 4;
+                            fieldImageData.data[idx] = 17 + r;
+                            fieldImageData.data[idx + 1] = 17 + g;
+                            fieldImageData.data[idx + 2] = 24 + b;
+                            fieldImageData.data[idx + 3] = 255;
+                        }
+                    }
+                }
+            }
+        }
+
+        calculateField();
+
+        // === RENDERIZADO ===
+        function draw() {
+            if (showField && fieldImageData) {
+                ctx.putImageData(fieldImageData, 0, 0);
+            } else {
+                ctx.fillStyle = '#111118';
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            // Draw triangles
+            for (const tri of triangles) {
+                const [v0, v1, v2] = tri.vertices;
+                const isActive = currentTriangle === tri;
+                const isMajor = tri.type === 'major';
+
+                ctx.beginPath();
+                ctx.moveTo(v0.x, v0.y);
+                ctx.lineTo(v1.x, v1.y);
+                ctx.lineTo(v2.x, v2.y);
+                ctx.closePath();
+
+                if (isActive) {
+                    ctx.fillStyle = isMajor ? 'rgba(59, 130, 246, 0.25)' : 'rgba(34, 197, 94, 0.25)';
+                    ctx.fill();
+                    ctx.strokeStyle = isMajor ? '#3b82f6' : '#22c55e';
+                    ctx.lineWidth = 2.5;
+                } else {
+                    ctx.fillStyle = isMajor ? 'rgba(59, 130, 246, 0.08)' : 'rgba(34, 197, 94, 0.08)';
+                    ctx.fill();
+                    ctx.strokeStyle = isMajor ? 'rgba(59, 130, 246, 0.3)' : 'rgba(34, 197, 94, 0.3)';
+                    ctx.lineWidth = 1;
+                }
+                ctx.stroke();
+
+                // Chord name
+                const cx = (v0.x + v1.x + v2.x) / 3;
+                const cy = (v0.y + v1.y + v2.y) / 3;
+                ctx.font = isActive ? 'bold 13px SF Mono, Consolas, monospace' : '10px SF Mono, Consolas, monospace';
+                ctx.fillStyle = isActive ? (isMajor ? '#3b82f6' : '#22c55e') : '#555';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(tri.name || '', cx, cy);
+            }
+
+            // Trail
+            if (particle.trail.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(particle.trail[0].x, particle.trail[0].y);
+                for (let i = 1; i < particle.trail.length; i++) {
+                    ctx.lineTo(particle.trail[i].x, particle.trail[i].y);
+                }
+
+                const gradient = ctx.createLinearGradient(
+                    particle.trail[0].x, particle.trail[0].y,
+                    particle.x, particle.y
+                );
+                gradient.addColorStop(0, 'rgba(34, 197, 94, 0)');
+                gradient.addColorStop(1, 'rgba(34, 197, 94, 0.8)');
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Nodes
+            for (const node of nodes) {
+                const glowSize = 30 + node.glow * 25;
+                const glowOpacity = Math.floor(40 + node.glow * 180).toString(16).padStart(2, '0');
+
+                const glowGradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowSize);
+                glowGradient.addColorStop(0, node.color + glowOpacity);
+                glowGradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = glowGradient;
+                ctx.fillRect(node.x - glowSize, node.y - glowSize, glowSize * 2, glowSize * 2);
+
+                const nodeSize = 16 + node.glow * 6;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, nodeSize, 0, Math.PI * 2);
+                ctx.fillStyle = node.color;
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 11px SF Mono, Consolas, monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.name, node.x, node.y);
+            }
+
+            // Particle
+            ctx.beginPath();
+            ctx.arc(particle.x, particle.y, 7, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+
+            // Velocity vector
+            const velScale = 6;
+            ctx.beginPath();
+            ctx.moveTo(particle.x, particle.y);
+            ctx.lineTo(particle.x + particle.vx * velScale, particle.y + particle.vy * velScale);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Stats
+            const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
+            const majorCount = triangles.filter(t => t.type === 'major').length;
+            const minorCount = triangles.filter(t => t.type === 'minor').length;
+            document.getElementById('stats').textContent =
+                `Triangulos: ${triangles.length} (${majorCount} mayores, ${minorCount} menores) | ` +
+                `Nodos: ${nodes.length} | ` +
+                `Acorde: ${currentTriangle ? currentTriangle.name : '-'} | ` +
+                `Vel: ${speed.toFixed(1)}`;
+        }
+
+        // === LOOP ===
+        function loop(time) {
+            const dt = Math.min((time - lastTime) / 1000, 0.05);
+            lastTime = time;
+
+            updatePhysics(dt);
+            checkTriangle();
+            draw();
+
+            requestAnimationFrame(loop);
+        }
+
+        // === CONTROLS ===
+        document.getElementById('force').addEventListener('input', (e) => {
+            params.force = parseFloat(e.target.value);
+            document.getElementById('forceVal').textContent = params.force;
+        });
+
+        document.getElementById('friction').addEventListener('input', (e) => {
+            params.friction = parseFloat(e.target.value) / 1000;
+            document.getElementById('frictionVal').textContent = params.friction.toFixed(3);
+        });
+
+        document.getElementById('velocity').addEventListener('input', (e) => {
+            params.initialVelocity = parseFloat(e.target.value) / 10;
+            document.getElementById('velocityVal').textContent = params.initialVelocity.toFixed(0);
+        });
+
+        document.getElementById('trail').addEventListener('input', (e) => {
+            params.trailLength = parseInt(e.target.value);
+            document.getElementById('trailVal').textContent = params.trailLength;
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', async () => {
+            await initAudio();
+            resetParticle();
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            paused = !paused;
+            document.getElementById('pauseBtn').textContent = paused ? 'Reanudar' : 'Pausar';
+        });
+
+        document.getElementById('clearTrailBtn').addEventListener('click', () => {
+            particle.trail = [];
+        });
+
+        document.getElementById('fieldBtn').addEventListener('click', () => {
+            showField = !showField;
+            document.getElementById('fieldBtn').textContent = `Campo: ${showField ? 'ON' : 'OFF'}`;
+        });
+
+        // Mouse
+        canvas.addEventListener('mousedown', async (e) => {
+            await initAudio();
+            const rect = canvas.getBoundingClientRect();
+            const mx = (e.clientX - rect.left) * (W / rect.width);
+            const my = (e.clientY - rect.top) * (H / rect.height);
+
+            const dx = mx - particle.x;
+            const dy = my - particle.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < 25) {
+                isDragging = true;
+                particle.vx = 0;
+                particle.vy = 0;
+            } else {
+                particle.x = mx;
+                particle.y = my;
+                particle.vx = 0;
+                particle.vy = 0;
+                particle.trail = [];
+                isDragging = true;
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const rect = canvas.getBoundingClientRect();
+            particle.x = (e.clientX - rect.left) * (W / rect.width);
+            particle.y = (e.clientY - rect.top) * (H / rect.height);
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+
+        // === START ===
+        resetParticle();
+        requestAnimationFrame(loop);
+    </script>
+</body>
+</html>

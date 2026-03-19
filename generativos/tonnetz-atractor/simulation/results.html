@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tonnetz Grid Simulation Results</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #1a1a24;
+            --bg-tertiary: #252532;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888;
+            --accent-green: #22c55e;
+            --accent-blue: #3b82f6;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid var(--bg-tertiary);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--accent-green);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .meta {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            background: var(--bg-secondary);
+            padding: 10px 20px;
+            border-radius: 6px;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .meta-item span {
+            color: var(--accent-green);
+            font-weight: bold;
+        }
+
+        section {
+            margin-bottom: 50px;
+        }
+
+        h2 {
+            color: var(--accent-green);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--bg-tertiary);
+        }
+
+        h3 {
+            color: var(--accent-blue);
+            font-size: 1.1rem;
+            margin: 25px 0 15px 0;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            color: var(--accent-orange);
+            font-size: 1.2rem;
+        }
+
+        .badge {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .badge.blue { background: var(--accent-blue); }
+        .badge.orange { background: var(--accent-orange); }
+        .badge.red { background: var(--accent-red); }
+        .badge.purple { background: var(--accent-purple); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--bg-tertiary);
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .highlight {
+            color: var(--accent-green);
+            font-weight: bold;
+        }
+
+        .warning {
+            color: var(--accent-red);
+        }
+
+        .code-block {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            margin: 15px 0;
+        }
+
+        .code-block code {
+            color: var(--text-primary);
+        }
+
+        .code-block .comment { color: #6a9955; }
+        .code-block .keyword { color: var(--accent-purple); }
+        .code-block .string { color: var(--accent-orange); }
+        .code-block .number { color: var(--accent-blue); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border-top: 3px solid var(--accent-blue);
+        }
+
+        .stat-card.green { border-top-color: var(--accent-green); }
+        .stat-card.orange { border-top-color: var(--accent-orange); }
+        .stat-card.red { border-top-color: var(--accent-red); }
+        .stat-card.purple { border-top-color: var(--accent-purple); }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--accent-green);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .stat-detail {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+
+        .comparison-table {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .comparison-table th {
+            text-align: center;
+        }
+
+        .comparison-table td {
+            text-align: center;
+        }
+
+        .comparison-table .method-col {
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .bar-chart {
+            margin: 20px 0;
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .bar-label {
+            width: 120px;
+            font-size: 0.9rem;
+        }
+
+        .bar-container {
+            flex: 1;
+            background: var(--bg-tertiary);
+            height: 30px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--bg-primary);
+            transition: width 0.5s ease;
+        }
+
+        .bar.p { background: var(--accent-red); }
+        .bar.l { background: var(--accent-orange); }
+        .bar.r { background: var(--accent-blue); }
+
+        .formula {
+            background: var(--bg-tertiary);
+            padding: 15px 25px;
+            border-radius: 6px;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2rem;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .conclusion-box {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-radius: 8px;
+            padding: 30px;
+            border-left: 4px solid var(--accent-green);
+        }
+
+        .conclusion-box h3 {
+            color: var(--accent-green);
+            margin-bottom: 15px;
+        }
+
+        .conclusion-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .conclusion-box li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .conclusion-box li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--accent-green);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .tech-badge {
+            background: var(--bg-tertiary);
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            border: 1px solid var(--bg-tertiary);
+        }
+
+        .tech-badge:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .file-tree {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .file-tree .folder { color: var(--accent-blue); }
+        .file-tree .file { color: var(--text-primary); }
+        .file-tree .comment { color: var(--text-secondary); font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Tonnetz Grid Simulation Results</h1>
+            <p class="subtitle">Chaotic Harmonic Generation - Quantitative Analysis</p>
+            <div class="meta">
+                <div class="meta-item">Total Simulations: <span>450</span></div>
+                <div class="meta-item">Duration: <span>60s each</span></div>
+                <div class="meta-item">Date: <span>December 13, 2024</span></div>
+            </div>
+        </header>
+
+        <!-- Technical Stack -->
+        <section>
+            <h2>1. Technical Stack</h2>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Architecture</span>
+                    <span class="badge blue">Headless Simulation</span>
+                </div>
+                <p>Sistema de simulacion batch sin renderizado visual para recoleccion masiva de datos.</p>
+
+                <h3>Technologies</h3>
+                <div class="tech-stack">
+                    <span class="tech-badge">Node.js v18+</span>
+                    <span class="tech-badge">better-sqlite3</span>
+                    <span class="tech-badge">Python 3.9+</span>
+                    <span class="tech-badge">pandas</span>
+                    <span class="tech-badge">SQLite3</span>
+                </div>
+
+                <h3>File Structure</h3>
+                <div class="file-tree">
+<pre>
+<span class="folder">simulation/</span>
+├── <span class="file">simulator.js</span>      <span class="comment"># Headless physics engine</span>
+├── <span class="file">run_batch.js</span>      <span class="comment"># Batch runner with SQLite</span>
+├── <span class="file">analyze.py</span>        <span class="comment"># Statistical analysis</span>
+├── <span class="file">package.json</span>      <span class="comment"># npm dependencies</span>
+├── <span class="file">results.db</span>        <span class="comment"># SQLite database (450 sims)</span>
+└── <span class="folder">output/</span>
+    ├── <span class="file">table1_results.csv</span>
+    ├── <span class="file">transition_matrix.csv</span>
+    ├── <span class="file">coverage_histogram.csv</span>
+    └── <span class="file">sample_sequences.json</span>
+</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Configuration -->
+        <section>
+            <h2>2. Simulation Configuration</h2>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Physics Model</span>
+                        <span class="badge green">1/r³ Force Law</span>
+                    </div>
+                    <div class="formula">
+                        F = k / r³
+                    </div>
+                    <p>Fuerza de atraccion inversamente proporcional al cubo de la distancia. Proporciona mejor estabilidad numerica y atraccion mas localizada que 1/r².</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Tonnetz Grid</span>
+                        <span class="badge purple">4×5 Nodes</span>
+                    </div>
+                    <table>
+                        <tr><td>Nodes</td><td class="highlight">20</td></tr>
+                        <tr><td>Triangles</td><td class="highlight">24</td></tr>
+                        <tr><td>Major triads</td><td>12</td></tr>
+                        <tr><td>Minor triads</td><td>12</td></tr>
+                        <tr><td>Canvas</td><td>900×550 px</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Default Parameters</span>
+                </div>
+                <div class="code-block">
+<code><span class="keyword">const</span> params = {
+    <span class="string">force</span>: <span class="number">100</span>,           <span class="comment">// Magnetic attraction strength</span>
+    <span class="string">friction</span>: <span class="number">0.003</span>,      <span class="comment">// Damping coefficient</span>
+    <span class="string">initialVelocity</span>: <span class="number">8</span>,  <span class="comment">// Starting speed (px/frame)</span>
+    <span class="string">chordCooldown</span>: <span class="number">300</span>,  <span class="comment">// ms between chord triggers</span>
+    <span class="string">dt</span>: <span class="number">16.67</span>,           <span class="comment">// Time step (~60fps)</span>
+    <span class="string">subSteps</span>: <span class="number">6</span>          <span class="comment">// Physics subdivisions per frame</span>
+};</code>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Simulation Batches</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Batch</th>
+                            <th>n</th>
+                            <th>Duration</th>
+                            <th>Parameters</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Default</td>
+                            <td class="highlight">100</td>
+                            <td>60s</td>
+                            <td>Standard config</td>
+                            <td>Main results</td>
+                        </tr>
+                        <tr>
+                            <td>Parameter Sweep</td>
+                            <td class="highlight">240</td>
+                            <td>60s</td>
+                            <td>6 force × 4 friction × 10</td>
+                            <td>Sensitivity analysis</td>
+                        </tr>
+                        <tr>
+                            <td>Random Baseline</td>
+                            <td class="highlight">100</td>
+                            <td>60s</td>
+                            <td>Uniform random selection</td>
+                            <td>Control group</td>
+                        </tr>
+                        <tr style="background: var(--bg-tertiary);">
+                            <td><strong>Total</strong></td>
+                            <td class="highlight"><strong>450</strong></td>
+                            <td><strong>7.5 hours</strong></td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Results Overview -->
+        <section>
+            <h2>3. Results Overview</h2>
+
+            <div class="grid">
+                <div class="stat-card green">
+                    <div class="stat-value">70.2%</div>
+                    <div class="stat-label">Adjacency Rate</div>
+                    <div class="stat-detail">Chaotic (vs 8% random)</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-value">0.65</div>
+                    <div class="stat-label">Avg Voice Leading</div>
+                    <div class="stat-detail">semitones (vs 4.2 random)</div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-value">55.0</div>
+                    <div class="stat-label">Transitions / 60s</div>
+                    <div class="stat-detail">±26.8 std dev</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">6.4</div>
+                    <div class="stat-label">Unique Chords</div>
+                    <div class="stat-detail">of 24 total triads</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Table -->
+        <section>
+            <h2>4. Method Comparison</h2>
+
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="method-col">Metric</th>
+                            <th>Random Baseline</th>
+                            <th style="background: var(--accent-green); color: var(--bg-primary);">Chaotic (Ours)</th>
+                            <th>Improvement</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="method-col">Sample Size</td>
+                            <td>n = 100</td>
+                            <td>n = 350</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td class="method-col">Adjacency Rate</td>
+                            <td class="warning">8.0%</td>
+                            <td class="highlight">70.2%</td>
+                            <td class="highlight">+778%</td>
+                        </tr>
+                        <tr>
+                            <td class="method-col">Voice Leading (st)</td>
+                            <td class="warning">4.20</td>
+                            <td class="highlight">0.65</td>
+                            <td class="highlight">-85%</td>
+                        </tr>
+                        <tr>
+                            <td class="method-col">Transitions / 60s</td>
+                            <td>60.0 ± 0.0</td>
+                            <td>55.0 ± 26.8</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td class="method-col">Unique Chords</td>
+                            <td>22.4 ± 1.2</td>
+                            <td>6.4 ± 1.3</td>
+                            <td>Focused exploration</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <span class="card-title">Interpretation</span>
+                </div>
+                <ul style="padding-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Adjacency Rate:</strong> The chaotic system achieves 70% adjacent transitions vs only 8% for random selection. This means the particle naturally moves between neighboring triangles in the Tonnetz, producing Neo-Riemannian transformations.</li>
+                    <li style="margin-top: 10px;"><strong>Voice Leading:</strong> Average movement of 0.65 semitones confirms parsimonious voice leading - voices move by small intervals (mostly 1-2 semitones).</li>
+                    <li style="margin-top: 10px;"><strong>Coverage:</strong> The chaotic system explores fewer unique chords (6.4 vs 22.4) because it moves through connected regions rather than jumping randomly. This is a feature, not a bug - it creates coherent harmonic journeys.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Transformation Distribution -->
+        <section>
+            <h2>5. Transformation Distribution</h2>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Neo-Riemannian Operations (n=350 chaotic simulations)</span>
+                </div>
+
+                <div class="bar-chart">
+                    <div class="bar-row">
+                        <div class="bar-label">P (Parallel)</div>
+                        <div class="bar-container">
+                            <div class="bar p" style="width: 56.9%;">56.9%</div>
+                        </div>
+                    </div>
+                    <div class="bar-row">
+                        <div class="bar-label">R (Relative)</div>
+                        <div class="bar-container">
+                            <div class="bar r" style="width: 30.0%;">30.0%</div>
+                        </div>
+                    </div>
+                    <div class="bar-row">
+                        <div class="bar-label">L (Leading-tone)</div>
+                        <div class="bar-container">
+                            <div class="bar l" style="width: 13.0%;">13.0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <table style="margin-top: 20px;">
+                    <thead>
+                        <tr>
+                            <th>Transformation</th>
+                            <th>Count</th>
+                            <th>Percentage</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge red">P</span> Parallel</td>
+                            <td>8,575</td>
+                            <td>56.9%</td>
+                            <td>C ↔ Cm (changes 3rd by 1 semitone)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge blue">R</span> Relative</td>
+                            <td>4,523</td>
+                            <td>30.0%</td>
+                            <td>C ↔ Am (changes 5th by 2 semitones)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge orange">L</span> Leading-tone</td>
+                            <td>1,960</td>
+                            <td>13.0%</td>
+                            <td>C ↔ Em (changes root by 1 semitone)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 20px; padding: 15px; background: var(--bg-tertiary); border-radius: 6px;">
+                    <p><strong>Key Finding:</strong> P transformations dominate (57%), indicating the particle frequently oscillates between major and minor versions of the same root. This creates characteristic "modal shimmer" - the harmonic equivalent of tremolo between parallel modes.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Parameter Sensitivity -->
+        <section>
+            <h2>6. Parameter Sensitivity Analysis</h2>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Force vs Friction Effects (n=10 per combination)</span>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Force</th>
+                            <th>Friction</th>
+                            <th>Adjacency</th>
+                            <th>Transitions</th>
+                            <th>Voice Leading</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>50</td>
+                            <td>0.001</td>
+                            <td class="highlight">89.0%</td>
+                            <td>35.5</td>
+                            <td>0.63</td>
+                        </tr>
+                        <tr>
+                            <td>75</td>
+                            <td>0.001</td>
+                            <td class="highlight">80.8%</td>
+                            <td>48.1</td>
+                            <td>0.74</td>
+                        </tr>
+                        <tr>
+                            <td>100</td>
+                            <td>0.003</td>
+                            <td>67.0%</td>
+                            <td>50.9</td>
+                            <td>0.59</td>
+                        </tr>
+                        <tr>
+                            <td>150</td>
+                            <td>0.005</td>
+                            <td class="warning">55.7%</td>
+                            <td>81.3</td>
+                            <td>0.64</td>
+                        </tr>
+                        <tr>
+                            <td>200</td>
+                            <td>0.01</td>
+                            <td class="warning">55.8%</td>
+                            <td>75.4</td>
+                            <td>0.76</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 20px; padding: 15px; background: var(--bg-tertiary); border-radius: 6px;">
+                    <p><strong>Observations:</strong></p>
+                    <ul style="margin-top: 10px; padding-left: 20px;">
+                        <li>Lower force + lower friction = highest adjacency (up to 89%)</li>
+                        <li>Higher force = more transitions but lower adjacency</li>
+                        <li>Voice leading remains consistently low (0.5-0.8 st) across all configs</li>
+                        <li>Optimal config for coherence: Force=50-75, Friction=0.001</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Database Schema -->
+        <section>
+            <h2>7. Database Schema</h2>
+
+            <div class="card">
+                <div class="code-block">
+<code><span class="comment">-- Simulation metadata</span>
+<span class="keyword">CREATE TABLE</span> simulations (
+    id <span class="keyword">INTEGER PRIMARY KEY</span>,
+    timestamp <span class="keyword">TEXT</span>,
+    batch_name <span class="keyword">TEXT</span>,
+    duration_ms <span class="keyword">INTEGER</span>,
+    force <span class="keyword">REAL</span>,
+    friction <span class="keyword">REAL</span>,
+    initial_velocity <span class="keyword">REAL</span>
+);
+
+<span class="comment">-- Individual chord events</span>
+<span class="keyword">CREATE TABLE</span> chord_events (
+    id <span class="keyword">INTEGER PRIMARY KEY</span>,
+    simulation_id <span class="keyword">INTEGER</span>,
+    timestamp_ms <span class="keyword">REAL</span>,
+    chord_name <span class="keyword">TEXT</span>,
+    chord_type <span class="keyword">TEXT</span>,  <span class="comment">-- 'major' or 'minor'</span>
+    transformation <span class="keyword">TEXT</span>,  <span class="comment">-- 'P', 'L', 'R'</span>
+    is_adjacent <span class="keyword">INTEGER</span>,
+    voice_leading <span class="keyword">REAL</span>
+);
+
+<span class="comment">-- Aggregated statistics per simulation</span>
+<span class="keyword">CREATE TABLE</span> statistics (
+    simulation_id <span class="keyword">INTEGER PRIMARY KEY</span>,
+    total_transitions <span class="keyword">INTEGER</span>,
+    unique_chords <span class="keyword">INTEGER</span>,
+    adjacency_rate <span class="keyword">REAL</span>,
+    avg_voice_leading <span class="keyword">REAL</span>,
+    p_count <span class="keyword">INTEGER</span>,
+    l_count <span class="keyword">INTEGER</span>,
+    r_count <span class="keyword">INTEGER</span>,
+    chord_sequence <span class="keyword">TEXT</span>
+);</code>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conclusions -->
+        <section>
+            <h2>8. Conclusions</h2>
+
+            <div class="conclusion-box">
+                <h3>Key Findings</h3>
+                <ul>
+                    <li>The chaotic pendulum system achieves <strong>70% adjacency rate</strong> compared to 8% for random selection</li>
+                    <li>Voice leading averages <strong>0.65 semitones</strong> - confirming parsimonious motion</li>
+                    <li><strong>P transformations dominate (57%)</strong>, creating modal oscillation patterns</li>
+                    <li>Lower force/friction configurations maximize coherence (up to 89% adjacency)</li>
+                    <li>The system produces <strong>non-repeating</strong> yet <strong>locally coherent</strong> progressions</li>
+                </ul>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <span class="card-title">Implications for the Paper</span>
+                </div>
+                <p>These quantitative results support the central thesis: chaotic dynamics constrained to the Tonnetz topology produce musically coherent output. The 70% adjacency rate demonstrates that the physical simulation naturally follows Neo-Riemannian voice-leading principles without explicit rules.</p>
+                <p style="margin-top: 15px;">The dominance of P transformations suggests the system has an inherent tendency toward modal ambiguity - a characteristic valued in contemporary harmonic practice and ambient music.</p>
+            </div>
+        </section>
+
+        <!-- Reproduction -->
+        <section>
+            <h2>9. Reproduction</h2>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Run Simulations</span>
+                </div>
+                <div class="code-block">
+<code><span class="comment"># Install dependencies</span>
+cd simulation
+npm install
+
+<span class="comment"># Quick test (10 simulations, 10s each)</span>
+node run_batch.js quick
+
+<span class="comment"># Full default batch (100 simulations, 60s each)</span>
+node run_batch.js default 100 60000
+
+<span class="comment"># Parameter sweep</span>
+node run_batch.js sweep 10 60000
+
+<span class="comment"># Random baseline</span>
+node run_batch.js random 100 60000
+
+<span class="comment"># Run analysis</span>
+python3 analyze.py</code>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>Tonnetz Grid Simulation Results | Generated December 13, 2024</p>
+            <p style="margin-top: 10px;">Part of the research paper: "Chaotic Harmonic Generation on the Tonnetz"</p>
+        </footer>
+    </div>
+</body>
+</html>

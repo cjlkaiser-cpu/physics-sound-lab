@@ -1,0 +1,4 @@
+node_modules/
+results.db
+.DS_Store
+output/

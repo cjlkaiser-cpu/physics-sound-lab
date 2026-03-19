@@ -1,0 +1,19 @@
+{
+  "name": "tonnetz-simulation",
+  "version": "1.0.0",
+  "description": "Batch simulation runner for Tonnetz Grid research",
+  "main": "run_batch.js",
+  "scripts": {
+    "quick": "node run_batch.js quick",
+    "default": "node run_batch.js default 100 60000",
+    "sweep": "node run_batch.js sweep 10 60000",
+    "random": "node run_batch.js random 100 60000",
+    "all": "node run_batch.js all",
+    "analyze": "python3 analyze.py"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.3"
+  },
+  "author": "Carlos",
+  "license": "MIT"
+}
