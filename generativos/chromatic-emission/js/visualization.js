@@ -440,50 +440,64 @@ class SetClassVisualization {
   }
 
   /**
-   * Dibujar la órbita actual de la partícula
+   * Dibujar la órbita central de la partícula alrededor del centro del canvas
    */
   drawParticleOrbit(ctx, particle, physicsSystem) {
-    if (!particle.orbitCenter) return;
+    if (!physicsSystem || !physicsSystem.orbitCenter) return;
 
-    const center = particle.orbitCenter;
-    const radius = physicsSystem ? physicsSystem.getOrbitRadius(particle.energyLevel) : 20;
+    // Centro = centro del canvas
+    const center = physicsSystem.orbitCenter;
+    const radius = physicsSystem.getCurrentOrbitRadius();
 
-    // Color según nivel de energía
+    // Colores según nivel de energía
     const energyColors = {
-      1: 'rgba(100, 200, 255, 0.3)',   // Ground - azul tenue
-      2: 'rgba(255, 200, 100, 0.4)',   // Excited 1 - naranja
-      3: 'rgba(255, 100, 100, 0.5)',   // Excited 2 - rojo
-      4: 'rgba(255, 50, 255, 0.6)'     // Excited 3 - magenta
+      1: { stroke: 'rgba(100, 200, 255, 0.4)', glow: 'rgba(100, 200, 255, 0.2)' },
+      2: { stroke: 'rgba(255, 200, 100, 0.5)', glow: 'rgba(255, 200, 100, 0.25)' },
+      3: { stroke: 'rgba(255, 100, 100, 0.6)', glow: 'rgba(255, 100, 100, 0.3)' },
+      4: { stroke: 'rgba(255, 50, 255, 0.7)', glow: 'rgba(255, 50, 255, 0.35)' }
     };
 
-    const color = energyColors[particle.energyLevel] || energyColors[1];
+    const colors = energyColors[particle.energyLevel] || energyColors[1];
 
-    // Dibujar órbita
+    // Glow de la órbita
+    ctx.shadowBlur = 6 + particle.energyLevel * 3;
+    ctx.shadowColor = colors.glow;
+
+    // Órbita principal
     ctx.beginPath();
     ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = particle.state === 'EXCITED' ? 2 : 1;
-
-    if (particle.state === 'EXCITED') {
-      ctx.setLineDash([4, 4]);
-    } else {
-      ctx.setLineDash([2, 6]);
-    }
-
+    ctx.strokeStyle = colors.stroke;
+    ctx.lineWidth = 1.5 + (particle.state === 'EXCITED' ? 0.5 : 0);
     ctx.stroke();
-    ctx.setLineDash([]);
 
-    // Si está excitado, dibujar también los otros niveles
-    if (particle.energyLevel > 1 && physicsSystem) {
-      // Ground state
+    ctx.shadowBlur = 0;
+
+    // Dibujar niveles de energía como referencia sutil
+    const baseRadius = physicsSystem.orbital.baseRadius;
+    const radiusPerLevel = physicsSystem.orbital.radiusPerLevel;
+
+    for (let level = 1; level <= 4; level++) {
+      if (level === particle.energyLevel) continue;
+
+      const r = baseRadius + (level - 1) * radiusPerLevel;
+      if (r > physicsSystem.orbital.maxRadius) continue;
+
       ctx.beginPath();
-      ctx.arc(center.x, center.y, physicsSystem.orbital.groundRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(100, 200, 255, 0.15)';
+      ctx.arc(center.x, center.y, r, 0, Math.PI * 2);
+      ctx.strokeStyle = level < particle.energyLevel
+        ? 'rgba(100, 200, 255, 0.08)'
+        : 'rgba(255, 255, 255, 0.05)';
       ctx.lineWidth = 1;
-      ctx.setLineDash([2, 6]);
+      ctx.setLineDash([3, 12]);
       ctx.stroke();
       ctx.setLineDash([]);
     }
+
+    // Pequeño punto en el centro
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.fill();
   }
 
   /**
@@ -499,10 +513,9 @@ class SetClassVisualization {
 
     // Estado
     const stateColors = {
-      'FREE': '#88ff88',
       'ORBITING': '#88ccff',
       'EXCITED': '#ffaa44',
-      'ESCAPING': '#ff6666'
+      'FREE': '#88ff88'
     };
 
     ctx.fillStyle = stateColors[particle.state] || '#ffffff';

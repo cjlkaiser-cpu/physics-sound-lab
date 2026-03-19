@@ -1,19 +1,18 @@
 /**
- * Chromatic Emission - Sistema de Física Orbital
+ * Chromatic Emission - Sistema de Física Central
  *
- * Física inspirada en el modelo de Bohr:
- * - La partícula ORBITA alrededor de los nodos (no colapsa al centro)
- * - Puede estar en diferentes niveles de energía (ground, excited)
- * - Se puede excitar para subir de nivel o escapar
- * - Temperatura controla la estabilidad/caos del sistema
+ * Modelo simplificado:
+ * - La partícula ORBITA alrededor del CENTRO del canvas
+ * - Al pasar cerca de un nodo, lo ACTIVA (trigger sonoro)
+ * - Niveles de energía controlan el radio de órbita
+ * - Temperatura controla variaciones y caos
  */
 
 // Estados de la partícula
 const ParticleState = {
-  FREE: 'FREE',           // Viajando entre nodos
-  ORBITING: 'ORBITING',   // Órbita estable (ground state)
-  EXCITED: 'EXCITED',     // Órbita excitada (puede escapar)
-  ESCAPING: 'ESCAPING'    // Escapando del nodo actual
+  ORBITING: 'ORBITING',     // Órbita normal
+  EXCITED: 'EXCITED',       // Órbita excitada (radio mayor, más rápida)
+  FREE: 'FREE'              // Movimiento libre (slingshot)
 };
 
 class Particle {
@@ -24,19 +23,21 @@ class Particle {
     this.vy = 0;
 
     // Estado orbital
-    this.state = ParticleState.FREE;
+    this.state = ParticleState.ORBITING;
     this.energyLevel = 1;         // n=1 (ground), n=2, n=3 (excited)
     this.orbitalAngle = 0;        // Ángulo actual en la órbita
-    this.orbitCenter = null;      // {x, y} del nodo siendo orbitado
 
-    // Set actual
+    // Set actual (último nodo activado)
     this.currentSet = null;
     this.previousSet = null;
     this.timeInCurrentSet = 0;
 
     // Trail visual
     this.trail = [];
-    this.maxTrailLength = 40;
+    this.maxTrailLength = 50;
+
+    // Nodos activados recientemente (cooldown)
+    this.recentlyActivated = new Map(); // forte -> timestamp
   }
 
   update(deltaTime) {
@@ -45,7 +46,7 @@ class Particle {
     this.y += this.vy;
 
     // Actualizar trail
-    this.trail.push({ x: this.x, y: this.y, state: this.state });
+    this.trail.push({ x: this.x, y: this.y, state: this.state, energy: this.energyLevel });
     if (this.trail.length > this.maxTrailLength) {
       this.trail.shift();
     }
@@ -54,15 +55,26 @@ class Particle {
     if (this.currentSet) {
       this.timeInCurrentSet += deltaTime;
     }
+
+    // Limpiar nodos activados antiguos (cooldown de 1500ms)
+    const now = performance.now();
+    for (const [forte, time] of this.recentlyActivated) {
+      if (now - time > 1500) {
+        this.recentlyActivated.delete(forte);
+      }
+    }
   }
 
   getSpeed() {
     return Math.sqrt(this.vx * this.vx + this.vy * this.vy);
   }
 
-  getKineticEnergy() {
-    const speed = this.getSpeed();
-    return 0.5 * speed * speed;
+  canActivate(forte) {
+    return !this.recentlyActivated.has(forte);
+  }
+
+  markActivated(forte) {
+    this.recentlyActivated.set(forte, performance.now());
   }
 
   teleportTo(x, y) {
@@ -71,9 +83,8 @@ class Particle {
     this.vx = 0;
     this.vy = 0;
     this.trail = [];
-    this.state = ParticleState.FREE;
+    this.state = ParticleState.ORBITING;
     this.energyLevel = 1;
-    this.orbitCenter = null;
   }
 }
 
@@ -81,26 +92,40 @@ class Particle {
 class PhysicsSystem {
   constructor(visualization) {
     this.viz = visualization;
-    this.particle = new Particle(visualization.centerX, visualization.centerY);
+
+    // Centro de órbita = centro del canvas
+    this.orbitCenter = {
+      x: visualization.centerX,
+      y: visualization.centerY
+    };
+
+    this.particle = new Particle(this.orbitCenter.x + 120, this.orbitCenter.y);
 
     // Parámetros orbitales
+    // Órbita base en el HUECO entre tricordios (100) y tetracordios (180)
     this.orbital = {
-      groundRadius: 20,              // Radio de órbita ground state
-      excitedRadii: [38, 55, 72],    // Radios para n=2, n=3, n=4
-      escapeRadius: 85,              // Radio donde escapa
-      baseAngularSpeed: 0.04,        // Velocidad angular base (rad/frame)
-      captureRadius: 90,             // Radio para iniciar captura
-      captureSpeed: 3.0,             // Velocidad máxima para ser capturado
+      baseRadius: 140,               // Radio base: entre anillos, no toca nodos
+      radiusPerLevel: 45,            // Aumento por nivel de energía
+      maxRadius: 320,                // Radio máximo
+      baseAngularSpeed: 0.008,       // Velocidad angular lenta (contemplativo)
+      speedMultiplier: 1.0,
+    };
+
+    // Parámetros de activación de nodos
+    // Solo activa con VELOCIDAD ALTA (slingshot o movimiento rápido)
+    this.activation = {
+      radius: 25,                    // Radio para activar un nodo
+      cooldown: 1500,                // ms entre activaciones del mismo nodo
+      velocityThreshold: 2.5,        // Velocidad mínima para activar (0 = siempre)
     };
 
     // Parámetros de física
     this.params = {
-      attractionStrength: 0.12,
-      friction: 0.985,
-      maxSpeed: 18,
-      excitationDecay: 0.0008,       // Caída natural de energía por frame
-      escapeVelocity: 5.5,           // Velocidad para escapar
-      temperature: 0.3               // 0=frío (estable), 1=caliente (caótico)
+      friction: 0.98,
+      maxSpeed: 15,
+      excitationDecay: 0.002,        // Caída natural de energía por frame
+      temperature: 0.3,              // 0=frío (estable), 1=caliente (caótico)
+      returnForce: 0.08              // Fuerza para volver a órbita (cuando FREE)
     };
 
     this.isRunning = false;
@@ -114,6 +139,7 @@ class PhysicsSystem {
     this.onSetChange = null;
     this.onPhotonEmission = null;
     this.onStateChange = null;
+    this.onNodeActivation = null;  // Nuevo: cuando se activa un nodo
 
     // Slingshot
     this.slingshot = {
@@ -123,6 +149,9 @@ class PhysicsSystem {
       currentX: 0,
       currentY: 0
     };
+
+    // Iniciar ángulo orbital
+    this.particle.orbitalAngle = Math.random() * Math.PI * 2;
   }
 
   setPhotonSystem(photonSystem, spectrumAnalyzer) {
@@ -132,6 +161,10 @@ class PhysicsSystem {
 
   setTemperature(t) {
     this.params.temperature = Math.max(0, Math.min(1, t));
+  }
+
+  setOrbitalSpeed(multiplier) {
+    this.orbital.speedMultiplier = Math.max(0.1, Math.min(3, multiplier));
   }
 
   start() {
@@ -152,29 +185,39 @@ class PhysicsSystem {
   }
 
   /**
+   * Obtener radio de órbita actual según nivel de energía
+   */
+  getCurrentOrbitRadius() {
+    const baseRadius = this.orbital.baseRadius;
+    const extraRadius = (this.particle.energyLevel - 1) * this.orbital.radiusPerLevel;
+    return Math.min(baseRadius + extraRadius, this.orbital.maxRadius);
+  }
+
+  /**
    * Loop principal de física
    */
   update() {
     if (!this.isRunning || this.isPaused) return null;
 
-    // Aplicar ruido térmico
-    this.applyThermalNoise();
+    let result = null;
 
     // Actualizar según estado
-    let result = null;
     switch (this.particle.state) {
-      case ParticleState.FREE:
-        result = this.updateFree();
-        break;
       case ParticleState.ORBITING:
         result = this.updateOrbiting();
         break;
       case ParticleState.EXCITED:
         result = this.updateExcited();
         break;
-      case ParticleState.ESCAPING:
-        result = this.updateEscaping();
+      case ParticleState.FREE:
+        result = this.updateFree();
         break;
+    }
+
+    // Detectar activación de nodos
+    const activation = this.checkNodeActivation();
+    if (activation) {
+      result = activation;
     }
 
     // Actualizar partícula
@@ -187,40 +230,108 @@ class PhysicsSystem {
   }
 
   /**
-   * Estado FREE: viajando entre nodos
+   * Estado ORBITING: órbita estable alrededor del centro
    */
-  updateFree() {
-    const nearest = this.viz.getNearestSet(this.particle.x, this.particle.y);
+  updateOrbiting() {
+    const radius = this.getCurrentOrbitRadius();
+    const angularSpeed = this.orbital.baseAngularSpeed * this.orbital.speedMultiplier;
 
-    if (nearest.set) {
-      const pos = this.viz.getPosition(nearest.set.forte);
-      if (pos) {
-        const dx = pos.x - this.particle.x;
-        const dy = pos.y - this.particle.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+    // Aplicar ruido térmico al ángulo
+    const thermalNoise = (Math.random() - 0.5) * this.params.temperature * 0.02;
 
-        // Aplicar atracción
-        if (dist > 0.1) {
-          const force = this.params.attractionStrength / Math.max(1, dist * 0.03);
-          this.particle.vx += (dx / dist) * force;
-          this.particle.vy += (dy / dist) * force;
-        }
+    // Actualizar ángulo
+    this.particle.orbitalAngle += angularSpeed + thermalNoise;
 
-        // Detectar captura
-        if (dist < this.orbital.captureRadius) {
-          const speed = this.particle.getSpeed();
+    // Calcular posición orbital objetivo
+    const targetX = this.orbitCenter.x + Math.cos(this.particle.orbitalAngle) * radius;
+    const targetY = this.orbitCenter.y + Math.sin(this.particle.orbitalAngle) * radius;
 
-          if (speed < this.orbital.captureSpeed) {
-            // Capturar en órbita
-            return this.captureInOrbit(nearest.set, pos);
-          }
-        }
-      }
+    // Mover suavemente hacia la posición orbital
+    const smoothing = 0.12;
+    this.particle.vx = (targetX - this.particle.x) * smoothing;
+    this.particle.vy = (targetY - this.particle.y) * smoothing;
+
+    // Excitación espontánea por temperatura
+    if (Math.random() < this.params.temperature * 0.005) {
+      this.excite();
     }
 
+    return null;
+  }
+
+  /**
+   * Estado EXCITED: órbita excitada con más variación
+   */
+  updateExcited() {
+    const radius = this.getCurrentOrbitRadius();
+
+    // Velocidad angular más variable cuando excitado
+    const baseSpeed = this.orbital.baseAngularSpeed * this.orbital.speedMultiplier;
+    const speedVariation = 1 + (Math.random() - 0.5) * this.params.temperature * 0.5;
+    const angularSpeed = baseSpeed * 1.2 * speedVariation;
+
+    // Más ruido térmico
+    const thermalNoise = (Math.random() - 0.5) * this.params.temperature * 0.05;
+
+    // Actualizar ángulo
+    this.particle.orbitalAngle += angularSpeed + thermalNoise;
+
+    // Perturbación del radio
+    const radiusNoise = (Math.random() - 0.5) * this.params.temperature * 30;
+    const currentRadius = radius + radiusNoise;
+
+    // Calcular posición orbital objetivo
+    const targetX = this.orbitCenter.x + Math.cos(this.particle.orbitalAngle) * currentRadius;
+    const targetY = this.orbitCenter.y + Math.sin(this.particle.orbitalAngle) * currentRadius;
+
+    // Mover hacia la posición (menos suave = más inestable)
+    const smoothing = 0.1;
+    this.particle.vx = (targetX - this.particle.x) * smoothing;
+    this.particle.vy = (targetY - this.particle.y) * smoothing;
+
+    // Decay natural de energía
+    if (Math.random() < this.params.excitationDecay) {
+      this.decay();
+    }
+
+    return null;
+  }
+
+  /**
+   * Estado FREE: movimiento libre (después de slingshot)
+   */
+  updateFree() {
     // Aplicar fricción
     this.particle.vx *= this.params.friction;
     this.particle.vy *= this.params.friction;
+
+    // Fuerza suave hacia la órbita
+    const dx = this.orbitCenter.x - this.particle.x;
+    const dy = this.orbitCenter.y - this.particle.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist > 0) {
+      // Atracción hacia el centro
+      const force = this.params.returnForce * 0.5;
+      this.particle.vx += (dx / dist) * force;
+      this.particle.vy += (dy / dist) * force;
+    }
+
+    // Si la velocidad es baja, volver a orbitar
+    const speed = this.particle.getSpeed();
+    if (speed < 1.5) {
+      // Calcular ángulo actual respecto al centro
+      const angle = Math.atan2(
+        this.particle.y - this.orbitCenter.y,
+        this.particle.x - this.orbitCenter.x
+      );
+      this.particle.orbitalAngle = angle;
+      this.particle.state = ParticleState.ORBITING;
+
+      if (this.onStateChange) {
+        this.onStateChange(ParticleState.FREE, ParticleState.ORBITING);
+      }
+    }
 
     // Limitar velocidad
     this.limitSpeed();
@@ -229,168 +340,62 @@ class PhysicsSystem {
   }
 
   /**
-   * Capturar partícula en órbita alrededor de un nodo
+   * Verificar si la partícula activa algún nodo
+   * Solo activa si: está cerca + tiene velocidad suficiente + cooldown pasado
    */
-  captureInOrbit(setClass, pos) {
-    const oldSet = this.particle.currentSet;
-    const isNewSet = oldSet !== setClass;
+  checkNodeActivation() {
+    const activationRadius = this.activation.radius;
+    const velocityThreshold = this.activation.velocityThreshold;
+    const speed = this.particle.getSpeed();
 
-    // Configurar órbita
-    this.particle.orbitCenter = { x: pos.x, y: pos.y };
-    this.particle.currentSet = setClass;
-    this.particle.energyLevel = 1; // Ground state
-
-    // Calcular ángulo inicial basado en posición actual
-    const dx = this.particle.x - pos.x;
-    const dy = this.particle.y - pos.y;
-    this.particle.orbitalAngle = Math.atan2(dy, dx);
-
-    // Cambiar estado
-    const oldState = this.particle.state;
-    this.particle.state = ParticleState.ORBITING;
-
-    if (this.onStateChange && oldState !== ParticleState.ORBITING) {
-      this.onStateChange(oldState, ParticleState.ORBITING);
-    }
-
-    // Si es un nuevo set, emitir fotones
-    if (isNewSet && oldSet) {
-      this.particle.previousSet = oldSet;
-      this.particle.timeInCurrentSet = 0;
-      return this.emitPhotonsOnTransition(oldSet, setClass, pos);
-    }
-
-    return null;
-  }
-
-  /**
-   * Estado ORBITING: órbita estable alrededor del nodo
-   */
-  updateOrbiting() {
-    if (!this.particle.orbitCenter || !this.particle.currentSet) {
-      this.particle.state = ParticleState.FREE;
+    // Si la velocidad es muy baja, no activar (modo contemplativo)
+    if (speed < velocityThreshold) {
       return null;
     }
 
-    const center = this.particle.orbitCenter;
-    const radius = this.getOrbitRadius(this.particle.energyLevel);
+    for (const [forte, pos] of this.viz.setPositions) {
+      const dx = this.particle.x - pos.x;
+      const dy = this.particle.y - pos.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
 
-    // Velocidad angular (más lenta en órbitas mayores)
-    const angularSpeed = this.orbital.baseAngularSpeed / Math.sqrt(this.particle.energyLevel);
+      if (dist < activationRadius && this.particle.canActivate(forte)) {
+        // Activar este nodo
+        this.particle.markActivated(forte);
 
-    // Actualizar ángulo
-    this.particle.orbitalAngle += angularSpeed;
+        const setClass = pos.setClass;
+        const oldSet = this.particle.currentSet;
+        const isNewSet = oldSet !== setClass;
 
-    // Calcular posición orbital
-    const targetX = center.x + Math.cos(this.particle.orbitalAngle) * radius;
-    const targetY = center.y + Math.sin(this.particle.orbitalAngle) * radius;
+        if (isNewSet) {
+          this.particle.previousSet = oldSet;
+          this.particle.currentSet = setClass;
+          this.particle.timeInCurrentSet = 0;
 
-    // Mover suavemente hacia la posición orbital
-    const smoothing = 0.15;
-    this.particle.vx = (targetX - this.particle.x) * smoothing;
-    this.particle.vy = (targetY - this.particle.y) * smoothing;
+          // Callback de activación de nodo
+          if (this.onNodeActivation) {
+            this.onNodeActivation(setClass, pos);
+          }
 
-    // Excitación espontánea por temperatura
-    if (Math.random() < this.params.temperature * 0.008) {
-      this.excite();
-    }
-
-    return null;
-  }
-
-  /**
-   * Estado EXCITED: órbita excitada, puede decaer o escapar
-   */
-  updateExcited() {
-    if (!this.particle.orbitCenter || !this.particle.currentSet) {
-      this.particle.state = ParticleState.FREE;
-      return null;
-    }
-
-    const center = this.particle.orbitCenter;
-    const radius = this.getOrbitRadius(this.particle.energyLevel);
-
-    // Velocidad angular más rápida cuando excitado
-    const angularSpeed = this.orbital.baseAngularSpeed * 1.3 / Math.sqrt(this.particle.energyLevel);
-
-    // Actualizar ángulo con más variación
-    const wobble = (Math.random() - 0.5) * this.params.temperature * 0.1;
-    this.particle.orbitalAngle += angularSpeed + wobble;
-
-    // Posición orbital con perturbación
-    const perturbation = (Math.random() - 0.5) * this.params.temperature * 8;
-    const targetX = center.x + Math.cos(this.particle.orbitalAngle) * (radius + perturbation);
-    const targetY = center.y + Math.sin(this.particle.orbitalAngle) * (radius + perturbation);
-
-    // Movimiento menos suave (más inestable)
-    const smoothing = 0.12;
-    this.particle.vx = (targetX - this.particle.x) * smoothing;
-    this.particle.vy = (targetY - this.particle.y) * smoothing;
-
-    // Decay natural de energía
-    if (Math.random() < this.params.excitationDecay * (1 - this.params.temperature * 0.5)) {
-      this.decay();
-    }
-
-    // Probabilidad de escape (mayor en niveles altos y alta temperatura)
-    const escapeProb = (this.particle.energyLevel - 1) * 0.003 * (1 + this.params.temperature);
-    if (Math.random() < escapeProb) {
-      this.startEscape();
-    }
-
-    return null;
-  }
-
-  /**
-   * Estado ESCAPING: abandonando el nodo actual
-   */
-  updateEscaping() {
-    if (!this.particle.orbitCenter) {
-      this.particle.state = ParticleState.FREE;
-      return null;
-    }
-
-    const center = this.particle.orbitCenter;
-    const dx = this.particle.x - center.x;
-    const dy = this.particle.y - center.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    // Aplicar fuerza de escape (radialmente hacia afuera)
-    if (dist > 0) {
-      const escapeForce = 0.3;
-      this.particle.vx += (dx / dist) * escapeForce;
-      this.particle.vy += (dy / dist) * escapeForce;
-    }
-
-    // Aplicar fricción mínima
-    this.particle.vx *= 0.995;
-    this.particle.vy *= 0.995;
-
-    // Si ha escapado lo suficiente, pasar a FREE
-    if (dist > this.orbital.escapeRadius) {
-      this.particle.state = ParticleState.FREE;
-      this.particle.orbitCenter = null;
-
-      if (this.onStateChange) {
-        this.onStateChange(ParticleState.ESCAPING, ParticleState.FREE);
+          // Emitir fotones si hay transición
+          if (oldSet) {
+            return this.emitPhotonsOnTransition(oldSet, setClass, pos);
+          } else {
+            // Primera activación
+            if (this.onSetChange) {
+              this.onSetChange({ from: null, to: setClass });
+            }
+            return { type: 'FIRST_ACTIVATION', set: setClass };
+          }
+        }
       }
     }
 
-    this.limitSpeed();
     return null;
   }
 
   /**
-   * Obtener radio de órbita según nivel de energía
-   */
-  getOrbitRadius(level) {
-    if (level <= 1) return this.orbital.groundRadius;
-    const idx = Math.min(level - 2, this.orbital.excitedRadii.length - 1);
-    return this.orbital.excitedRadii[idx];
-  }
-
-  /**
-   * Excitar la partícula (subir nivel de energía)
+   * Excitar la partícula (subir nivel de energía = radio mayor)
+   * También da un impulso radial para atravesar nodos
    */
   excite(levels = 1) {
     const oldLevel = this.particle.energyLevel;
@@ -402,6 +407,15 @@ class PhysicsSystem {
         this.onStateChange(ParticleState.ORBITING, ParticleState.EXCITED);
       }
     }
+
+    // Impulso radial hacia afuera para atravesar nodos
+    const dx = this.particle.x - this.orbitCenter.x;
+    const dy = this.particle.y - this.orbitCenter.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    const impulse = 4 + levels * 2; // Impulso proporcional a la excitación
+
+    this.particle.vx += (dx / dist) * impulse;
+    this.particle.vy += (dy / dist) * impulse;
 
     return this.particle.energyLevel - oldLevel;
   }
@@ -427,54 +441,6 @@ class PhysicsSystem {
           this.onStateChange(ParticleState.EXCITED, ParticleState.ORBITING);
         }
       }
-    }
-  }
-
-  /**
-   * Iniciar escape del nodo actual
-   */
-  startEscape() {
-    if (this.particle.state === ParticleState.ORBITING ||
-        this.particle.state === ParticleState.EXCITED) {
-      const oldState = this.particle.state;
-      this.particle.state = ParticleState.ESCAPING;
-      this.particle.energyLevel = 1;
-
-      // Dar impulso radial hacia afuera
-      if (this.particle.orbitCenter) {
-        const dx = this.particle.x - this.particle.orbitCenter.x;
-        const dy = this.particle.y - this.particle.orbitCenter.y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-
-        const impulse = this.params.escapeVelocity;
-        this.particle.vx = (dx / dist) * impulse;
-        this.particle.vy = (dy / dist) * impulse;
-      }
-
-      if (this.onStateChange) {
-        this.onStateChange(oldState, ParticleState.ESCAPING);
-      }
-    }
-  }
-
-  /**
-   * Aplicar ruido térmico
-   */
-  applyThermalNoise() {
-    const noise = this.params.temperature * 0.15;
-    this.particle.vx += (Math.random() - 0.5) * noise;
-    this.particle.vy += (Math.random() - 0.5) * noise;
-  }
-
-  /**
-   * Limitar velocidad máxima
-   */
-  limitSpeed() {
-    const speed = this.particle.getSpeed();
-    if (speed > this.params.maxSpeed) {
-      const scale = this.params.maxSpeed / speed;
-      this.particle.vx *= scale;
-      this.particle.vy *= scale;
     }
   }
 
@@ -508,10 +474,22 @@ class PhysicsSystem {
   }
 
   /**
+   * Limitar velocidad máxima
+   */
+  limitSpeed() {
+    const speed = this.particle.getSpeed();
+    if (speed > this.params.maxSpeed) {
+      const scale = this.params.maxSpeed / speed;
+      this.particle.vx *= scale;
+      this.particle.vy *= scale;
+    }
+  }
+
+  /**
    * Mantener partícula dentro de límites
    */
   keepInBounds() {
-    const margin = 50;
+    const margin = 30;
     const bounce = 0.5;
 
     if (this.particle.x < margin) {
@@ -535,7 +513,7 @@ class PhysicsSystem {
   // === Interacción del usuario ===
 
   /**
-   * Click cerca de la partícula para excitar
+   * Click para excitar o cambiar dirección
    */
   handleClick(x, y) {
     const dx = x - this.particle.x;
@@ -548,12 +526,11 @@ class PhysicsSystem {
       return true;
     }
 
-    // Si está en un nodo, atraer hacia él
-    const clicked = this.viz.getNearestSet(x, y);
-    if (clicked.set && clicked.distance < 30) {
-      this.attractTo(clicked.set.forte);
-      return true;
-    }
+    // Si hace click en otra parte, invertir dirección brevemente
+    this.orbital.baseAngularSpeed *= -1;
+    setTimeout(() => {
+      this.orbital.baseAngularSpeed *= -1;
+    }, 500);
 
     return false;
   }
@@ -605,16 +582,10 @@ class PhysicsSystem {
       this.particle.vx = (dx / dist) * force;
       this.particle.vy = (dy / dist) * force;
 
-      // Forzar escape si estaba orbitando
-      if (this.particle.state === ParticleState.ORBITING ||
-          this.particle.state === ParticleState.EXCITED) {
-        this.particle.state = ParticleState.ESCAPING;
-
-        // Si la fuerza es suficiente, escapar inmediatamente
-        if (force > 6) {
-          this.particle.state = ParticleState.FREE;
-          this.particle.orbitCenter = null;
-        }
+      // Cambiar a estado FREE
+      this.particle.state = ParticleState.FREE;
+      if (this.onStateChange) {
+        this.onStateChange(ParticleState.ORBITING, ParticleState.FREE);
       }
     }
 
@@ -670,30 +641,6 @@ class PhysicsSystem {
   }
 
   /**
-   * Atraer partícula hacia un nodo específico
-   */
-  attractTo(forte) {
-    const pos = this.viz.getPosition(forte);
-    if (!pos) return;
-
-    const dx = pos.x - this.particle.x;
-    const dy = pos.y - this.particle.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist > 0) {
-      // Si está orbitando, primero escapar
-      if (this.particle.state === ParticleState.ORBITING ||
-          this.particle.state === ParticleState.EXCITED) {
-        this.startEscape();
-      }
-
-      const strength = Math.min(10, dist * 0.08);
-      this.particle.vx = (dx / dist) * strength;
-      this.particle.vy = (dy / dist) * strength;
-    }
-  }
-
-  /**
    * Impulso aleatorio
    */
   randomImpulse(strength = 5) {
@@ -715,7 +662,6 @@ class PhysicsSystem {
     this.particle.vx = 0;
     this.particle.vy = 0;
     this.particle.state = ParticleState.FREE;
-    this.particle.orbitCenter = null;
   }
 }
 

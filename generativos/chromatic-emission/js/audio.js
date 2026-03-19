@@ -13,6 +13,17 @@ class AudioEngine {
     this.volume = 0.3;
     this.waveform = 'triangle';
 
+    // Modo de audio: 'drone' (continuo) o 'trigger' (eventos)
+    this.audioMode = 'trigger';
+
+    // Drone state
+    this.drone = {
+      active: false,
+      oscillators: [],
+      gains: [],
+      currentSet: null
+    };
+
     // Frecuencia base (C4)
     this.baseFrequency = 261.63;
 
@@ -20,6 +31,13 @@ class AudioEngine {
     this.chromaticRatios = [];
     for (let i = 0; i < 12; i++) {
       this.chromaticRatios[i] = Math.pow(2, i / 12);
+    }
+  }
+
+  setAudioMode(mode) {
+    this.audioMode = mode;
+    if (mode === 'trigger' && this.drone.active) {
+      this.stopDrone();
     }
   }
 
@@ -118,6 +136,121 @@ class AudioEngine {
     osc.start(startTime);
     osc.stop(startTime + duration + 0.1);
   }
+
+  // ============ MODO DRONE ============
+
+  /**
+   * Iniciar drone con un set-class (sonido continuo)
+   */
+  startDrone(setClass) {
+    if (!this.isInitialized || !setClass) return;
+    if (this.audioMode !== 'drone') return;
+
+    // Si ya hay un drone del mismo set, no hacer nada
+    if (this.drone.active && this.drone.currentSet?.forte === setClass.forte) return;
+
+    // Parar drone anterior si existe
+    this.stopDrone();
+
+    this.drone.active = true;
+    this.drone.currentSet = setClass;
+    this.drone.oscillators = [];
+    this.drone.gains = [];
+
+    const now = this.audioContext.currentTime;
+
+    // Crear osciladores para cada nota del acorde
+    setClass.primeForm.forEach((pc, i) => {
+      const freq = this.pcToFrequency(pc);
+
+      // Oscilador principal
+      const osc = this.audioContext.createOscillator();
+      osc.type = this.waveform;
+      osc.frequency.value = freq;
+
+      // Oscilador secundario (quinta arriba, más suave)
+      const osc2 = this.audioContext.createOscillator();
+      osc2.type = 'sine';
+      osc2.frequency.value = freq * 1.5;
+
+      // Gain individual
+      const gain = this.audioContext.createGain();
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.12, now + 0.3); // Fade in suave
+
+      // Filtro
+      const filter = this.audioContext.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 1200 + freq * 0.5;
+      filter.Q.value = 0.5;
+
+      // LFO para vibrato sutil
+      const lfo = this.audioContext.createOscillator();
+      const lfoGain = this.audioContext.createGain();
+      lfo.frequency.value = 3 + i * 0.5; // Ligeramente diferente por voz
+      lfoGain.gain.value = freq * 0.003; // Vibrato muy sutil
+
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+
+      // Conexiones
+      osc.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+
+      // Iniciar
+      osc.start(now);
+      osc2.start(now);
+      lfo.start(now);
+
+      this.drone.oscillators.push({ osc, osc2, lfo, filter });
+      this.drone.gains.push(gain);
+    });
+  }
+
+  /**
+   * Detener drone gradualmente
+   */
+  stopDrone() {
+    if (!this.drone.active) return;
+
+    const now = this.audioContext.currentTime;
+
+    // Fade out
+    this.drone.gains.forEach(gain => {
+      gain.gain.linearRampToValueAtTime(0, now + 0.5);
+    });
+
+    // Parar osciladores después del fade
+    setTimeout(() => {
+      this.drone.oscillators.forEach(({ osc, osc2, lfo }) => {
+        try {
+          osc.stop();
+          osc2.stop();
+          lfo.stop();
+        } catch (e) {}
+      });
+      this.drone.oscillators = [];
+      this.drone.gains = [];
+      this.drone.active = false;
+      this.drone.currentSet = null;
+    }, 600);
+  }
+
+  /**
+   * Actualizar el drone si cambia el set (transición suave)
+   */
+  updateDroneSet(newSet) {
+    if (this.audioMode !== 'drone') return;
+    if (!newSet) {
+      this.stopDrone();
+      return;
+    }
+    this.startDrone(newSet);
+  }
+
+  // ============ FIN MODO DRONE ============
 
   /**
    * Sonido de fotón basado en el intervalo
@@ -290,6 +423,7 @@ class AudioEngine {
 
   /**
    * Tocar una nota con parámetros de excitación
+   * Usa el mismo waveform que la partícula para coherencia sonora
    */
   playExcitedNote(pc, startTime, params) {
     if (!this.isInitialized) return;
@@ -300,14 +434,14 @@ class AudioEngine {
     const baseOctave = 4 + octaveShift;
     const freq = this.pcToFrequency(pc, baseOctave);
 
-    // Oscilador
+    // Oscilador - usa el mismo waveform que la partícula
     const osc = this.audioContext.createOscillator();
-    osc.type = 'sine'; // Más suave para excitaciones
+    osc.type = this.waveform;
     osc.frequency.value = freq;
 
-    // Segundo oscilador armónico
+    // Segundo oscilador armónico (más suave)
     const osc2 = this.audioContext.createOscillator();
-    osc2.type = 'triangle';
+    osc2.type = 'sine';
     osc2.frequency.value = freq * 2; // Octava arriba
 
     // Envelope

@@ -459,6 +459,16 @@
       <!-- Audio -->
       <div class="section">
         <div class="section-title">Audio</div>
+
+        <!-- Modo: Drone vs Trigger -->
+        <div style="margin-bottom: 12px;">
+          <span style="font-size: 10px; color: rgba(255,255,255,0.5);">Modo:</span>
+          <div style="margin-top: 5px;">
+            <button class="btn active" data-mode="trigger">Trigger</button>
+            <button class="btn" data-mode="drone">Drone</button>
+          </div>
+        </div>
+
         <div class="slider-container">
           <div class="slider-label">
             <span>Volumen</span>
@@ -467,9 +477,12 @@
           <input type="range" id="volume" min="0" max="100" value="30">
         </div>
         <div style="margin-top: 10px;">
-          <button class="btn" data-wave="sine">Sine</button>
-          <button class="btn active" data-wave="triangle">Triangle</button>
-          <button class="btn" data-wave="sawtooth">Saw</button>
+          <span style="font-size: 10px; color: rgba(255,255,255,0.5);">Waveform:</span>
+          <div style="margin-top: 5px;">
+            <button class="btn" data-wave="sine">Sine</button>
+            <button class="btn active" data-wave="triangle">Triangle</button>
+            <button class="btn" data-wave="sawtooth">Saw</button>
+          </div>
         </div>
       </div>
 
@@ -619,6 +632,20 @@
           });
         });
 
+        // Audio Mode: Drone vs Trigger
+        document.querySelectorAll('[data-mode]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            this.audio.setAudioMode(btn.dataset.mode);
+
+            // Si activa drone y hay un set actual, iniciarlo
+            if (btn.dataset.mode === 'drone' && this.physics.particle.currentSet) {
+              this.audio.startDrone(this.physics.particle.currentSet);
+            }
+          });
+        });
+
         // Callback de cambio de set
         this.physics.onSetChange = (event) => this.onSetChange(event);
 
@@ -651,6 +678,20 @@
             const toggle = document.getElementById('toggle-sonorous');
             toggle.classList.toggle('active');
             this.photonSystem.setSonorousPhotons(toggle.classList.contains('active'));
+          } else if (e.code === 'KeyD') {
+            // Toggle Drone/Trigger mode
+            const buttons = document.querySelectorAll('[data-mode]');
+            const currentMode = this.audio.audioMode;
+            const newMode = currentMode === 'drone' ? 'trigger' : 'drone';
+
+            buttons.forEach(btn => {
+              btn.classList.toggle('active', btn.dataset.mode === newMode);
+            });
+            this.audio.setAudioMode(newMode);
+
+            if (newMode === 'drone' && this.physics.particle.currentSet) {
+              this.audio.startDrone(this.physics.particle.currentSet);
+            }
           }
         });
       }
@@ -750,8 +791,13 @@
       onSetChange(event) {
         this.updateInfoPanel(event.to);
 
-        // Sonido del acorde
-        if (this.soundEnabled && this.audio.isInitialized) {
+        if (!this.soundEnabled || !this.audio.isInitialized) return;
+
+        // Modo Drone: actualizar el drone al nuevo set
+        if (this.audio.audioMode === 'drone') {
+          this.audio.updateDroneSet(event.to);
+        } else {
+          // Modo Trigger: tocar el acorde
           this.voiceLeader.playWithVoiceLeading(event.to);
         }
       }

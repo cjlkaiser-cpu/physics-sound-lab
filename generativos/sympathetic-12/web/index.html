@@ -973,6 +973,33 @@
                             <li>128 es suficiente para ~10 excitaciones por cuerda</li>
                         </ul>
                     </div>
+
+                    <div class="learn-section">
+                        <div class="learn-title">Karplus-Strong vs Ecuación de Onda</div>
+                        <p class="learn-text">
+                            Existen dos filosofías para simular cuerdas vibrantes:
+                        </p>
+                        <table class="learn-table">
+                            <tr><th>Aspecto</th><th>Ecuación de Onda (PDE)</th><th>Karplus-Strong</th></tr>
+                            <tr><td>Modelo</td><td>∂²y/∂t² = c² ∂²y/∂x²</td><td>y[n] = avg(y[n-L]) × g</td></tr>
+                            <tr><td>Datos</td><td>N puntos por cuerda</td><td>L samples de delay</td></tr>
+                            <tr><td>Costo</td><td>O(N) por sample</td><td>O(1) por sample</td></tr>
+                            <tr><td>Visual</td><td>Forma de onda real</td><td>Solo energía</td></tr>
+                        </table>
+                        <p class="learn-text">
+                            <strong>Ecuación de onda:</strong> Físicamente exacta. Discretiza la cuerda en
+                            200+ puntos y calcula cada uno. Costoso pero preciso.
+                        </p>
+                        <p class="learn-text">
+                            <strong>Karplus-Strong (este synth):</strong> Truco de 1983. Una cuerda vibrante
+                            <em>suena como</em> un delay con filtro lowpass. Solo guardas L samples
+                            (L = sample_rate / frequency). Eficiente y suena realista.
+                        </p>
+                        <div class="learn-diagram">Analogía: Simular agua
+
+PDE:            Resolver Navier-Stokes (físicamente correcto)
+Karplus-Strong: Grabar agua real y reproducirla (suena igual, mucho más barato)</div>
+                    </div>
                 </div>
 
                 <!-- Tab: Resonancia -->
@@ -1189,7 +1216,7 @@
     <script src="js/audio-processor.js?v=3"></script>
     <script src="js/visualization.js?v=3"></script>
     <script type="module">
-        import init, { Sympathetic12 } from './pkg/sympathetic_12.js?v=17';
+        import init, { Sympathetic12 } from './pkg/sympathetic_12.js?v=18';
 
         // ====================================================================
         // Application State
