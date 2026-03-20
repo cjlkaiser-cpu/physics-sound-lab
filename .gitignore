@@ -16,6 +16,7 @@ PLAN_EXPANSION.md
 
 # Sub-repos (they have their own repos)
 generativos/harmonices-mundi/
+generativos/contrapunctus/
 
 # Individual metronomo repos
 metronomos/pendulo/.git
