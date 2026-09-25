@@ -4,7 +4,7 @@ Sistema generativo de armonía funcional basado en las teorías de Jean-Philippe
 
 ## Concepto
 
-Mientras que el [Tonnetz Walker](../tonnetz-walker/) explora la geometría simétrica de las transformaciones Neo-Riemannianas, **Rameau Machine** implementa el paradigma opuesto: la armonía funcional jerárquica donde la tónica actúa como centro gravitacional.
+Mientras que el [Tonnetz Atractor](../tonnetz-atractor/) explora la geometría simétrica de las transformaciones Neo-Riemannianas, **Rameau Machine** implementa el paradigma opuesto: la armonía funcional jerárquica donde la tónica actúa como centro gravitacional.
 
 ### Dos Paradigmas Armónicos
 
