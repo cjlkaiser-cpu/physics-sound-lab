@@ -18,6 +18,7 @@
   <meta name="theme-color" content="#030712">
   <!-- /eigenlab:meta -->
   <style>
+        canvas { touch-action: none; } /* arrastrar con el dedo interactúa con la simulación en lugar de desplazar la página */
     * {
       margin: 0;
       padding: 0;
@@ -711,7 +712,7 @@
 
       setupDrag() {
         // Slingshot interaction
-        this.canvas.addEventListener('mousedown', (e) => {
+        this.canvas.addEventListener('pointerdown', (e) => {
           const rect = this.canvas.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
@@ -722,7 +723,7 @@
           }
         });
 
-        this.canvas.addEventListener('mousemove', (e) => {
+        this.canvas.addEventListener('pointermove', (e) => {
           const rect = this.canvas.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
@@ -738,14 +739,14 @@
           }
         });
 
-        this.canvas.addEventListener('mouseup', (e) => {
+        this.canvas.addEventListener('pointerup', (e) => {
           if (this.physics.slingshot.active) {
             this.physics.releaseSlingshot();
             this.canvas.style.cursor = 'default';
           }
         });
 
-        this.canvas.addEventListener('mouseleave', () => {
+        this.canvas.addEventListener('pointerleave', () => {
           if (this.physics.slingshot.active) {
             this.physics.releaseSlingshot();
             this.canvas.style.cursor = 'default';

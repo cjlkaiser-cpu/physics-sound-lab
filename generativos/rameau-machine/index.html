@@ -20,6 +20,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <style>
+        canvas { touch-action: none; } /* arrastrar con el dedo interactúa con la simulación en lugar de desplazar la página */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
 
         * { box-sizing: border-box; }
@@ -814,6 +815,15 @@
             color: #64748b;
         }
     </style>
+    <style>/* eigenlab:mobile — en pantallas estrechas, la barra lateral pasa debajo de la simulación */
+        @media (max-width: 767px) {
+            :has(> aside) { flex-direction: column !important; height: auto !important; min-height: 0 !important; }
+            :has(> aside) > :not(aside) { flex: none !important; width: 100% !important; height: 62vh !important; min-height: 320px; }
+            :has(> aside) > aside { width: 100% !important; max-width: none !important; height: auto !important; max-height: none !important;
+                                    overflow: visible !important; border-left: 0 !important; border-top: 1px solid rgba(255,255,255,.08); }
+            body { overflow-y: auto !important; }
+        }
+    /* /eigenlab:mobile */</style>
 </head>
 <body class="h-screen flex flex-col">
     <!-- Header -->
@@ -3861,7 +3871,7 @@ Movimiento por quintas = modulaciones naturales
                 callback(value);
             };
 
-            knob.addEventListener('mousedown', (e) => {
+            knob.addEventListener('pointerdown', (e) => {
                 isDragging = true;
                 startY = e.clientY;
                 startValue = parseInt(knob.dataset.value) || 50;
@@ -3869,14 +3879,14 @@ Movimiento por quintas = modulaciones naturales
                 e.preventDefault();
             });
 
-            document.addEventListener('mousemove', (e) => {
+            document.addEventListener('pointermove', (e) => {
                 if (!isDragging) return;
                 const deltaY = startY - e.clientY;
                 const newValue = startValue + deltaY * 0.5;
                 updateKnob(newValue);
             });
 
-            document.addEventListener('mouseup', () => {
+            document.addEventListener('pointerup', () => {
                 if (isDragging) {
                     isDragging = false;
                     knob.classList.remove('active');

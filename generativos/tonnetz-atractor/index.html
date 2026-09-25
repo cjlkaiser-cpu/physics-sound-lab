@@ -18,6 +18,7 @@
     <meta name="theme-color" content="#030712">
     <!-- /eigenlab:meta -->
     <style>
+        canvas { touch-action: none; } /* arrastrar con el dedo interactúa con la simulación en lugar de desplazar la página */
         * {
             margin: 0;
             padding: 0;
@@ -1187,7 +1188,7 @@
         let lastMouseY = 0;
         let lastMouseTime = 0;
 
-        canvas.addEventListener('mousedown', async (e) => {
+        canvas.addEventListener('pointerdown', async (e) => {
             await initAudio();
             const rect = canvas.getBoundingClientRect();
             const mx = e.clientX - rect.left;
@@ -1218,7 +1219,7 @@
             lastMouseTime = performance.now();
         });
 
-        canvas.addEventListener('mousemove', (e) => {
+        canvas.addEventListener('pointermove', (e) => {
             if (!isDragging) return;
 
             const rect = canvas.getBoundingClientRect();
@@ -1234,7 +1235,7 @@
             lastMouseTime = performance.now();
         });
 
-        canvas.addEventListener('mouseup', (e) => {
+        canvas.addEventListener('pointerup', (e) => {
             if (!isDragging) return;
             isDragging = false;
 
@@ -1260,7 +1261,7 @@
             }
         });
 
-        canvas.addEventListener('mouseleave', () => {
+        canvas.addEventListener('pointerleave', () => {
             isDragging = false;
         });
 
