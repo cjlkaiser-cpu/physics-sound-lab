@@ -814,16 +814,18 @@
             color: #64748b;
         }
     </style>
+    <link rel="stylesheet" href="../../tailwind.css" data-eigenlab-tailwind>
     <style>/* eigenlab:mobile — en pantallas estrechas, la barra lateral pasa debajo de la simulación */
         @media (max-width: 767px) {
             :has(> aside) { flex-direction: column !important; height: auto !important; min-height: 0 !important; }
-            :has(> aside) > :not(aside) { flex: none !important; width: 100% !important; height: 62vh !important; min-height: 320px; }
+            :has(> aside) > :not(aside) { flex: none !important; width: 100% !important; height: 62vh !important; min-height: 320px;
+                                          overflow: auto !important; }   /* canvas de ancho fijo: se desplaza dentro, no desborda la página */
             :has(> aside) > aside { width: 100% !important; max-width: none !important; height: auto !important; max-height: none !important;
-                                    overflow: visible !important; border-left: 0 !important; border-top: 1px solid rgba(255,255,255,.08); }
+                                    overflow-x: auto !important; border-left: 0 !important; border-top: 1px solid rgba(255,255,255,.08); }
+            header .flex { flex-wrap: wrap !important; row-gap: .35rem; }   /* estadísticas de la cabecera en varias líneas */
             body { overflow-y: auto !important; }
         }
     /* /eigenlab:mobile */</style>
-    <link rel="stylesheet" href="../../tailwind.css" data-eigenlab-tailwind>
 </head>
 <body class="h-screen flex flex-col">
     <!-- Header -->
